@@ -5,47 +5,62 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-background: #060B18;
-  --color-surface: #0B1120;
-  --color-card: #111A2E;
-  --color-card-hover: #16223C;
-  --color-border: #1E293B;
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-accent: #22D3EE;
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-success: #22C55E;
-  --color-warning: #EAB308;
-  --color-danger: #EF4444;
+  --color-background: #05070F;
+  --color-surface: #0A0D18;
+  --color-card: #10131F;
+  --color-card-hover: #151827;
+  --color-border: #1C2030;
+  --color-primary: #2E5CFF;
+  --color-primary-hover: #2448D9;
+  --color-accent: #2DE4E0;
+  --color-urgent: #FF8A3D;
+  --color-urgent-soft: #FF8A3D1A;
+  --color-text-primary: #F5F7FA;
+  --color-text-secondary: #8B93A7;
+  --color-success: #2ECC71;
+  --color-warning: #F5B942;
+  --color-danger: #FF5C5C;
+  --font-display: "Space Grotesk", sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
 :root, .dark {
-  --background: #060B18;
-  --foreground: #F8FAFC;
-  --card: #111A2E;
-  --card-foreground: #F8FAFC;
-  --popover: #0B1120;
-  --popover-foreground: #F8FAFC;
-  --primary: #2563EB;
+  --background: #05070F;
+  --foreground: #F5F7FA;
+  --card: #10131F;
+  --card-foreground: #F5F7FA;
+  --popover: #0A0D18;
+  --popover-foreground: #F5F7FA;
+  --primary: #2E5CFF;
   --primary-foreground: #FFFFFF;
-  --secondary: #16223C;
-  --secondary-foreground: #F8FAFC;
-  --muted: #0B1120;
-  --muted-foreground: #94A3B8;
-  --accent: #22D3EE;
-  --accent-foreground: #060B18;
-  --destructive: #EF4444;
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #2563EB;
-  --radius: 0.5rem;
+  --secondary: #151827;
+  --secondary-foreground: #F5F7FA;
+  --muted: #0A0D18;
+  --muted-foreground: #8B93A7;
+  --accent: #2DE4E0;
+  --accent-foreground: #05070F;
+  --destructive: #FF5C5C;
+  --border: #1C2030;
+  --input: #1C2030;
+  --ring: #2E5CFF;
+  --radius: 0.75rem;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
 }
