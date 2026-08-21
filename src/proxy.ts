@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
+  // Develop Dashboard mode, comment when dashboard done
+  return NextResponse.next();
+
   const pathname = request.nextUrl.pathname;
 
   // Check for protected routes: /peserta, /juri, /admin
@@ -29,9 +32,5 @@ export async function proxy(request: NextRequest) {
 export default proxy;
 
 export const config = {
-  matcher: [
-    "/peserta/:path*",
-    "/juri/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/peserta/:path*", "/juri/:path*", "/admin/:path*"],
 };
