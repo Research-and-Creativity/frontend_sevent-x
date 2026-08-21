@@ -95,11 +95,7 @@ export default function DashboardPeserta() {
   );
 
   return (
-    <section
-      id="hero"
-      ref={containerRef}
-      className="relative md:min-h-screen  pt-28 pb-20 px-4 md:px-8 overflow-hidden flex min-h-screen items-center justify-center bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D]  text-text-primary"
-    >
+    <section id="hero" ref={containerRef} className="">
       <div className="max-w-6xl mx-auto w-full z-10">
         <div
           ref={contentRef}
