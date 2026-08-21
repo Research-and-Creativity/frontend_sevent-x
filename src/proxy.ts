@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  // TODO: AKTIFKAN LAGI SEBELUM PRODUCTION (Nonaktif sementara untuk keperluan UI testing)
-  return NextResponse.next();
-
   const pathname = request.nextUrl.pathname;
 
   // Check for protected routes: /peserta, /juri, /admin
