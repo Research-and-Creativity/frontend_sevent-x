@@ -20,13 +20,29 @@ import {
   clearAuthTransition,
 } from "@/lib/auth-transition";
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-type LoginFormValues = z.infer<typeof loginSchema>;
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    username: z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers, and underscores",
+      ),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    institution: z.string().min(2, "Institution / school name is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-export default function LoginPage() {
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
@@ -42,8 +58,8 @@ export default function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
   });
 
   useGSAP(() => {
@@ -54,12 +70,12 @@ export default function LoginPage() {
 
     if (!form || !layer || !circle || !staticCircle) return;
 
-    const incomingTransition = getAuthTransition();
+    const transition = getAuthTransition();
 
-    if (!incomingTransition) {
+    if (!transition) {
       gsap.set(layer, { display: "flex" });
       gsap.set(staticCircle, { opacity: 0 });
-      gsap.set(form, { opacity: 0, x: -50 });
+      gsap.set(form, { opacity: 0, x: 50 });
 
       gsap.set(circle, { x: "0%", scale: 4, opacity: 0 });
 
@@ -80,7 +96,7 @@ export default function LoginPage() {
       tl.to(
         circle,
         {
-          x: "61%",
+          x: "-61%",
           duration: 0.9,
           ease: "power3.inOut",
         },
@@ -101,7 +117,7 @@ export default function LoginPage() {
       return;
     }
 
-    if (incomingTransition === "to-login") {
+    if (transition === "to-register") {
       gsap.set(staticCircle, { opacity: 0 });
 
       gsap.set(layer, {
@@ -109,13 +125,13 @@ export default function LoginPage() {
       });
 
       gsap.set(circle, {
-        x: "61%",
+        x: "-61%",
         y: 0,
       });
 
       gsap.set(form, {
         opacity: 0,
-        x: -25,
+        x: 25,
       });
 
       const tl = gsap.timeline({
@@ -144,22 +160,22 @@ export default function LoginPage() {
       return;
     }
 
-    clearAuthTransition();
-
-    gsap.set(form, {
-      opacity: 0,
-      x: -50,
-    });
-
-    gsap.to(form, {
-      opacity: 1,
-      x: 0,
-      duration: 0.8,
-      ease: "power3.out",
-    });
+    gsap.fromTo(
+      form,
+      {
+        opacity: 0,
+        x: 30,
+      },
+      {
+        opacity: 1,
+        x: 0,
+        duration: 0.8,
+        ease: "power3.out",
+      },
+    );
   }, []);
 
-  const navigateToRegister = () => {
+  const navigateToLogin = () => {
     if (isAnimating) return;
 
     setIsAnimating(true);
@@ -171,20 +187,19 @@ export default function LoginPage() {
 
     if (!layer || !circle || !form || !staticCircle) return;
 
-    setAuthTransition("to-register");
+    setAuthTransition("to-login");
 
     const tl = gsap.timeline({
       onComplete: () => {
-        router.push("/register");
+        router.push("/login");
       },
     });
 
     tl.set(layer, { display: "flex" }, 0);
-
     tl.set(staticCircle, { opacity: 0 }, 0);
 
     gsap.set(circle, {
-      x: "61%",
+      x: "-61%",
       y: 0,
     });
 
@@ -192,7 +207,7 @@ export default function LoginPage() {
       form,
       {
         opacity: 0,
-        x: -100,
+        x: 100,
         duration: 0.8,
         ease: "power2.out",
       },
@@ -212,74 +227,45 @@ export default function LoginPage() {
     tl.to({}, { duration: 0.08 });
 
     tl.to(circle, {
-      x: "-61%",
+      x: "61%",
       duration: 0.9,
       ease: "power3.inOut",
     });
-
-    tl.to({}, { duration: 0.01 });
   };
 
-  const navigateToForgot = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-
-    const tl = gsap.timeline();
-
-    tl.set(transitionLayerRef.current, { display: "flex" }, 0)
-      .set(staticCircleRef.current, { opacity: 0 }, 0)
-      .set(circleImgRef.current, { x: "61%", scale: 1, opacity: 1 }, 0);
-
-    tl.to(formRef.current, { opacity: 0, duration: 0.3 }, 0);
-
-    tl.to(
-      circleImgRef.current,
-      {
-        x: "0%",
-        duration: 0.6,
-        ease: "power3.inOut",
-      },
-      0,
-    );
-
-    tl.to(
-      circleImgRef.current,
-      {
-        scale: 4,
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.inOut",
-      },
-      ">",
-    );
-
-    tl.add(() => {
-      router.push("/forgot-password");
-    }, "-=0.3");
-  };
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post("/api/auth/login", data);
-      const { user, accessToken } = response.data;
-      if (!accessToken || !user) throw new Error("Invalid response");
-      setAuth(user, accessToken);
-      toast.success(`Welcome back, ${user.fullName || user.username}!`);
-
-      const role = user.role;
-      if (role === "ADMIN") router.push("/admin/dashboard");
-      else if (role === "JURI") router.push("/juri/dashboard");
-      else router.push("/peserta/dashboard");
+      const regPayload = {
+        fullName: data.fullName,
+        email: data.email,
+        username: data.username,
+        password: data.password,
+        institution: data.institution,
+      };
+      const res = await apiClient.post("/api/auth/register", regPayload);
+      let user = res.data?.user;
+      let accessToken = res.data?.accessToken;
+      if (!accessToken || !user) {
+        const loginRes = await apiClient.post("/api/auth/login", {
+          username: data.username,
+          password: data.password,
+        });
+        user = loginRes.data?.user;
+        accessToken = loginRes.data?.accessToken;
+      }
+      if (user && accessToken) setAuth(user, accessToken);
+      toast.success("Account created successfully!");
+      router.push("/peserta/dashboard");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Invalid credentials.");
+      toast.error(error.response?.data?.message || "Registration failed.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="h-screen flex bg-[#05070F] overflow-hidden relative">
+    <div className="h-screen flex justify-end bg-[#05070F] overflow-hidden relative">
       <div
         ref={transitionLayerRef}
         className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center"
@@ -287,15 +273,15 @@ export default function LoginPage() {
         <div
           ref={circleImgRef}
           className="
-              absolute
-              w-[110vh]
-              h-[110vh]
-              rounded-full
-              overflow-hidden
-              shadow-2xl
-              shrink-0
-              will-change-transform
-            "
+      absolute
+      w-[110vh]
+      h-[110vh]
+      rounded-full
+      overflow-hidden
+      shadow-2xl
+      shrink-0
+      will-change-transform
+    "
         >
           <img
             src="/images/auth-collage.jpg"
@@ -305,77 +291,95 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative">
+      <div
+        ref={staticCircleRef}
+        className="hidden lg:flex w-1/2 h-full items-center justify-start relative z-0"
+      >
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl -translate-x-[28%] shrink-0">
+          <img
+            src="/images/auth-collage.jpg"
+            className="w-full h-full object-cover"
+            alt="Collage"
+          />
+        </div>
+      </div>
+
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative py-10 overflow-y-auto">
         <div ref={formRef} className="max-w-md w-full mx-auto space-y-6">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-8">
-            Welcome Back <span className="text-[#00E5FF]">To SEVENT</span>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-6">
+            Create Your <span className="text-[#00E5FF]">Account</span>
           </h1>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1">
-              <Input
-                type="text"
-                placeholder="username"
-                className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
-                {...register("username")}
-              />
-              {errors.username && (
-                <p className="text-xs text-red-400">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            {[
+              { id: "fullName", placeholder: "name" },
+              { id: "email", type: "email", placeholder: "email" },
+              { id: "username", placeholder: "username" },
+              { id: "password", type: "password", placeholder: "password" },
+              {
+                id: "confirmPassword",
+                type: "password",
+                placeholder: "comfirm password",
+              },
+              { id: "institution", placeholder: "from institute" },
+            ].map((field) => (
+              <div key={field.id} className="w-full">
+                <Input
+                  id={field.id}
+                  type={field.type || "text"}
+                  placeholder={field.placeholder}
+                  className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
+                  {...register(field.id as keyof RegisterFormValues)}
+                />
+                {errors[field.id as keyof RegisterFormValues] && (
+                  <p className="text-[10px] text-red-400 mt-1">
+                    {errors[field.id as keyof RegisterFormValues]?.message}
+                  </p>
+                )}
+              </div>
+            ))}
 
-            <div className="space-y-1">
-              <Input
-                type="password"
-                placeholder="Password"
-                className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-xs text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-1">
-              <button
-                type="button"
-                onClick={navigateToForgot}
-                className="text-xs text-white/50 hover:text-white transition-colors"
-              >
-                Forget Your password?{" "}
-                <span className="text-[#00E5FF] underline underline-offset-2">
-                  Reset password
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="relative border border-white/20 rounded-md p-3 text-center hover:border-[#00E5FF] transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                <span className="text-xs text-white/50">
+                  upload ktm/student card
                 </span>
-              </button>
+              </div>
+              <div className="relative border border-white/20 rounded-md p-3 text-center hover:border-[#00E5FF] transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                <span className="text-xs text-white/50">upload id card</span>
+              </div>
             </div>
 
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md shadow-lg transition-all mt-4"
+              className="w-full bg-[#2E5CFF] hover:bg-[#2448D9] text-white font-medium h-12 rounded-md shadow-lg mt-4 transition-all"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Logging
-                  in...
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating...
                 </>
               ) : (
-                "Login"
+                "Sign up"
               )}
             </Button>
           </form>
 
-          <div className="relative flex items-center justify-center my-6">
+          <div className="relative flex items-center justify-center my-5">
             <div className="border-t border-white/10 w-full" />
             <span className="bg-[#05070F] px-4 text-xs text-white/40">or</span>
             <div className="border-t border-white/10 w-full" />
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <Button
               type="button"
               onClick={initiateGoogleLogin}
@@ -401,32 +405,18 @@ export default function LoginPage() {
               </svg>
               <span>Continue with Google</span>
             </Button>
-
             <div className="text-center">
               <p className="text-sm text-white/50">
-                Dont have an account?{" "}
+                Already have an account?{" "}
                 <button
-                  onClick={navigateToRegister}
-                  className="font-semibold text-white hover:text-[#00E5FF] transition-colors underline underline-offset-2"
+                  onClick={navigateToLogin}
+                  className="font-semibold text-[#00E5FF] hover:text-white transition-colors underline underline-offset-2"
                 >
-                  Register
+                  Login
                 </button>
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div
-        ref={staticCircleRef}
-        className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0"
-      >
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[28%] shrink-0">
-          <img
-            src="/images/auth-collage.jpg"
-            className="w-full h-full object-cover"
-            alt="Collage"
-          />
         </div>
       </div>
     </div>
