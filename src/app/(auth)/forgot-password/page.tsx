@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-[#B8C4FF]">
+    <div className="h-screen w-full relative overflow-hidden flex items-center justify-center bg-[#B8C4FF]">
       <div
         ref={formRef}
         className="max-w-lg w-full px-6 space-y-6 text-center z-10 opacity-0"

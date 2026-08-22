@@ -15,7 +15,7 @@ export default function AuthLayout({
   const bgClass = isForgotOrReset ? "bg-[#B8C4FF]" : "bg-[#091024]";
 
   return (
-    <div className={`min-h-screen w-full relative overflow-hidden ${bgClass}`}>
+    <div className={`h-screen w-full relative overflow-hidden ${bgClass}`}>
       {children}
     </div>
   );

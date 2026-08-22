@@ -66,7 +66,7 @@ function ResetPasswordFormContent() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen flex bg-[#0B1021] overflow-hidden relative">
+    <div ref={containerRef} className="h-screen flex bg-[#0B1021] overflow-hidden relative">
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-16 md:px-24 lg:px-32 relative z-10">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div className="space-y-2 text-left auth-anim">
@@ -139,8 +139,8 @@ function ResetPasswordFormContent() {
         </div>
       </div>
 
-      <div className="hidden lg:flex w-1/2 absolute right-0 top-0 bottom-0 pointer-events-none z-0 overflow-hidden items-center">
-        <div className="w-[140%] aspect-square absolute right-[-40%] rounded-full overflow-hidden border-l-[12px] border-white/5 shadow-2xl">
+      <div className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0">
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[28%] shrink-0">
           <img src="/images/auth-collage.jpg" alt="SEVENT Event Collage" className="w-full h-full object-cover" />
         </div>
       </div>

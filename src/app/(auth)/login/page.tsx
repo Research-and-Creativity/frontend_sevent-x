@@ -33,6 +33,7 @@ export default function LoginPage() {
   const formRef = useRef<HTMLDivElement>(null);
   const transitionLayerRef = useRef<HTMLDivElement>(null);
   const circleImgRef = useRef<HTMLDivElement>(null);
+  const staticCircleRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -45,46 +46,70 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Animasi Masuk yang Bersih
   useGSAP(() => {
     const form = formRef.current;
     const layer = transitionLayerRef.current;
     const circle = circleImgRef.current;
+    const staticCircle = staticCircleRef.current;
 
-    if (!form || !layer || !circle) return;
+    if (!form || !layer || !circle || !staticCircle) return;
 
     const incomingTransition = getAuthTransition();
 
-    // --------------------------------------------------
-    // NORMAL LOGIN LOAD
-    // --------------------------------------------------
     if (!incomingTransition) {
-      gsap.set(form, {
-        opacity: 0,
-        x: -30,
+      gsap.set(layer, { display: "flex" });
+      gsap.set(staticCircle, { opacity: 0 });
+      gsap.set(form, { opacity: 0, x: -50 });
+
+      gsap.set(circle, { x: "0%", scale: 4, opacity: 0 });
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          gsap.set(layer, { display: "none" });
+          gsap.set(staticCircle, { opacity: 1 });
+        },
       });
 
-      gsap.to(form, {
+      tl.to(circle, {
+        scale: 1,
         opacity: 1,
-        x: 0,
-        duration: 0.8,
-        delay: 0.1,
-        ease: "power3.out",
+        duration: 1.2,
+        ease: "power3.inOut",
       });
+
+      tl.to(
+        circle,
+        {
+          x: "61%",
+          duration: 0.9,
+          ease: "power3.inOut",
+        },
+        "+=0.1",
+      );
+
+      tl.to(
+        form,
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.6,
+          ease: "power3.out",
+        },
+        "-=0.5",
+      );
 
       return;
     }
 
-    // --------------------------------------------------
-    // REGISTER -> LOGIN
-    // --------------------------------------------------
     if (incomingTransition === "to-login") {
+      gsap.set(staticCircle, { opacity: 0 });
+
       gsap.set(layer, {
         display: "flex",
       });
 
       gsap.set(circle, {
-        x: "28%",
+        x: "61%",
         y: 0,
       });
 
@@ -100,6 +125,8 @@ export default function LoginPage() {
           gsap.set(layer, {
             display: "none",
           });
+
+          gsap.set(staticCircle, { opacity: 1 });
         },
       });
 
@@ -117,12 +144,11 @@ export default function LoginPage() {
       return;
     }
 
-    // Safety fallback
     clearAuthTransition();
 
     gsap.set(form, {
       opacity: 0,
-      x: -30,
+      x: -50,
     });
 
     gsap.to(form, {
@@ -133,7 +159,6 @@ export default function LoginPage() {
     });
   }, []);
 
-  // Transisi Mulus ke Register
   const navigateToRegister = () => {
     if (isAnimating) return;
 
@@ -142,8 +167,9 @@ export default function LoginPage() {
     const layer = transitionLayerRef.current;
     const circle = circleImgRef.current;
     const form = formRef.current;
+    const staticCircle = staticCircleRef.current;
 
-    if (!layer || !circle || !form) return;
+    if (!layer || !circle || !form || !staticCircle) return;
 
     setAuthTransition("to-register");
 
@@ -153,13 +179,12 @@ export default function LoginPage() {
       },
     });
 
-    tl.set(layer, {
-      display: "flex",
-    });
+    tl.set(layer, { display: "flex" }, 0);
 
-    // Posisi awal = posisi lingkaran kanan
+    tl.set(staticCircle, { opacity: 0 }, 0);
+
     gsap.set(circle, {
-      x: "28%",
+      x: "61%",
       y: 0,
     });
 
@@ -167,14 +192,13 @@ export default function LoginPage() {
       form,
       {
         opacity: 0,
-        x: -20,
-        duration: 0.35,
+        x: -100,
+        duration: 0.8,
         ease: "power2.out",
       },
       0,
     );
 
-    // KANAN -> TENGAH
     tl.to(
       circle,
       {
@@ -185,40 +209,53 @@ export default function LoginPage() {
       0,
     );
 
-    // Sedikit hold di tengah
     tl.to({}, { duration: 0.08 });
 
-    // TENGAH -> KIRI
     tl.to(circle, {
-      x: "-28%",
+      x: "-61%",
       duration: 0.9,
       ease: "power3.inOut",
     });
 
-    // Baru pindah halaman
     tl.to({}, { duration: 0.01 });
   };
 
   const navigateToForgot = () => {
     if (isAnimating) return;
     setIsAnimating(true);
-    const tl = gsap.timeline({
-      onComplete: () => router.push("/forgot-password"),
-    });
-    tl.set(transitionLayerRef.current, { display: "block" })
-      .to(formRef.current, { opacity: 0, duration: 0.2 }, 0)
-      .fromTo(
-        circleImgRef.current,
-        { x: "35vw", scale: 1 },
-        {
-          x: "0vw",
-          scale: 2.2,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power2.inOut",
-        },
-        0,
-      );
+
+    const tl = gsap.timeline();
+
+    tl.set(transitionLayerRef.current, { display: "flex" }, 0)
+      .set(staticCircleRef.current, { opacity: 0 }, 0)
+      .set(circleImgRef.current, { x: "61%", scale: 1, opacity: 1 }, 0);
+
+    tl.to(formRef.current, { opacity: 0, duration: 0.3 }, 0);
+
+    tl.to(
+      circleImgRef.current,
+      {
+        x: "0%",
+        duration: 0.6,
+        ease: "power3.inOut",
+      },
+      0,
+    );
+
+    tl.to(
+      circleImgRef.current,
+      {
+        scale: 4,
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2.inOut",
+      },
+      ">",
+    );
+
+    tl.add(() => {
+      router.push("/forgot-password");
+    }, "-=0.3");
   };
 
   const onSubmit = async (data: LoginFormValues) => {
@@ -242,11 +279,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#05070F] overflow-hidden relative">
-      {/* LAYER TRANSISI FIXED (Menghilangkan kedip dan memastikan presisi tengah) */}
+    <div className="h-screen flex bg-[#05070F] overflow-hidden relative">
       <div
         ref={transitionLayerRef}
-        className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center bg-[#05070F]"
+        className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center"
       >
         <div
           ref={circleImgRef}
@@ -269,8 +305,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Form Kiri */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-10">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative">
         <div ref={formRef} className="max-w-md w-full mx-auto space-y-6">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-8">
             Welcome Back <span className="text-[#00E5FF]">To SEVENT</span>
@@ -382,8 +417,10 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Lingkaran Kanan Normal */}
-      <div className="hidden lg:flex w-1/2 items-center justify-end relative z-0">
+      <div
+        ref={staticCircleRef}
+        className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0"
+      >
         <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[28%] shrink-0">
           <img
             src="/images/auth-collage.jpg"
