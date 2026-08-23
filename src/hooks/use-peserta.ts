@@ -198,14 +198,14 @@ export function useUserTeam() {
 
 // Hook 3: Fetch Submission GET /api/submissions/me
 export function useUserSubmission() {
-  return useQuery<Submission>({
+  return useQuery<Submission | null>({
     queryKey: ["userSubmission"],
     queryFn: async () => {
       try {
         const res = await apiClient.get("/api/submissions/me");
-        return res.data?.data || res.data || mockSubmissionFallback;
+        return res.data?.data ?? res.data ?? null;
       } catch {
-        return mockSubmissionFallback;
+        return null;
       }
     },
     staleTime: 5 * 60 * 1000,
