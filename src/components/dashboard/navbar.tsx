@@ -151,7 +151,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
           )}
 
           {role === "juri" && (
-            <span className="bg-primary/20 border border-primary/40 text-accent font-mono text-xs font-bold px-3 py-1 rounded-lg">
+            <span className="border border-primary/40 text-accent font-mono text-xs font-bold px-3 py-1 rounded-lg">
               SENIOR JUDGE
             </span>
           )}
