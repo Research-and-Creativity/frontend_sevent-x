@@ -1,0 +1,247 @@
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
+import { User, Team, Submission, NewsPost } from "@/types/api";
+
+export interface TimelineStage {
+  id: string;
+  stageName: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  isCompleted: boolean;
+  isActive: boolean;
+}
+
+// Fallback Mock Data for Development & Initial Render
+const mockUserFallback: User = {
+  id: "u-1",
+  email: "peserta@seventx.id",
+  name: "Alex Septiadi",
+  role: "PESERTA",
+  institution: "Telkom University",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+  createdAt: "2026-08-01T00:00:00Z",
+  updatedAt: "2026-08-01T00:00:00Z",
+};
+
+const mockTeamFallback: Team = {
+  id: "t-101",
+  name: "Apex Innovators",
+  competitionId: "1",
+  leaderId: "u-1",
+  inviteCode: "APEX2026",
+  status: "VERIFIED",
+  members: [
+    {
+      id: "tm-1",
+      teamId: "t-101",
+      userId: "u-1",
+      user: mockUserFallback,
+      role: "LEADER",
+      joinedAt: "2026-08-05T00:00:00Z",
+    },
+    {
+      id: "tm-2",
+      teamId: "t-101",
+      userId: "u-2",
+      user: {
+        id: "u-2",
+        email: "sarah@seventx.id",
+        name: "Sarah Amanda",
+        role: "PESERTA",
+        institution: "Telkom University",
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
+        createdAt: "2026-08-06T00:00:00Z",
+        updatedAt: "2026-08-06T00:00:00Z",
+      },
+      role: "MEMBER",
+      joinedAt: "2026-08-06T00:00:00Z",
+    },
+    {
+      id: "tm-3",
+      teamId: "t-101",
+      userId: "u-3",
+      user: {
+        id: "u-3",
+        email: "budi@seventx.id",
+        name: "Budi Pratama",
+        role: "PESERTA",
+        institution: "Telkom University",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
+        createdAt: "2026-08-07T00:00:00Z",
+        updatedAt: "2026-08-07T00:00:00Z",
+      },
+      role: "MEMBER",
+      joinedAt: "2026-08-07T00:00:00Z",
+    },
+  ],
+  createdAt: "2026-08-05T00:00:00Z",
+  updatedAt: "2026-08-05T00:00:00Z",
+};
+
+const mockSubmissionFallback: Submission = {
+  id: "sub-1",
+  teamId: "t-101",
+  competitionId: "1",
+  title: "SEVENT X Platform Web Application",
+  description: "A high-performance modern web application built with Next.js and Tailwind CSS.",
+  fileUrl: "https://example.com/proposal.pdf",
+  repoUrl: "https://github.com/Apex-Innovators/seventx-project",
+  videoUrl: "https://youtube.com/watch?v=demo",
+  status: "SUBMITTED",
+  submittedAt: "2026-08-18T14:30:00Z",
+  updatedAt: "2026-08-18T14:30:00Z",
+};
+
+const mockNewsFallback: NewsPost[] = [
+  {
+    id: "n-1",
+    title: "Pengumuman Jadwal Technical Meeting Finalis SEVENT X 2026",
+    slug: "jadwal-technical-meeting-2026",
+    content: "Seluruh tim yang lolos tahap awal wajib menghadiri sesi Technical Meeting melalui Zoom pada tanggal 1 November 2026 pukul 13.00 WIB.",
+    excerpt: "Sesi briefing teknis untuk seluruh tim peserta SEVENT X 2026.",
+    category: "ANNOUNCEMENT",
+    authorId: "admin-1",
+    publishedAt: "2026-08-15T09:00:00Z",
+    isPublished: true,
+    createdAt: "2026-08-15T09:00:00Z",
+    updatedAt: "2026-08-15T09:00:00Z",
+  },
+  {
+    id: "n-2",
+    title: "Update Buku Panduan & Kriteria Penilaian Web Development",
+    slug: "update-guidebook-web-dev",
+    content: "Telah diterbitkan revisi buku panduan versi 1.2 mencakup detail bobot kriteria penilaian responsivitas dan aksesibilitas.",
+    excerpt: "Detail revisi kriteria penilaian kategori Web Development.",
+    category: "GUIDEBOOK",
+    authorId: "admin-1",
+    publishedAt: "2026-08-10T11:00:00Z",
+    isPublished: true,
+    createdAt: "2026-08-10T11:00:00Z",
+    updatedAt: "2026-08-10T11:00:00Z",
+  },
+];
+
+const mockTimelineFallback: TimelineStage[] = [
+  {
+    id: "stage-1",
+    stageName: "Registration & Account Setup",
+    startDate: "2026-09-01T00:00:00Z",
+    endDate: "2026-10-15T23:59:59Z",
+    description: "Pendaftaran akun tim & pengunggahan berkas peserta.",
+    isCompleted: true,
+    isActive: false,
+  },
+  {
+    id: "stage-[#UPLOAD_KARYA]",
+    stageName: "Project Submission (Upload Karya)",
+    startDate: "2026-09-01T00:00:00Z",
+    endDate: "2026-10-15T23:59:59Z",
+    description: "Batas akhir pengunggahan proposal, repositori kode, dan video demo.",
+    isCompleted: false,
+    isActive: true,
+  },
+  {
+    id: "stage-3",
+    stageName: "Initial Judging & Screening",
+    startDate: "2026-10-16T00:00:00Z",
+    endDate: "2026-10-24T23:59:59Z",
+    description: "Penilaian tahap penyisihan oleh dewan juri ahli.",
+    isCompleted: false,
+    isActive: false,
+  },
+  {
+    id: "stage-4",
+    stageName: "Grand Final & Awarding Night",
+    startDate: "2026-11-10T00:00:00Z",
+    endDate: "2026-11-10T23:59:59Z",
+    description: "Presentasi finalis 10 besar dan pengumuman pemenang.",
+    isCompleted: false,
+    isActive: false,
+  },
+];
+
+// Hook 1: Fetch Current User Profile GET /api/user/me
+export function useUserMe() {
+  const storeUser = useAuthStore((state) => state.user);
+
+  return useQuery<User>({
+    queryKey: ["userMe"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/user/me");
+        return res.data?.data || res.data || storeUser || mockUserFallback;
+      } catch {
+        return storeUser || mockUserFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Hook 2: Fetch Current Team GET /api/user/team or GET /api/teams/me
+export function useUserTeam() {
+  return useQuery<Team>({
+    queryKey: ["userTeam"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/user/team");
+        return res.data?.data || res.data || mockTeamFallback;
+      } catch {
+        return mockTeamFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Hook 3: Fetch Submission GET /api/submissions/me
+export function useUserSubmission() {
+  return useQuery<Submission>({
+    queryKey: ["userSubmission"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/submissions/me");
+        return res.data?.data || res.data || mockSubmissionFallback;
+      } catch {
+        return mockSubmissionFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Hook 4: Fetch Announcements / News GET /api/news
+export function useNewsAnnouncements() {
+  return useQuery<NewsPost[]>({
+    queryKey: ["newsAnnouncements"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/news");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) && list.length > 0 ? list : mockNewsFallback;
+      } catch {
+        return mockNewsFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Hook 5: Fetch Competition Timeline GET /api/competitions/:id/timeline
+export function useCompetitionTimeline(competitionId: string = "1") {
+  return useQuery<TimelineStage[]>({
+    queryKey: ["competitionTimeline", competitionId],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get(`/api/competitions/${competitionId}/timeline`);
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) && list.length > 0 ? list : mockTimelineFallback;
+      } catch {
+        return mockTimelineFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
