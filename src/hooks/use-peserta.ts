@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
-import { User, Team, Submission, NewsPost } from "@/types/api";
+import { User, Team, Submission, NewsPost, Competition } from "@/types/api";
 
 export interface TimelineStage {
   id: string;
@@ -166,14 +166,14 @@ const mockTimelineFallback: TimelineStage[] = [
 export function useUserMe() {
   const storeUser = useAuthStore((state) => state.user);
 
-  return useQuery<User>({
+  return useQuery<User | null>({
     queryKey: ["userMe"],
     queryFn: async () => {
       try {
         const res = await apiClient.get("/api/user/me");
-        return res.data?.data || res.data || storeUser || mockUserFallback;
+        return res.data?.data || res.data || storeUser || null;
       } catch {
-        return storeUser || mockUserFallback;
+        return storeUser || null;
       }
     },
     staleTime: 5 * 60 * 1000,
@@ -182,14 +182,14 @@ export function useUserMe() {
 
 // Hook 2: Fetch Current Team GET /api/user/team or GET /api/teams/me
 export function useUserTeam() {
-  return useQuery<Team>({
+  return useQuery<Team | null>({
     queryKey: ["userTeam"],
     queryFn: async () => {
       try {
         const res = await apiClient.get("/api/user/team");
-        return res.data?.data || res.data || mockTeamFallback;
+        return res.data?.data ?? res.data ?? null;
       } catch {
-        return mockTeamFallback;
+        return null;
       }
     },
     staleTime: 5 * 60 * 1000,
@@ -245,3 +245,66 @@ export function useCompetitionTimeline(competitionId: string = "1") {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export const mockCompetitionsFallback: Competition[] = [
+  {
+    id: "1",
+    title: "Web Development Competition",
+    slug: "web-development",
+    description: "Bangun aplikasi web inovatif, responsif, dan modern menggunakan teknologi web terbaru.",
+    category: "Web Development",
+    startDate: "2026-09-01T00:00:00Z",
+    endDate: "2026-10-28T23:59:59Z",
+    registrationFee: 150000,
+    maxTeamMembers: 5,
+    status: "OPEN",
+    createdAt: "2026-08-01T00:00:00Z",
+    updatedAt: "2026-08-01T00:00:00Z",
+  },
+  {
+    id: "2",
+    title: "UI/UX Design Competition",
+    slug: "ui-ux-design",
+    description: "Rancang antarmuka & pengalaman pengguna yang intuitif, estetik, dan berdaya guna tinggi.",
+    category: "UI/UX Design",
+    startDate: "2026-09-01T00:00:00Z",
+    endDate: "2026-10-30T23:59:59Z",
+    registrationFee: 100000,
+    maxTeamMembers: 3,
+    status: "OPEN",
+    createdAt: "2026-08-01T00:00:00Z",
+    updatedAt: "2026-08-01T00:00:00Z",
+  },
+  {
+    id: "3",
+    title: "Competitive Programming",
+    slug: "competitive-programming",
+    description: "Uji kemampuan algoritma, struktur data, dan pemecahan masalah dengan batas waktu ketat.",
+    category: "Competitive Programming",
+    startDate: "2026-09-01T00:00:00Z",
+    endDate: "2026-11-05T23:59:59Z",
+    registrationFee: 75000,
+    maxTeamMembers: 3,
+    status: "OPEN",
+    createdAt: "2026-08-01T00:00:00Z",
+    updatedAt: "2026-08-01T00:00:00Z",
+  },
+];
+
+// Hook 6: Fetch Competitions GET /api/competitions
+export function useCompetitions() {
+  return useQuery<Competition[]>({
+    queryKey: ["competitionsList"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/competitions");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) && list.length > 0 ? list : mockCompetitionsFallback;
+      } catch {
+        return mockCompetitionsFallback;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
