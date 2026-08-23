@@ -149,6 +149,12 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               </Button>
             </Link>
           )}
+
+          {role === "juri" && (
+            <span className="bg-primary/20 border border-primary/40 text-accent font-mono text-xs font-bold px-3 py-1 rounded-lg">
+              SENIOR JUDGE
+            </span>
+          )}
         </div>
       </header>
 
@@ -171,6 +177,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               const isActive =
                 pathname === item.url ||
                 (item.url !== "/peserta/dashboard" &&
+                  item.url !== "/juri/dashboard" &&
                   pathname.startsWith(item.url));
               return (
                 <Link
@@ -205,9 +212,9 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
           {/* Secondary Links: Settings & FAQ */}
           <nav className="space-y-1 pt-1 border-t border-border/40">
             <Link
-              href="/peserta/settings"
+              href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
               className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/peserta/settings"
+                pathname.endsWith("/settings")
                   ? "text-accent bg-card font-semibold"
                   : "text-text-secondary hover:text-white hover:bg-card-hover"
               }`}
@@ -216,9 +223,9 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               <span>Settings</span>
             </Link>
             <Link
-              href="/peserta/help"
+              href={role === "juri" ? "/juri/help" : "/peserta/help"}
               className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname === "/peserta/help"
+                pathname.endsWith("/help")
                   ? "text-accent bg-card font-semibold"
                   : "text-text-secondary hover:text-white hover:bg-card-hover"
               }`}
@@ -241,8 +248,13 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
             </Avatar>
             <div className="overflow-hidden text-left">
               <p className="text-xs font-bold text-white truncate">
-                {userName}
+                {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
               </p>
+              {role === "juri" && (
+                <span className="text-[10px] font-mono font-bold text-accent">
+                  SENIOR JUDGE
+                </span>
+              )}
             </div>
           </div>
         </div>
