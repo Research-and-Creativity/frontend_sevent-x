@@ -2,76 +2,61 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { HelpCircle, ChevronDown, ChevronUp, BookOpen, Mail } from "lucide-react";
+import { HelpCircle, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-interface FAQItem {
+interface JuriFAQItem {
   id: string;
   question: string;
   answer: string;
-  category: "REGISTRATION" | "SUBMISSION" | "JUDGING" | "GENERAL";
 }
 
-export default function PesertaFAQPage() {
+export default function JuriFAQPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqList: FAQItem[] = [
+  const juriFaqList: JuriFAQItem[] = [
     {
-      id: "faq-1",
-      category: "REGISTRATION",
-      question: "Bagaimana alur pendaftaran SEVENT X 2026?",
+      id: "j-faq-1",
+      question: "Bagaimana cara mengakses daftar submission yang di-assign kepada saya?",
       answer:
-        "Peserta membuat akun individu terlebih dahulu, kemudian membuat tim baru atau bergabung ke tim yang sudah ada menggunakan Kode Invite. Selanjutnya, ketua tim wajib mengunggah bukti pembayaran dan dokumen administrasi anggota tim untuk diverifikasi oleh admin.",
+        "Anda dapat melihat daftar seluruh karya tim yang ditugaskan melalui menu 'Overview' atau 'Team' di sidebar kiri. Setiap card/baris karya menyajikan status penilaian ('Scored' atau 'Pending') dan tombol untuk masuk ke Evaluation Console.",
     },
     {
-      id: "faq-2",
-      category: "REGISTRATION",
-      question: "Berapa jumlah maksimal anggota dalam 1 tim?",
+      id: "j-faq-2",
+      question: "Apa perbedaan antara tombol 'Save Draft' dan 'Submit Score'?",
       answer:
-        "Setiap tim terdiri dari 3 hingga 5 orang anggota dari perguruan tinggi yang sama atau berbeda (sesuai ketentuan cabang kompetisi Web Development dan UI/UX Design).",
+        "Tombol 'Save Draft' menyimpan skor sementara dan catatan komentar di perangkat lokal Anda sehingga Anda dapat kembali melanjutkan penilaian nanti. Sedangkan tombol 'Submit Score' akan mengirimkan nilai secara permanen ke sistem backend panitia.",
     },
     {
-      id: "faq-3",
-      category: "REGISTRATION",
-      question: "Apakah peserta diperbolehkan mendaftar lebih dari satu cabang kompetisi?",
+      id: "j-faq-3",
+      question: "Apakah skor yang sudah di-submit masih bisa diubah kembali?",
       answer:
-        "Setiap individu hanya diperbolehkan menjadi Ketua Tim pada 1 cabang kompetisi, namun dapat menjadi anggota pada maksimal 2 cabang kompetisi berbeda yang tidak bersamaan jadwalnya.",
+        "Sesuai ketentuan penjurian transparan, skor yang sudah di-submit bersifat permanen dan form akan dikunci secara otomatis. Jika terdapat kesalahan input nilai yang sangat mendesak, silakan hubungi Administrator Sistem untuk pembukaan kunci revisi.",
     },
     {
-      id: "faq-4",
-      category: "SUBMISSION",
-      question: "Kapan batas akhir pengumpulan karya (submission deadline)?",
+      id: "j-faq-4",
+      question: "Bagaimana cara menghitung Total Score terkonsolidasi pada karya?",
       answer:
-        "Pengumpulan karya tahap kualifikasi ditutup pada tanggal 20 Oktober 2026 pukul 23:59 WIB. Pengiriman karya setelah batas waktu tidak akan diproses oleh sistem.",
+        "Sistem Evaluation Console menghitung Total Score secara live real-time dari rata-rata matematis 4 indikator kriteria (Innovation, Technical Complexity, Feasibility, dan Design/UX). Setiap perubahan nilai kriteria (+5/-5 atau slider) langsung memperbarui skor total.",
     },
     {
-      id: "faq-5",
-      category: "SUBMISSION",
-      question: "Format berkas dan link apa saja yang wajib dilampirkan saat submit karya?",
+      id: "j-faq-5",
+      question: "Kapan batas akhir (deadline) pemberian penilaian untuk tahap ini?",
       answer:
-        "Peserta wajib melampirkan berkas proposal/pitch deck format PDF (maks. 20 MB), link repository source code (GitHub/GitLab), dan link video demo/presentasi (YouTube/Vimeo).",
+        "Batas akhir penjurian Babak 1 (Round 1 Scoring) adalah tanggal 25 Oktober 2026 pukul 23:59 WIB. Pastikan seluruh karya bermerek 'Pending' di-evaluasi sebelum tenggat waktu tersebut.",
     },
     {
-      id: "faq-6",
-      category: "JUDGING",
-      question: "Bagaimana kriteria dan bobot penilaian oleh dewan juri?",
+      id: "j-faq-6",
+      question: "Apa yang harus dilakukan jika ditemukan berkas karya atau link repository yang rusak/broken?",
       answer:
-        "Penilaian dilakukan berdasarkan 4 indikator utama: Inovasi & Kebaruan Ide (25%), Arsitektur Kode & Kualitas Teknis (30%), Desain UI/UX (25%), serta Dampak Solusi & Penyelesaian Masalah (20%).",
+        "Apabila berkas proposal PDF atau tautan repository GitHub tidak dapat diakses, Anda dapat mencantumkan catatan pada kotak 'Evaluation Comments' dan memberikan nilai sesuai kelengkapan berkas yang dapat dibuka, kemudian laporkan ID Tim ke admin.",
     },
     {
-      id: "faq-7",
-      category: "GENERAL",
-      question: "Apakah ada biaya pendaftaran dan bagaimana konfirmasinya?",
+      id: "j-faq-7",
+      question: "Siapa yang harus dihubungi jika terjadi kendala pada sistem scoring console?",
       answer:
-        "Biaya pendaftaran sebesar Rp 150.000 / tim. Pembayaran dilakukan via transfer bank atau e-wallet resmi panitia yang tertera pada halaman Tim, kemudian upload bukti pembayaran pada dashboard.",
-    },
-    {
-      id: "faq-8",
-      category: "GENERAL",
-      question: "Siapa yang harus dihubungi jika terjadi kendala teknis pada platform?",
-      answer:
-        "Anda dapat menghubungi Helpdesk Sekretariat via WhatsApp di +62 812-3456-7890 atau mengirimkan email ke support@seventx.id yang aktif 24/7 selama periode kompetisi.",
+        "Tim teknis panitia siap membantu melalui WhatsApp Panitia Juri di +62 812-9876-5432 atau email juri@seventx.id.",
     },
   ];
 
@@ -84,24 +69,24 @@ export default function PesertaFAQPage() {
       {/* Header */}
       <div className="pb-2 border-b border-border/40">
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Frequently Asked Questions (FAQ)
+          Jury Platform FAQ & Guidelines
         </h1>
         <p className="text-xs text-text-secondary mt-1">
-          Temukan jawaban cepat seputar pendaftaran tim, ketentuan karya, hingga alur babak penjurian SEVENT X 2026.
+          Panduan teknis alur penilaian, aturan penguncian skor, serta bantuan dewan juri SEVENT X 2026.
         </p>
       </div>
 
-      {/* Accordion List Card */}
+      {/* Accordion Card */}
       <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-3 pb-4 border-b border-border/40">
           <HelpCircle className="w-5 h-5 text-accent" />
           <h2 className="font-display text-lg font-bold text-white tracking-tight">
-            Panduan & Pertanyaan Populer
+            Pertanyaan Populer seputar Penjurian
           </h2>
         </div>
 
         <div className="space-y-3">
-          {faqList.map((item, idx) => {
+          {juriFaqList.map((item, idx) => {
             const isOpen = openIndex === idx;
 
             return (
@@ -133,14 +118,14 @@ export default function PesertaFAQPage() {
         </div>
       </Card>
 
-      {/* Contact Support Banner */}
+      {/* Rubric PDF Banner */}
       <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h3 className="font-display font-bold text-white text-base">
-            Masih memiliki pertanyaan lain?
+            Rubrik & Bobot Penilaian Resmi
           </h3>
           <p className="text-xs text-text-secondary">
-            Tim panitia SEVENT X 2026 siap membantu menjawab pertanyaan Anda melalui saluran resmi.
+            Unduh dokumen rubrik resmi untuk pedoman pemberian poin pada setiap kriteria.
           </p>
         </div>
 
@@ -150,7 +135,7 @@ export default function PesertaFAQPage() {
             className="bg-surface hover:bg-card-hover border-border text-white text-xs font-semibold px-4 h-9 rounded-xl flex items-center gap-2 cursor-pointer shrink-0"
           >
             <BookOpen className="w-4 h-4 text-accent" />
-            <span>Unduh Guidebook (PDF)</span>
+            <span>Unduh Rubrik Juri (PDF)</span>
           </Button>
         </Link>
       </Card>

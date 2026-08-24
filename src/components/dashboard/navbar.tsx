@@ -19,6 +19,10 @@ import {
   Menu,
   X,
   UploadCloud,
+  FileCheck,
+  Trophy,
+  Calendar,
+  Newspaper,
 } from "lucide-react";
 
 type Role = "juri" | "admin" | "peserta";
@@ -78,13 +82,33 @@ const NAV_ITEMS: Record<
       icon: <LayoutPanelLeft className="w-5 h-5" />,
     },
     {
-      url: "/admin/users",
-      name: "Team",
+      url: "/admin/teams",
+      name: "Teams & Payment",
       icon: <Users className="w-5 h-5" />,
     },
     {
-      url: "/admin/announcements",
-      name: "Announcements",
+      url: "/admin/documents",
+      name: "User Documents",
+      icon: <FileCheck className="w-5 h-5" />,
+    },
+    {
+      url: "/admin/competitions",
+      name: "Competitions",
+      icon: <Trophy className="w-5 h-5" />,
+    },
+    {
+      url: "/admin/timeline",
+      name: "Timeline",
+      icon: <Calendar className="w-5 h-5" />,
+    },
+    {
+      url: "/admin/news",
+      name: "News & Articles",
+      icon: <Newspaper className="w-5 h-5" />,
+    },
+    {
+      url: "/admin/results",
+      name: "Publish Results",
       icon: <Megaphone className="w-5 h-5" />,
     },
   ],
@@ -119,7 +143,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
       {/* Desktop Top Title Bar (Fixed Right of Sidebar) */}
       <header className="hidden lg:flex fixed z-30 top-0 right-0 left-64 items-center justify-between px-8 py-4 bg-[#040E21]/90 backdrop-blur-md border-b border-border/80 text-white shadow-sm">
         <h1 className="font-display text-2xl font-bold tracking-tight text-white">
-          {pageTitle?.name || "Competition Dashboard"}
+          {pageTitle?.name || (role === "admin" ? "Admin Control Panel" : "Competition Dashboard")}
         </h1>
 
         <div className="flex items-center gap-3">
@@ -131,15 +155,17 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
             <Bell className="w-5 h-5" />
           </button>
 
-          <Link href="/peserta/help">
-            <button
-              className="p-2 rounded-xl bg-card border border-border text-text-secondary hover:text-white transition-colors cursor-pointer"
-              title="Help & FAQ"
-              aria-label="Help"
-            >
-              <HelpCircle className="w-5 h-5" />
-            </button>
-          </Link>
+          {role !== "admin" && (
+            <Link href={role === "juri" ? "/juri/help" : "/peserta/help"}>
+              <button
+                className="p-2 rounded-xl bg-card border border-border text-text-secondary hover:text-white transition-colors cursor-pointer"
+                title="Help & FAQ"
+                aria-label="Help"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </button>
+            </Link>
+          )}
 
           {role === "peserta" && (
             <Link href="/peserta/submission">
@@ -150,11 +176,22 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
             </Link>
           )}
 
-          {role === "juri" && (
-            <span className="border border-primary/40 text-accent font-mono text-xs font-bold px-3 py-1 rounded-lg">
-              SENIOR JUDGE
-            </span>
-          )}
+          <div className="flex items-center gap-2 pl-2 border-l border-border/40">
+            <Avatar className="w-8 h-8 rounded-lg border border-border">
+              <AvatarImage src={currentUser?.avatar || undefined} />
+              <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
+                {userName.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-left hidden sm:block">
+              <p className="text-xs font-bold text-white leading-tight">
+                {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
+              </p>
+              <span className="text-[10px] font-mono text-text-secondary uppercase block">
+                {role === "juri" ? "SENIOR JUDGE" : role === "admin" ? "ADMINISTRATOR" : "PARTICIPANT"}
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -178,6 +215,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
                 pathname === item.url ||
                 (item.url !== "/peserta/dashboard" &&
                   item.url !== "/juri/dashboard" &&
+                  item.url !== "/admin/dashboard" &&
                   pathname.startsWith(item.url));
               return (
                 <Link
@@ -203,37 +241,39 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
           <Link href="/guidebook.pdf" target="_blank" className="block">
             <Button
               variant="outline"
-              className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border  text-white text-xs font-semibold h-10 rounded-xl transition-all"
+              className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border text-white text-xs font-semibold h-10 rounded-xl transition-all"
             >
               View Rules
             </Button>
           </Link>
 
-          {/* Secondary Links: Settings & FAQ */}
-          <nav className="space-y-1 pt-1 border-t border-border/40">
-            <Link
-              href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
-              className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname.endsWith("/settings")
-                  ? "text-accent bg-card font-semibold"
-                  : "text-text-secondary hover:text-white hover:bg-card-hover"
-              }`}
-            >
-              <Settings className="w-5 h-5" />
-              <span>Settings</span>
-            </Link>
-            <Link
-              href={role === "juri" ? "/juri/help" : "/peserta/help"}
-              className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                pathname.endsWith("/help")
-                  ? "text-accent bg-card font-semibold"
-                  : "text-text-secondary hover:text-white hover:bg-card-hover"
-              }`}
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span>FAQ</span>
-            </Link>
-          </nav>
+          {/* Secondary Links: Settings & FAQ (Hidden for Admin) */}
+          {role !== "admin" && (
+            <nav className="space-y-1 pt-1 border-t border-border/40">
+              <Link
+                href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
+                className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname.endsWith("/settings")
+                    ? "text-accent bg-card font-semibold"
+                    : "text-text-secondary hover:text-white hover:bg-card-hover"
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                <span>Settings</span>
+              </Link>
+              <Link
+                href={role === "juri" ? "/juri/help" : "/peserta/help"}
+                className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                  pathname.endsWith("/help")
+                    ? "text-accent bg-card font-semibold"
+                    : "text-text-secondary hover:text-white hover:bg-card-hover"
+                }`}
+              >
+                <HelpCircle className="w-5 h-5" />
+                <span>FAQ</span>
+              </Link>
+            </nav>
+          )}
 
           {/* User Profile Card */}
           <div className="bg-[#040E21] border border-border/80 p-3 rounded-xl flex items-center gap-3">
@@ -251,8 +291,13 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
                 {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
               </p>
               {role === "juri" && (
-                <span className="text-[10px] font-mono font-bold text-accent">
+                <span className="text-[10px] font-mono font-bold text-accent block">
                   SENIOR JUDGE
+                </span>
+              )}
+              {role === "admin" && (
+                <span className="text-[10px] font-mono font-bold text-rose-400 block">
+                  SYSTEM ADMIN
                 </span>
               )}
             </div>
@@ -324,24 +369,26 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               })}
             </ul>
 
-            <div className="space-y-2 pt-4 border-t border-border">
-              <Link
-                href="/peserta/settings"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm text-text-secondary hover:text-white"
-              >
-                <Settings className="w-5 h-5" />
-                <span>Settings</span>
-              </Link>
-              <Link
-                href="/peserta/help"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm text-text-secondary hover:text-white"
-              >
-                <HelpCircle className="w-5 h-5" />
-                <span>FAQ</span>
-              </Link>
-            </div>
+            {role !== "admin" && (
+              <div className="space-y-2 pt-4 border-t border-border">
+                <Link
+                  href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm text-text-secondary hover:text-white"
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Settings</span>
+                </Link>
+                <Link
+                  href={role === "juri" ? "/juri/help" : "/peserta/help"}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm text-text-secondary hover:text-white"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                  <span>FAQ</span>
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="pt-4 border-t border-border">
