@@ -14,7 +14,7 @@ export interface TimelineStage {
 }
 
 // Fallback Mock Data for Development & Initial Render
-const mockUserFallback: User = {
+export const mockUserFallback: User = {
   id: "u-1",
   email: "peserta@seventx.id",
   name: "Alex Septiadi",
@@ -25,7 +25,7 @@ const mockUserFallback: User = {
   updatedAt: "2026-08-01T00:00:00Z",
 };
 
-const mockTeamFallback: Team = {
+export const mockTeamFallback: Team = {
   id: "t-101",
   name: "Apex Innovators",
   competitionId: "1",
@@ -80,7 +80,7 @@ const mockTeamFallback: Team = {
   updatedAt: "2026-08-05T00:00:00Z",
 };
 
-const mockSubmissionFallback: Submission = {
+export const mockSubmissionFallback: Submission = {
   id: "sub-1",
   teamId: "t-101",
   competitionId: "1",
@@ -94,7 +94,7 @@ const mockSubmissionFallback: Submission = {
   updatedAt: "2026-08-18T14:30:00Z",
 };
 
-const mockNewsFallback: NewsPost[] = [
+export const mockNewsFallback: NewsPost[] = [
   {
     id: "n-1",
     title: "Pengumuman Jadwal Technical Meeting Finalis SEVENT X 2026",
@@ -123,7 +123,7 @@ const mockNewsFallback: NewsPost[] = [
   },
 ];
 
-const mockTimelineFallback: TimelineStage[] = [
+export const mockTimelineFallback: TimelineStage[] = [
   {
     id: "stage-1",
     stageName: "Registration & Account Setup",
@@ -134,7 +134,7 @@ const mockTimelineFallback: TimelineStage[] = [
     isActive: false,
   },
   {
-    id: "stage-[#UPLOAD_KARYA]",
+    id: "stage-upload",
     stageName: "Project Submission (Upload Karya)",
     startDate: "2026-09-01T00:00:00Z",
     endDate: "2026-10-15T23:59:59Z",
@@ -180,16 +180,21 @@ export function useUserMe() {
   });
 }
 
-// Hook 2: Fetch Current Team GET /api/user/team or GET /api/teams/me
+// Hook 2: Fetch Current Team GET /api/teams/me
 export function useUserTeam() {
   return useQuery<Team | null>({
     queryKey: ["userTeam"],
     queryFn: async () => {
       try {
-        const res = await apiClient.get("/api/user/team");
+        const res = await apiClient.get("/api/teams/me");
         return res.data?.data ?? res.data ?? null;
       } catch {
-        return null;
+        try {
+          const fallbackRes = await apiClient.get("/api/user/team");
+          return fallbackRes.data?.data ?? fallbackRes.data ?? null;
+        } catch {
+          return null;
+        }
       }
     },
     staleTime: 5 * 60 * 1000,
@@ -212,28 +217,37 @@ export function useUserSubmission() {
   });
 }
 
-// Hook 4: Fetch Announcements / News GET /api/news
-export function useNewsAnnouncements() {
+// Alias for requirement compatibility
+export const useSubmission = useUserSubmission;
+
+// Hook 4: Fetch Announcements / News GET /api/news?limit=X
+export function useNews(limit: number = 2) {
   return useQuery<NewsPost[]>({
-    queryKey: ["newsAnnouncements"],
+    queryKey: ["newsAnnouncements", limit],
     queryFn: async () => {
       try {
-        const res = await apiClient.get("/api/news");
+        const res = await apiClient.get(`/api/news?limit=${limit}`);
         const list = res.data?.data || res.data;
-        return Array.isArray(list) && list.length > 0 ? list : mockNewsFallback;
+        if (Array.isArray(list) && list.length > 0) {
+          return list.slice(0, limit);
+        }
+        return mockNewsFallback.slice(0, limit);
       } catch {
-        return mockNewsFallback;
+        return mockNewsFallback.slice(0, limit);
       }
     },
     staleTime: 5 * 60 * 1000,
   });
 }
 
+export const useNewsAnnouncements = useNews;
+
 // Hook 5: Fetch Competition Timeline GET /api/competitions/:id/timeline
-export function useCompetitionTimeline(competitionId: string = "1") {
+export function useCompetitionTimeline(competitionId?: string) {
   return useQuery<TimelineStage[]>({
     queryKey: ["competitionTimeline", competitionId],
     queryFn: async () => {
+      if (!competitionId) return mockTimelineFallback;
       try {
         const res = await apiClient.get(`/api/competitions/${competitionId}/timeline`);
         const list = res.data?.data || res.data;
@@ -242,6 +256,7 @@ export function useCompetitionTimeline(competitionId: string = "1") {
         return mockTimelineFallback;
       }
     },
+    enabled: !!competitionId,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -307,4 +322,3 @@ export function useCompetitions() {
     staleTime: 5 * 60 * 1000,
   });
 }
-
