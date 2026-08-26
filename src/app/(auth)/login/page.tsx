@@ -356,7 +356,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md shadow-lg transition-all mt-4"
+              className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md transition-all mt-4"
             >
               {isLoading ? (
                 <>
@@ -421,7 +421,7 @@ export default function LoginPage() {
         ref={staticCircleRef}
         className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0"
       >
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[28%] shrink-0">
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden translate-x-[28%] shrink-0">
           <img
             src="/images/auth-collage.jpg"
             className="w-full h-full object-cover"
