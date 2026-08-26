@@ -1,5 +1,7 @@
 "use client";
 
+// TODO: connect ke API setelah backend endpoint publik untuk judges tersedia.
+
 import { useRef, useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";

@@ -30,6 +30,16 @@ export interface Competition {
   updatedAt: string;
 }
 
+export interface TimelineStage {
+  id: string;
+  stageName: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  isCompleted: boolean;
+  isActive: boolean;
+}
+
 export interface TeamMember {
   id: string;
   teamId: string;

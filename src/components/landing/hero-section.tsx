@@ -34,64 +34,61 @@ export function HeroSection() {
 
       const reduceMotion = prefersReducedMotion();
 
+      const revealAll = () => {
+        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 1, x: 0 });
+        if (titleRef.current) gsap.set(".title-char", { opacity: 1, y: 0 });
+        if (subtitleRef.current) gsap.set(subtitleRef.current, { opacity: 1, y: "0%" });
+        if (descRef.current) gsap.set(descRef.current, { opacity: 1, y: 0 });
+        gsap.set(".hero-btn", { opacity: 1, y: 0 });
+      };
+
       if (reduceMotion) {
-        gsap.set(
-          [
-            badgeRef.current,
-            titleRef.current,
-            subtitleRef.current,
-            descRef.current,
-            ".hero-btn",
-          ],
-          { opacity: 1, y: 0 },
-        );
+        revealAll();
         return;
       }
 
-      // 1. SETUP INITIAL STATE (Kondisi sebelum animasi dimulai)
-      // Menggeser elemen sedikit ke bawah dan membuatnya transparan
-      gsap.set(badgeRef.current, { opacity: 0, x: -20 });
-      gsap.set(".title-char", { opacity: 0, y: 40 });
-      gsap.set(subtitleRef.current, { y: "100%" }); // Bersembunyi di balik overflow-hidden
-      gsap.set(descRef.current, { opacity: 0, y: 20 });
-      gsap.set(".hero-btn", { opacity: 0, y: 20 });
+      try {
+        // 1. SETUP INITIAL STATE
+        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 0, x: -20 });
+        gsap.set(".title-char", { opacity: 0, y: 40 });
+        if (subtitleRef.current) gsap.set(subtitleRef.current, { y: "100%" });
+        if (descRef.current) gsap.set(descRef.current, { opacity: 0, y: 20 });
+        gsap.set(".hero-btn", { opacity: 0, y: 20 });
 
-      // 2. ENTRANCE TIMELINE (Koreografi Animasi Premium)
-      // Menggunakan expo.out untuk pergerakan yang cepat di awal lalu melambat sangat halus
-      const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+        // 2. ENTRANCE TIMELINE
+        const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-      tl.to(badgeRef.current, { opacity: 1, x: 0, duration: 1.2 })
-        // Animasi per huruf dengan jeda (stagger) 0.04 detik
-        .to(
-          ".title-char",
-          { opacity: 1, y: 0, duration: 1.2, stagger: 0.04 },
-          "-=0.8",
-        )
-        // Mask reveal untuk subjudul (muncul dari bawah)
-        .to(subtitleRef.current, { y: "0%", duration: 1.2 }, "-=0.9")
-        // Deskripsi muncul
-        .to(descRef.current, { opacity: 1, y: 0, duration: 1.2 }, "-=1")
-        // Tombol muncul berurutan
-        .to(
-          ".hero-btn",
-          { opacity: 1, y: 0, duration: 1.2, stagger: 0.15 },
-          "-=1.1",
-        );
+        if (badgeRef.current) {
+          tl.to(badgeRef.current, { opacity: 1, x: 0, duration: 1.2 });
+        }
+        tl.to(".title-char", { opacity: 1, y: 0, duration: 1.2, stagger: 0.04 }, "-=0.8");
+        if (subtitleRef.current) {
+          tl.to(subtitleRef.current, { y: "0%", duration: 1.2 }, "-=0.9");
+        }
+        if (descRef.current) {
+          tl.to(descRef.current, { opacity: 1, y: 0, duration: 1.2 }, "-=1");
+        }
+        tl.to(".hero-btn", { opacity: 1, y: 0, duration: 1.2, stagger: 0.15 }, "-=1.1");
 
-      // 3. PARALLAX SCROLL (Tetap dipertahankan agar tidak kaku saat di-scroll)
-      gsap.to(contentRef.current, {
-        y: -120,
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
+        // 3. PARALLAX SCROLL
+        if (contentRef.current && containerRef.current) {
+          gsap.to(contentRef.current, {
+            y: -120,
+            opacity: 0,
+            ease: "none",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "top top",
+              end: "bottom top",
+              scrub: true,
+            },
+          });
+        }
+      } catch {
+        revealAll();
+      }
     },
-    { scope: containerRef },
+    { scope: containerRef }
   );
 
   return (
