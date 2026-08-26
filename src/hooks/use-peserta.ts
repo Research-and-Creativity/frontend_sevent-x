@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 import { User, Team, Submission, NewsPost, Competition } from "@/types/api";
@@ -322,3 +322,64 @@ export function useCompetitions() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export interface UserDocumentItem {
+  id: string;
+  userId: string;
+  type: string;
+  fileUrl: string;
+  status: "REVIEW" | "APPROVE" | "REJECT" | string;
+}
+
+// Hook 7: Fetch User Documents GET /api/user/documents
+export function useUserDocuments() {
+  return useQuery<UserDocumentItem[]>({
+    queryKey: ["userDocuments"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/user/documents");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        try {
+          const resFallback = await apiClient.get("/api/user-documents");
+          const list = resFallback.data?.data || resFallback.data;
+          return Array.isArray(list) ? list : [];
+        } catch {
+          return [];
+        }
+      }
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+// Hook 8: Create Team POST /api/teams
+export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; competitionId: string }) => {
+      const res = await apiClient.post("/api/teams", data);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Hook 9: Join Team POST /api/teams/join
+export function useJoinTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { inviteCode: string }) => {
+      const res = await apiClient.post("/api/teams/join", data);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+

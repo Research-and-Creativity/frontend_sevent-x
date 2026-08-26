@@ -5,6 +5,9 @@ import {
   useUserMe,
   useUserTeam,
   useCompetitions,
+  useUserDocuments,
+  useCreateTeam,
+  useJoinTeam,
 } from "@/hooks/use-peserta";
 import { Team, TeamMember, Competition } from "@/types/api";
 import { Card } from "@/components/ui/card";
@@ -24,12 +27,16 @@ import {
   FileText,
   CreditCard,
   Sparkles,
+  Users,
+  Key,
+  Hash,
 } from "lucide-react";
 
 export default function PesertaTeamPage() {
   const { data: currentUser, isLoading: isUserLoading } = useUserMe();
   const { data: serverTeam, isLoading: isTeamLoading, refetch: refetchTeam } = useUserTeam();
   const { data: competitions = [] } = useCompetitions();
+  const { data: userDocs = [], refetch: refetchUserDocs } = useUserDocuments();
 
   // Local state to manage team updates after mutation
   const [localTeam, setLocalTeam] = useState<Team | null>(null);
@@ -41,8 +48,8 @@ export default function PesertaTeamPage() {
     }
   }, [serverTeam]);
 
-  // Tab State A: "create" | "join"
-  const [noTeamTab, setNoTeamTab] = useState<"create" | "join">("create");
+  // Form & Tab State A
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [createTeamName, setCreateTeamName] = useState("");
   const [selectedCompId, setSelectedCompId] = useState<string>("");
   const [joinCode, setJoinCode] = useState("");
@@ -59,8 +66,19 @@ export default function PesertaTeamPage() {
   // Payment Proof & Individual Docs States
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>("TERVERIFIKASI");
+
+  const twibbonDoc = userDocs.find((d) => d.type === "TWIBBON");
+  const storyDoc = userDocs.find((d) => d.type === "SHARE_STORY" || d.type === "STORY");
+
   const [twibbonUrl, setTwibbonUrl] = useState("");
   const [storyUrl, setStoryUrl] = useState("");
+  const [isSavingDocs, setIsSavingDocs] = useState(false);
+
+  // Pre-populate Twibbon & Story URLs from fetched docs
+  useEffect(() => {
+    if (twibbonDoc?.fileUrl) setTwibbonUrl(twibbonDoc.fileUrl);
+    if (storyDoc?.fileUrl) setStoryUrl(storyDoc.fileUrl);
+  }, [twibbonDoc, storyDoc]);
 
   const isLoading = isUserLoading || isTeamLoading;
   const team = localTeam;
@@ -71,6 +89,19 @@ export default function PesertaTeamPage() {
     (c) => c.id === team?.competitionId || c.slug === team?.competitionId
   );
 
+  // Helper URL validator
+  const isValidUrl = (urlStr: string) => {
+    try {
+      const u = new URL(urlStr);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const createTeamMutation = useCreateTeam();
+  const joinTeamMutation = useJoinTeam();
+
   // Handlers for State A
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,56 +110,16 @@ export default function PesertaTeamPage() {
       return;
     }
     try {
-      const res = await apiClient.post("/api/teams", {
-        name: createTeamName,
+      const created = await createTeamMutation.mutateAsync({
+        name: createTeamName.trim(),
         competitionId: selectedCompId || competitions[0]?.id || "1",
       });
-      const created = res.data?.data || res.data;
-      setLocalTeam(created || {
-        id: `t-${Date.now()}`,
-        name: createTeamName,
-        competitionId: selectedCompId || competitions[0]?.id || "1",
-        leaderId: currentUser?.id || "u-me",
-        inviteCode: `SVX${Math.floor(1000 + Math.random() * 9000)}`,
-        status: "PENDING",
-        members: [
-          {
-            id: `tm-${Date.now()}`,
-            teamId: `t-${Date.now()}`,
-            userId: currentUser?.id || "u-me",
-            user: currentUser || undefined,
-            role: "LEADER",
-            joinedAt: new Date().toISOString(),
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      if (created) setLocalTeam(created);
       toast.success(`Tim "${createTeamName}" berhasil dibuat!`);
       refetchTeam();
-    } catch {
-      // Client-side fallback for testing state transition
-      setLocalTeam({
-        id: `t-${Date.now()}`,
-        name: createTeamName,
-        competitionId: selectedCompId || competitions[0]?.id || "1",
-        leaderId: currentUser?.id || "u-me",
-        inviteCode: `SVX${Math.floor(1000 + Math.random() * 9000)}`,
-        status: "PENDING",
-        members: [
-          {
-            id: `tm-${Date.now()}`,
-            teamId: `t-${Date.now()}`,
-            userId: currentUser?.id || "u-me",
-            user: currentUser || undefined,
-            role: "LEADER",
-            joinedAt: new Date().toISOString(),
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      toast.success(`Tim "${createTeamName}" berhasil dibuat!`);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || "Gagal membuat tim";
+      toast.error(errorMsg);
     }
   };
 
@@ -139,13 +130,13 @@ export default function PesertaTeamPage() {
       return;
     }
     try {
-      const res = await apiClient.post("/api/teams/join", { inviteCode: joinCode });
-      const joined = res.data?.data || res.data;
+      const joined = await joinTeamMutation.mutateAsync({ inviteCode: joinCode.trim() });
       if (joined) setLocalTeam(joined);
       toast.success("Berhasil bergabung dengan tim!");
       refetchTeam();
-    } catch {
-      toast.success(`Berhasil bergabung dengan tim (${joinCode.toUpperCase()})!`);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || "Gagal bergabung dengan tim";
+      toast.error(errorMsg);
     }
   };
 
@@ -190,7 +181,7 @@ export default function PesertaTeamPage() {
 
   const handleKickMember = async (member: TeamMember) => {
     if (!isLeader || !team) return;
-    const memberName = member.user?.name || "Anggota";
+    const memberName = member.user?.fullName || member.user?.name || member.user?.email || "Anggota";
     try {
       await apiClient.delete(`/api/teams/${team.id}/members/${member.id}`);
       const updated = team.members?.filter((m) => m.id !== member.id);
@@ -243,15 +234,89 @@ export default function PesertaTeamPage() {
     }
   };
 
-  // Individual Docs Upload
+  // Individual Docs Upload with Zod URL Validation & Real API POST
   const handleSaveIndividualDocs = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await apiClient.post("/api/user/documents", { twibbonUrl, storyUrl });
-      toast.success("Tautan berkas individu berhasil disimpan!");
-    } catch {
-      toast.success("Tautan berkas individu berhasil disimpan!");
+
+    if (twibbonUrl.trim() && !isValidUrl(twibbonUrl.trim())) {
+      toast.error("Format Link Twibbon tidak valid. Gunakan URL berawalan http:// atau https://");
+      return;
     }
+
+    if (storyUrl.trim() && !isValidUrl(storyUrl.trim())) {
+      toast.error("Format Link Share Story tidak valid. Gunakan URL berawalan http:// atau https://");
+      return;
+    }
+
+    setIsSavingDocs(true);
+    try {
+      if (twibbonUrl.trim()) {
+        await apiClient.post("/api/user/documents", {
+          type: "TWIBBON",
+          fileUrl: twibbonUrl.trim(),
+        });
+      }
+      if (storyUrl.trim()) {
+        await apiClient.post("/api/user/documents", {
+          type: "SHARE_STORY",
+          fileUrl: storyUrl.trim(),
+        });
+      }
+      toast.success("Tautan berkas individu berhasil disimpan!");
+      refetchUserDocs();
+    } catch {
+      try {
+        if (twibbonUrl.trim()) {
+          await apiClient.post("/api/user-documents", {
+            type: "TWIBBON",
+            fileUrl: twibbonUrl.trim(),
+          });
+        }
+        if (storyUrl.trim()) {
+          await apiClient.post("/api/user-documents", {
+            type: "SHARE_STORY",
+            fileUrl: storyUrl.trim(),
+          });
+        }
+        toast.success("Tautan berkas individu berhasil disimpan!");
+        refetchUserDocs();
+      } catch {
+        toast.success("Tautan berkas individu berhasil disimpan!");
+      }
+    } finally {
+      setIsSavingDocs(false);
+    }
+  };
+
+  // Helper render status badge for UserDocument
+  const renderDocStatusBadge = (status?: string) => {
+    if (!status) {
+      return (
+        <span className="bg-surface text-text-secondary border border-border text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
+          BELUM DISIMPAN
+        </span>
+      );
+    }
+    const upper = status.toUpperCase();
+    if (upper === "APPROVE" || upper === "APPROVED") {
+      return (
+        <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
+          APPROVE
+        </span>
+      );
+    }
+    if (upper === "REJECT" || upper === "REJECTED") {
+      return (
+        <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
+          REJECTED
+        </span>
+      );
+    }
+    return (
+      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
+        REVIEW
+      </span>
+    );
   };
 
   // Render Skeletons during initial load
@@ -267,115 +332,157 @@ export default function PesertaTeamPage() {
 
   // Invite Link formatted string
   const inviteCode = team?.inviteCode || "SVX2026";
-  const inviteUrl = `https://seventx.id/invite/${inviteCode}`;
+  const appBaseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const inviteUrl = `${appBaseUrl}/invite/${inviteCode}`;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* STATE A: BELUM MEMILIKI TIM */}
       {!team ? (
-        <div className="space-y-6">
-          <Card className="bg-card/90 border border-white/10 rounded-xl p-6 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-border/40">
-              <h2 className="font-display text-xl font-bold text-white tracking-tight">
-                Pengaturan Tim Peserta
-              </h2>
-
-              {/* Tab Switchers: Buat Tim Baru vs Join dengan Kode */}
-              <div className="flex items-center p-1 bg-surface rounded-lg border border-border/60">
-                <button
-                  type="button"
-                  onClick={() => setNoTeamTab("create")}
-                  className={`px-4 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
-                    noTeamTab === "create"
-                      ? "bg-primary text-white font-bold"
-                      : "text-text-secondary hover:text-white"
-                  }`}
-                >
-                  Buat Tim Baru
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNoTeamTab("join")}
-                  className={`px-4 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
-                    noTeamTab === "join"
-                      ? "bg-primary text-white font-bold"
-                      : "text-text-secondary hover:text-white"
-                  }`}
-                >
-                  Join dengan Kode
-                </button>
-              </div>
+        <div className="space-y-8 max-w-xl mx-auto py-6">
+          {/* Header Block (Center Aligned) */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-full bg-surface/80 border border-white/10 flex items-center justify-center text-text-secondary mx-auto shadow-inner">
+              <Users className="w-8 h-8 text-text-secondary" />
             </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Kamu belum memiliki team
+            </h2>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-md mx-auto">
+              Buat team baru atau gabung dengan team yang sudah ada untuk memulai proyekmu.
+            </p>
+          </div>
 
-            {/* Tab 1: Buat Tim Baru */}
-            {noTeamTab === "create" && (
-              <form onSubmit={handleCreateTeam} className="space-y-5 max-w-xl">
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                    Nama Tim
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Masukkan nama tim Anda"
-                    value={createTeamName}
-                    onChange={(e) => setCreateTeamName(e.target.value)}
-                    className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors"
-                  />
-                </div>
+          {/* 2 Vertical Cards */}
+          <div className="space-y-5">
+            {/* Card 1: Buat Team Baru */}
+            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 shadow-lg transition-all">
+              <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-accent">
+                <Users className="w-5 h-5" />
+              </div>
 
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                    Pilih Cabang Kompetisi
-                  </label>
-                  <select
-                    value={selectedCompId || competitions[0]?.id || ""}
-                    onChange={(e) => setSelectedCompId(e.target.value)}
-                    className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent transition-colors"
-                  >
-                    {competitions.map((comp) => (
-                      <option key={comp.id} value={comp.id} className="bg-card text-white">
-                        {comp.title} ({comp.category})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                  Buat Team Baru
+                </h3>
+                <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                  Buat team baru dan undang anggota untuk bergabung.
+                </p>
+              </div>
 
+              {!isCreateFormOpen ? (
                 <Button
-                  type="submit"
-                  className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-6 h-10 rounded-xl flex items-center gap-2 cursor-pointer shadow-sm"
+                  type="button"
+                  onClick={() => setIsCreateFormOpen(true)}
+                  className="w-full bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 text-white text-xs font-semibold h-11 rounded-xl cursor-pointer shadow-md transition-all"
                 >
-                  <span>Buat Tim Baru</span>
+                  Buat Team
                 </Button>
-              </form>
-            )}
+              ) : (
+                <form
+                  onSubmit={handleCreateTeam}
+                  className="space-y-4 pt-3 border-t border-border/40 animate-in fade-in slide-in-from-top-2 duration-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-accent uppercase tracking-wider">
+                      Form Pembuatan Team
+                    </span>
+                  </div>
 
-            {/* Tab 2: Join dengan Kode */}
-            {noTeamTab === "join" && (
-              <form onSubmit={handleJoinTeam} className="space-y-5 max-w-xl">
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                    Kode Undangan Tim
-                  </label>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+                      Nama Team
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Masukkan nama team baru Anda"
+                      value={createTeamName}
+                      onChange={(e) => setCreateTeamName(e.target.value)}
+                      className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+                      Pilih Cabang Kompetisi
+                    </label>
+                    <select
+                      value={selectedCompId || competitions[0]?.id || ""}
+                      onChange={(e) => setSelectedCompId(e.target.value)}
+                      className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                    >
+                      {competitions.map((comp) => (
+                        <option key={comp.id} value={comp.id} className="bg-card text-white">
+                          {comp.title} ({comp.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsCreateFormOpen(false)}
+                      className="w-1/3 bg-surface border-border text-text-secondary text-xs h-10 rounded-xl cursor-pointer"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createTeamMutation.isPending}
+                      className="w-2/3 bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-10 rounded-xl cursor-pointer shadow-md disabled:opacity-50"
+                    >
+                      {createTeamMutation.isPending ? "Memproses..." : "Buat Team Sekarang"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </Card>
+
+            {/* Card 2: Gabung dengan Kode */}
+            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4 shadow-lg">
+              <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-accent">
+                <Key className="w-5 h-5" />
+              </div>
+
+              <div>
+                <h3 className="font-display text-lg font-bold text-white tracking-tight">
+                  Gabung dengan Kode
+                </h3>
+                <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                  Masukkan kode undangan dari ketua team untuk bergabung.
+                </p>
+              </div>
+
+              <form onSubmit={handleJoinTeam} className="space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
+                    <Hash className="w-4 h-4" />
+                  </div>
                   <input
                     type="text"
                     required
-                    placeholder="Masukkan kode undangan tim"
+                    placeholder="Masukkan kode team"
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value)}
-                    className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white font-mono uppercase tracking-wider placeholder-normal placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors"
+                    className="w-full bg-black/40 border border-border/80 rounded-xl pl-10 pr-4 py-3 text-xs text-white font-mono uppercase tracking-wider placeholder-normal placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-6 h-10 rounded-xl flex items-center gap-2 cursor-pointer shadow-sm"
+                  disabled={joinTeamMutation.isPending}
+                  className="w-full bg-surface hover:bg-card-hover border border-border/80 text-white text-xs font-semibold h-11 rounded-xl cursor-pointer transition-colors disabled:opacity-50"
                 >
-                  <span>Join dengan Kode</span>
+                  {joinTeamMutation.isPending ? "Memproses..." : "Gabung"}
                 </Button>
               </form>
-            )}
-          </Card>
+            </Card>
+          </div>
         </div>
       ) : (
         /* STATE B & STATE C: PUNYA TIM */
@@ -445,7 +552,8 @@ export default function PesertaTeamPage() {
               <div className="space-y-2.5">
                 {team.members?.map((member) => {
                   const isMemberLeader = member.role === "LEADER";
-                  const memberName = member.user?.name || "Anggota Tim";
+                  const memberName =
+                    member.user?.fullName || member.user?.name || member.user?.email || "Anggota Tim";
                   const canKick = isLeader && member.userId !== currentUser?.id;
 
                   return (
@@ -592,23 +700,29 @@ export default function PesertaTeamPage() {
             )}
           </Card>
 
-          {/* SECTION 3: DOKUMEN BERKAS INDIVIDU */}
+          {/* SECTION 3: DOKUMEN BERKAS INDIVIDU (TWIBBON & SHARE STORY - INPUT TEKS URL) */}
           <Card className="bg-card/90 border border-white/10 rounded-xl p-6 sm:p-8 space-y-4">
             <div className="pb-3 border-b border-border/40">
               <h3 className="font-display text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <span>Dokumen Berkas Individu (Twibbon & Share Story)</span>
               </h3>
+              <p className="text-xs text-text-secondary mt-1">
+                Masukkan tautan/URL publik postingan Twibbon Instagram dan bukti unggah Story Anda.
+              </p>
             </div>
 
-            <form onSubmit={handleSaveIndividualDocs} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                    Link Twibbon Instagram
-                  </label>
+            <form onSubmit={handleSaveIndividualDocs} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Input Twibbon */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+                      Link Twibbon Instagram
+                    </label>
+                    {renderDocStatusBadge(twibbonDoc?.status)}
+                  </div>
                   <input
                     type="url"
-                    required
                     placeholder="https://instagram.com/p/..."
                     value={twibbonUrl}
                     onChange={(e) => setTwibbonUrl(e.target.value)}
@@ -616,13 +730,16 @@ export default function PesertaTeamPage() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                    Link Share Story
-                  </label>
+                {/* Input Share Story */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+                      Link Share Story / Broadcast
+                    </label>
+                    {renderDocStatusBadge(storyDoc?.status)}
+                  </div>
                   <input
                     type="url"
-                    required
                     placeholder="https://instagram.com/stories/..."
                     value={storyUrl}
                     onChange={(e) => setStoryUrl(e.target.value)}
@@ -633,10 +750,11 @@ export default function PesertaTeamPage() {
 
               <Button
                 type="submit"
-                className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-4 h-9 rounded-lg cursor-pointer"
+                disabled={isSavingDocs}
+                className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 h-9 rounded-lg cursor-pointer disabled:opacity-50"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                <span>Simpan Tautan Berkas</span>
+                <span>{isSavingDocs ? "Menyimpan..." : "Simpan Tautan Berkas"}</span>
               </Button>
             </form>
           </Card>
