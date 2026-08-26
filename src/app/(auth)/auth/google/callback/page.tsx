@@ -32,7 +32,7 @@ function GoogleCallbackContent() {
     const processGoogleLogin = async () => {
       try {
         const response = await apiClient.post("/api/auth/google", { code });
-        const { user, accessToken } = response.data;
+        const { user, accessToken } = response.data.data;
         if (!accessToken || !user)
           throw new Error("Invalid response from Google auth endpoint");
 
@@ -56,6 +56,9 @@ function GoogleCallbackContent() {
           "Google authentication failed. Please try again.";
         setErrorMessage(msg);
         toast.error(msg);
+        console.log(err.response?.data?.message)
+        console.log(err.response?.data)
+        console.log(err.message)
       }
     };
     processGoogleLogin();
