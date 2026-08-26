@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: #05070f;
+  --color-surface: #0a0d18;
+  --color-card: #10131f;
+  --color-card-hover: #151827;
+  --color-border: #1c2030;
+  --color-primary: #2e5cff;
+  --color-primary-hover: #2448d9;
+  --color-accent: #2de4e0;
+  --color-urgent: #ff8a3d;
+  --color-urgent-soft: #ff8a3d1a;
+  --color-text-primary: #f5f7fa;
+  --color-text-secondary: #8b93a7;
+  --color-success: #2ecc71;
+  --color-warning: #f5b942;
+  --color-danger: #ff5c5c;
+  --font-display: var(--font-space-grotesk), "Space Grotesk";
+  --font-sans: var(--font-space-grotesk), "Space Grotesk";
+  --font-mono: var(--font-space-grotesk), "Space Grotesk";
+}
+
+:root,
+.dark {
+  --background: #05070f;
+  --foreground: #f5f7fa;
+  --card: #121c35;
+  --card-foreground: #f5f7fa;
+  --popover: #0a0d18;
+  --popover-foreground: #f5f7fa;
+  --primary: #2e5cff;
+  --primary-foreground: #ffffff;
+  --secondary: #151827;
+  --secondary-foreground: #f5f7fa;
+  --muted: #0a0d18;
+  --muted-foreground: #8b93a7;
+  --accent: #2de4e0;
+  --accent-foreground: #05070f;
+  --destructive: #ff5c5c;
+  --border: #1c2030;
+  --input: #1c2030;
+  --ring: #2e5cff;
+  --radius: 0.75rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+input,
+button,
+select,
+textarea,
+.font-display {
+  font-family: var(--font-display);
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
