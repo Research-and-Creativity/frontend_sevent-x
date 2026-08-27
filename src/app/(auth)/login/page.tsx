@@ -265,7 +265,7 @@ export default function LoginPage() {
       const { user, accessToken } = response.data;
       if (!accessToken || !user) throw new Error("Invalid response");
       setAuth(user, accessToken);
-      toast.success(`Welcome back, ${user.fullName || user.username}!`);
+      toast.success(`Welcome back, ${user.fullName}!`);
 
       const role = user.role;
       if (role === "ADMIN") router.push("/admin/dashboard");

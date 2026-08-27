@@ -24,7 +24,7 @@ export default function PesertaSettingsPage() {
   const currentUser = userMe || storeUser;
 
   // Profile Edit State
-  const [fullName, setFullName] = useState(currentUser?.name || "Budi Santoso");
+  const [fullName, setFullName] = useState(currentUser?.fullName || "Budi Santoso");
   const [institution, setInstitution] = useState(currentUser?.institution || "Universitas Indonesia");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 

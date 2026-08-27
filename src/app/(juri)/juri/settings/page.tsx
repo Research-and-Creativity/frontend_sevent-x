@@ -13,10 +13,10 @@ export default function JuriSettingsPage() {
   const { data: userMe } = useUserMe();
   const currentUser = userMe || storeUser;
 
-  const defaultName = currentUser?.name
-    ? currentUser.name.startsWith("Dr.")
-      ? currentUser.name
-      : `Dr. ${currentUser.name}`
+  const defaultName = currentUser?.fullName
+    ? currentUser.fullName.startsWith("Dr.")
+      ? currentUser.fullName
+      : `Dr. ${currentUser.fullName}`
     : "Dr. Abed Nego";
 
   // Profile Edit State (fullName only for Juri)

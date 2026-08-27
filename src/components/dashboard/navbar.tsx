@@ -123,7 +123,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
   const { user: storeUser } = useAuthStore();
   const { data: userMe } = useUserMe();
   const currentUser = userMe || storeUser;
-  const userName = currentUser?.name || currentUser?.email || "name user";
+  const userName = currentUser?.fullName || currentUser?.email || "name user";
 
   // tutup menu mobile otomatis tiap kali pindah halaman
   useEffect(() => {

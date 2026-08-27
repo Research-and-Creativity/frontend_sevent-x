@@ -149,7 +149,7 @@ export default function PesertaAnnouncementsPage() {
             { day: "numeric", month: "long", year: "numeric" }
           );
 
-          const authorName = item.author?.name || "Panitia";
+          const authorName = item.author?.fullName || "Panitia";
 
           return (
             <Card

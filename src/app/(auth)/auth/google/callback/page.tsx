@@ -32,14 +32,14 @@ function GoogleCallbackContent() {
     const processGoogleLogin = async () => {
       try {
         const response = await apiClient.post("/api/auth/google", { code });
-        const { user, accessToken } = response.data;
+        const { user, accessToken } = response.data.data;
         if (!accessToken || !user)
           throw new Error("Invalid response from Google auth endpoint");
 
         setAuth(user, accessToken);
         setStatus("success");
         toast.success(
-          `Google auth successful! Welcome, ${user.fullName || user.username}.`,
+          `Google auth successful! Welcome, ${user.fullName}.`,
         );
 
         const role = user.role;
