@@ -78,7 +78,7 @@ export function TimelineSection() {
   });
 
   const activeComp =
-    competitions.find((c) => c.status === "OPEN" || (c as any).isActive) ||
+    competitions.find((c) => c.isActive) ||
     competitions[0];
 
   // 2. Fetch timeline stages for active competition
@@ -111,7 +111,7 @@ export function TimelineSection() {
     side: idx % 2 === 0 ? "left" : "right",
   }));
 
-  // Target countdown calculation (UPLOAD_KARYA phase or activeComp.endDate)
+  // Target countdown calculation (UPLOAD_KARYA phase or default)
   const uploadStage =
     rawTimeline.find(
       (s) =>
@@ -119,7 +119,7 @@ export function TimelineSection() {
         s.stageName?.toLowerCase().includes("submit")
     ) || rawTimeline[1] || rawTimeline[0];
 
-  const targetDate = uploadStage?.endDate || activeComp?.endDate || "2026-12-01T23:59:59Z";
+  const targetDate = uploadStage?.endDate || "2026-12-01T23:59:59Z";
 
   useGSAP(
     () => {
@@ -212,7 +212,7 @@ export function TimelineSection() {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-4">
             Competition{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-indigo-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#00E5FF] to-indigo-400">
               Timeline
             </span>
           </h2>

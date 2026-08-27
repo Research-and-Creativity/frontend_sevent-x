@@ -55,6 +55,7 @@ export interface TeamMember {
     email: string;
     fullName: string;
     institution: string;
+    avatar?: string | null;
   };
   role: "LEADER" | "MEMBER";
   joinedAt: string;

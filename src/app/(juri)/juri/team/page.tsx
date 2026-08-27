@@ -23,11 +23,10 @@ export default function JuriTeamDirectoryPage() {
     {
       team: {
         id: "4092",
-        name: "Quantum Coders",
+        teamName: "Quantum Coders",
+        teamCode: "QUANTUM",
         competitionId: "1",
-        leaderId: "u-401",
-        inviteCode: "QUANTUM",
-        status: "VERIFIED",
+        status: "APPROVE",
         members: [
           { id: "tm-1", teamId: "4092", userId: "u-401", role: "LEADER", joinedAt: "" },
           { id: "tm-2", teamId: "4092", userId: "u-402", role: "MEMBER", joinedAt: "" },
@@ -40,15 +39,9 @@ export default function JuriTeamDirectoryPage() {
       submission: {
         id: "sub-4092",
         teamId: "4092",
-        competitionId: "1",
-        title: "Quantum Algorithm Visualization Engine",
-        description: "Interactive UI for quantum circuit simulation.",
         fileUrl: "https://example.com/quantum.pdf",
-        repoUrl: "https://github.com/quantum/engine",
-        videoUrl: "https://youtube.com/watch?v=quantum",
-        status: "SUBMITTED",
+        linkUrl: "https://github.com/quantum/engine",
         submittedAt: "2026-10-12T11:59:00Z",
-        updatedAt: "2026-10-12T11:59:00Z",
       },
       category: "UI/UX",
       status: "Scored",
@@ -57,11 +50,10 @@ export default function JuriTeamDirectoryPage() {
     {
       team: {
         id: "8120",
-        name: "Nexus Navigators",
+        teamName: "Nexus Navigators",
+        teamCode: "NEXUS8120",
         competitionId: "1",
-        leaderId: "u-801",
-        inviteCode: "NEXUS8120",
-        status: "VERIFIED",
+        status: "APPROVE",
         members: [
           { id: "tm-5", teamId: "8120", userId: "u-801", role: "LEADER", joinedAt: "" },
           { id: "tm-6", teamId: "8120", userId: "u-802", role: "MEMBER", joinedAt: "" },
@@ -73,15 +65,9 @@ export default function JuriTeamDirectoryPage() {
       submission: {
         id: "sub-8120",
         teamId: "8120",
-        competitionId: "1",
-        title: "Autonomous Navigation & Spatial Mapping",
-        description: "Real-time indoor spatial mapping portal.",
         fileUrl: "https://example.com/nexus.pdf",
-        repoUrl: "https://github.com/nexus/navigator",
-        videoUrl: "https://youtube.com/watch?v=nexus",
-        status: "UNDER_REVIEW",
+        linkUrl: "https://github.com/nexus/navigator",
         submittedAt: "2026-10-15T18:00:00Z",
-        updatedAt: "2026-10-15T18:00:00Z",
       },
       category: "UI/UX",
       status: "Pending",
@@ -90,11 +76,10 @@ export default function JuriTeamDirectoryPage() {
     {
       team: {
         id: "2291",
-        name: "Data Drifters",
+        teamName: "Data Drifters",
+        teamCode: "DRIFTERS",
         competitionId: "1",
-        leaderId: "u-201",
-        inviteCode: "DRIFTERS",
-        status: "VERIFIED",
+        status: "APPROVE",
         members: [
           { id: "tm-8", teamId: "2291", userId: "u-201", role: "LEADER", joinedAt: "" },
           { id: "tm-9", teamId: "2291", userId: "u-202", role: "MEMBER", joinedAt: "" },
@@ -108,15 +93,9 @@ export default function JuriTeamDirectoryPage() {
       submission: {
         id: "sub-2291",
         teamId: "2291",
-        competitionId: "1",
-        title: "High-Frequency Data Streaming Analytics",
-        description: "Dashboard for real-time financial time-series visualization.",
         fileUrl: "https://example.com/drifters.pdf",
-        repoUrl: "https://github.com/drifters/analytics",
-        videoUrl: "https://youtube.com/watch?v=drifters",
-        status: "SUBMITTED",
+        linkUrl: "https://github.com/drifters/analytics",
         submittedAt: "2026-10-16T09:00:00Z",
-        updatedAt: "2026-10-16T09:00:00Z",
       },
       category: "UI/UX",
       status: "Scored",
@@ -127,7 +106,7 @@ export default function JuriTeamDirectoryPage() {
   // Client-side search filter
   const filteredData = mockDirectoryData.filter(({ team }) => {
     return (
-      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      team.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.id.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
@@ -178,14 +157,14 @@ export default function JuriTeamDirectoryPage() {
 
           return (
             <Link key={team.id} href={`/juri/team/${submission.id}`} className="block group">
-              <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-6 flex flex-col justify-between hover:border-white/20 transition-all duration-300 min-h-[220px] shadow-sm">
+              <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-6 flex flex-col justify-between hover:border-white/20 transition-all duration-300 min-h-55 shadow-sm">
                 {/* Top Part: Thumbnail + Team Info + Category Badge */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3.5">
                     {/* Team Name & ID */}
                     <div className="space-y-0.5">
                       <h2 className="font-display font-bold text-lg text-white group-hover:text-accent transition-colors leading-snug">
-                        {team.name}
+                        {team.teamName}
                       </h2>
                       <span className="font-mono text-xs text-text-secondary block">
                         ID: #{team.id}

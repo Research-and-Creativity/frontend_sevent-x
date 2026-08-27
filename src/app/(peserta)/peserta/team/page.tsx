@@ -82,7 +82,9 @@ export default function PesertaTeamPage() {
 
   const isLoading = isUserLoading || isTeamLoading;
   const team = localTeam;
-  const isLeader = Boolean(currentUser && team && team.leaderId === currentUser.id);
+  const isLeader = Boolean(
+    currentUser && team && team.members?.some((m) => m.userId === currentUser.id && m.role === "LEADER")
+  );
 
   // Determine active Competition
   const currentComp = competitions.find(
@@ -168,12 +170,12 @@ export default function PesertaTeamPage() {
     if (!editNameInput.trim() || !team) return;
     try {
       await apiClient.patch(`/api/teams/${team.id}`, { name: editNameInput });
-      setLocalTeam({ ...team, name: editNameInput });
+      setLocalTeam({ ...team, teamName: editNameInput });
       toast.success("Nama tim berhasil diperbarui!");
       setIsEditNameOpen(false);
       refetchTeam();
     } catch {
-      setLocalTeam({ ...team, name: editNameInput });
+      setLocalTeam({ ...team, teamName: editNameInput });
       toast.success("Nama tim berhasil diperbarui!");
       setIsEditNameOpen(false);
     }
@@ -331,7 +333,7 @@ export default function PesertaTeamPage() {
   }
 
   // Invite Link formatted string
-  const inviteCode = team?.inviteCode || "SVX2026";
+  const inviteCode = team?.teamCode || "SVX2026";
   const appBaseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
@@ -376,7 +378,7 @@ export default function PesertaTeamPage() {
                 <Button
                   type="button"
                   onClick={() => setIsCreateFormOpen(true)}
-                  className="w-full bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 text-white text-xs font-semibold h-11 rounded-xl cursor-pointer shadow-md transition-all"
+                  className="w-full bg-linear-to-r from-primary to-primary-hover hover:opacity-90 text-white text-xs font-semibold h-11 rounded-xl cursor-pointer shadow-md transition-all"
                 >
                   Buat Team
                 </Button>
@@ -416,7 +418,7 @@ export default function PesertaTeamPage() {
                     >
                       {competitions.map((comp) => (
                         <option key={comp.id} value={comp.id} className="bg-card text-white">
-                          {comp.title} ({comp.category})
+                          {comp.name}
                         </option>
                       ))}
                     </select>
@@ -508,7 +510,7 @@ export default function PesertaTeamPage() {
             /* STATE C: Kompetisi Sudah Dipilih */
             <div className="flex items-center justify-between bg-surface border border-white/10 rounded-xl px-5 py-3">
               <span className="text-sm font-medium text-white">
-                {currentComp.title}
+                {currentComp.name}
               </span>
             </div>
           )}
@@ -519,7 +521,7 @@ export default function PesertaTeamPage() {
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-border/40">
               <div>
                 <h2 className="font-display text-2xl font-bold text-white tracking-tight">
-                  {team.name}
+                  {team.teamName}
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5">
                   ID: #{team.id}
@@ -531,7 +533,7 @@ export default function PesertaTeamPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setEditNameInput(team.name);
+                    setEditNameInput(team.teamName);
                     setIsEditNameOpen(true);
                   }}
                   className="bg-surface border-border text-white text-xs h-8 px-3 rounded-lg flex items-center gap-1.5 cursor-pointer"
@@ -797,7 +799,7 @@ export default function PesertaTeamPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono font-bold text-accent px-2 py-0.5 bg-accent/10 rounded">
-                        {comp.category}
+                        {comp.name}
                       </span>
                       {isSelected && (
                         <span className="text-[10px] font-mono font-bold text-white px-2 py-0.5 bg-primary rounded">
@@ -805,7 +807,7 @@ export default function PesertaTeamPage() {
                         </span>
                       )}
                     </div>
-                    <h4 className="font-display text-base font-bold text-white">{comp.title}</h4>
+                    <h4 className="font-display text-base font-bold text-white">{comp.name}</h4>
                     <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
                       {comp.description}
                     </p>

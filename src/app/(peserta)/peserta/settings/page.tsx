@@ -326,7 +326,7 @@ export default function PesertaSettingsPage() {
 
                   {/* Document Info & Upload Button */}
                   <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5 text-xs font-mono">
-                    <span className="text-text-secondary truncate max-w-[200px]">
+                    <span className="text-text-secondary truncate max-w-50">
                       {doc.fileName || "Belum ada file disubmit"}
                     </span>
 

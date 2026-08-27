@@ -279,10 +279,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen flex bg-[#05070F] overflow-hidden relative">
+    <div className="h-screen flex bg-background overflow-hidden relative">
       <div
         ref={transitionLayerRef}
-        className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center"
+        className="fixed inset-0 z-100 pointer-events-none hidden overflow-hidden items-center justify-center"
       >
         <div
           ref={circleImgRef}
@@ -356,7 +356,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md transition-all mt-4"
+              className="w-full bg-linear-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md transition-all mt-4"
             >
               {isLoading ? (
                 <>
@@ -371,7 +371,7 @@ export default function LoginPage() {
 
           <div className="relative flex items-center justify-center my-6">
             <div className="border-t border-white/10 w-full" />
-            <span className="bg-[#05070F] px-4 text-xs text-white/40">or</span>
+            <span className="bg-background px-4 text-xs text-white/40">or</span>
             <div className="border-t border-white/10 w-full" />
           </div>
 
@@ -379,7 +379,7 @@ export default function LoginPage() {
             <Button
               type="button"
               onClick={initiateGoogleLogin}
-              className="w-full bg-white hover:bg-gray-100 text-[#05070F] font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-white hover:bg-gray-100 text-background font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

@@ -173,7 +173,7 @@ export function AppraisersSection() {
         <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight mb-4">
             <span className="text-white">The </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-[#00E5FF]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-teal-300 to-[#00E5FF]">
               Expert{" "}
             </span>
             <span className="text-white">Appraisers</span>
@@ -260,7 +260,7 @@ export function AppraisersSection() {
                   aria-label={`Go to slide ${idx + 1}`}
                   className={`transition-all duration-300 cursor-pointer rounded-full ${
                     idx === selectedIndex
-                      ? "w-8 h-1.5 bg-gradient-to-r from-teal-400 to-[#00E5FF]"
+                      ? "w-8 h-1.5 bg-linear-to-r from-teal-400 to-[#00E5FF]"
                       : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
                   }`}
                 />

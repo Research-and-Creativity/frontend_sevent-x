@@ -18,11 +18,10 @@ export default function JuriDashboardPage() {
     {
       team: {
         id: "t-101",
-        name: "Aura Tech",
+        teamName: "Aura Tech",
         competitionId: "1",
-        leaderId: "u-101",
-        inviteCode: "AURA2026",
-        status: "VERIFIED",
+        teamCode: "AURA2026",
+        status: "APPROVE",
         members: [
           { id: "tm-1", teamId: "t-101", userId: "u-101", role: "LEADER", joinedAt: "" },
           { id: "tm-2", teamId: "t-101", userId: "u-102", role: "MEMBER", joinedAt: "" },
@@ -34,26 +33,19 @@ export default function JuriDashboardPage() {
       submission: {
         id: "sub-101",
         teamId: "t-101",
-        competitionId: "1",
-        title: "Predictive Crop Yield Engine & Sensor Dashboard",
-        description: "AI-driven precision agriculture system for local farmers.",
         fileUrl: "https://example.com/aura_proposal.pdf",
-        repoUrl: "https://github.com/auratech/crop-yield",
-        videoUrl: "https://youtube.com/watch?v=aura",
-        status: "SUBMITTED",
+        linkUrl: "https://github.com/auratech/crop-yield",
         submittedAt: "2026-10-12T11:59:00Z",
-        updatedAt: "2026-10-12T11:59:00Z",
       },
       scoreDisplay: "94 / 100",
     },
     {
       team: {
         id: "t-102",
-        name: "Neural Linkers",
+        teamName: "Neural Linkers",
         competitionId: "1",
-        leaderId: "u-201",
-        inviteCode: "NEURAL26",
-        status: "VERIFIED",
+        teamCode: "NEURAL26",
+        status: "APPROVE",
         members: [
           { id: "tm-4", teamId: "t-102", userId: "u-201", role: "LEADER", joinedAt: "" },
           { id: "tm-5", teamId: "t-102", userId: "u-202", role: "MEMBER", joinedAt: "" },
@@ -65,26 +57,19 @@ export default function JuriDashboardPage() {
       submission: {
         id: "sub-102",
         teamId: "t-102",
-        competitionId: "1",
-        title: "In-Browser Realtime Translation Framework",
-        description: "Low-latency WebAssembly neural translation pipeline.",
         fileUrl: "https://example.com/neural_proposal.pdf",
-        repoUrl: "https://github.com/neurallinkers/wasm-translate",
-        videoUrl: "https://youtube.com/watch?v=neural",
-        status: "SUBMITTED",
+        linkUrl: "https://github.com/neurallinkers/wasm-translate",
         submittedAt: "2026-10-15T18:00:00Z",
-        updatedAt: "2026-10-15T18:00:00Z",
       },
       scoreDisplay: "82 / 100",
     },
     {
       team: {
         id: "t-103",
-        name: "Apex Alpha",
+        teamName: "Apex Alpha",
         competitionId: "1",
-        leaderId: "u-301",
-        inviteCode: "APEX2026",
-        status: "VERIFIED",
+        teamCode: "APEX2026",
+        status: "APPROVE",
         members: [
           { id: "tm-7", teamId: "t-103", userId: "u-301", role: "LEADER", joinedAt: "" },
           { id: "tm-8", teamId: "t-103", userId: "u-302", role: "MEMBER", joinedAt: "" },
@@ -96,26 +81,19 @@ export default function JuriDashboardPage() {
       submission: {
         id: "sub-103",
         teamId: "t-103",
-        competitionId: "1",
-        title: "Autonomous Security Drone Surveillance Mesh",
-        description: "Edge-AI obstacle detection and real-time streaming system.",
         fileUrl: "https://example.com/apex_proposal.pdf",
-        repoUrl: "https://github.com/apexalpha/drone-mesh",
-        videoUrl: "https://youtube.com/watch?v=apex",
-        status: "UNDER_REVIEW",
+        linkUrl: "https://github.com/apexalpha/drone-mesh",
         submittedAt: "2026-10-16T09:00:00Z",
-        updatedAt: "2026-10-16T09:00:00Z",
       },
       scoreDisplay: "-- / 100",
     },
     {
       team: {
         id: "t-104",
-        name: "Telkom Devs",
+        teamName: "Telkom Devs",
         competitionId: "1",
-        leaderId: "u-401",
-        inviteCode: "TELKOM26",
-        status: "VERIFIED",
+        teamCode: "TELKOM26",
+        status: "APPROVE",
         members: [
           { id: "tm-10", teamId: "t-104", userId: "u-401", role: "LEADER", joinedAt: "" },
           { id: "tm-11", teamId: "t-104", userId: "u-402", role: "MEMBER", joinedAt: "" },
@@ -127,26 +105,19 @@ export default function JuriDashboardPage() {
       submission: {
         id: "sub-104",
         teamId: "t-104",
-        competitionId: "1",
-        title: "Campus Smart Utility Metering Platform",
-        description: "IoT energy consumption tracking & predictive analytics.",
         fileUrl: "https://example.com/telkom_proposal.pdf",
-        repoUrl: "https://github.com/telkomdevs/metering",
-        videoUrl: "https://youtube.com/watch?v=telkom",
-        status: "SUBMITTED",
+        linkUrl: "https://github.com/telkomdevs/metering",
         submittedAt: "2026-10-17T14:20:00Z",
-        updatedAt: "2026-10-17T14:20:00Z",
       },
       scoreDisplay: "89 / 100",
     },
     {
       team: {
         id: "t-105",
-        name: "Cyber Sentinel",
+        teamName: "Cyber Sentinel",
         competitionId: "1",
-        leaderId: "u-501",
-        inviteCode: "SENTINEL",
-        status: "VERIFIED",
+        teamCode: "SENTINEL",
+        status: "APPROVE",
         members: [
           { id: "tm-13", teamId: "t-105", userId: "u-501", role: "LEADER", joinedAt: "" },
           { id: "tm-14", teamId: "t-105", userId: "u-502", role: "MEMBER", joinedAt: "" },
@@ -158,15 +129,9 @@ export default function JuriDashboardPage() {
       submission: {
         id: "sub-105",
         teamId: "t-105",
-        competitionId: "1",
-        title: "Malware Pattern Recognition via Deep Graphs",
-        description: "Automated binary graph threat vector analysis.",
         fileUrl: "https://example.com/sentinel_proposal.pdf",
-        repoUrl: "https://github.com/cybersentinel/deep-graph",
-        videoUrl: "https://youtube.com/watch?v=sentinel",
-        status: "UNDER_REVIEW",
+        linkUrl: "https://github.com/cybersentinel/deep-graph",
         submittedAt: "2026-10-18T14:00:00Z",
-        updatedAt: "2026-10-18T14:00:00Z",
       },
       scoreDisplay: "-- / 100",
     },
@@ -271,7 +236,7 @@ export default function JuriDashboardPage() {
                         <td className="py-4 pr-4">
                           <Link href={`/juri/team/${submission.id}`} className="block">
                             <p className="font-display font-bold text-white text-sm group-hover:text-accent transition-colors">
-                              {team.name}
+                              {team.teamName}
                             </p>
                             <span className="font-mono text-[10px] text-text-secondary uppercase">
                               {memberCount} MEMBERS
@@ -283,7 +248,7 @@ export default function JuriDashboardPage() {
                         <td className="py-4 pr-4">
                           <Link href={`/juri/team/${submission.id}`} className="block">
                             <p className="text-xs text-white/90 truncate max-w-xs sm:max-w-sm">
-                              {submission.title}
+                              {submission.fileUrl ? "Project Proposal & Source" : "Dokumen Karya"}
                             </p>
                           </Link>
                         </td>
@@ -344,7 +309,7 @@ export default function JuriDashboardPage() {
             <div className="relative border-l border-white/10 pl-6 space-y-6 pt-2">
               {/* Item 1 */}
               <div className="relative flex items-center justify-between gap-4">
-                <span className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
+                <span className="absolute -left-7.25 top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
                 <span className="font-display font-bold text-white text-sm">
                   Lorem ipsum
                 </span>
@@ -356,7 +321,7 @@ export default function JuriDashboardPage() {
 
               {/* Item 2 */}
               <div className="relative flex items-center justify-between gap-4">
-                <span className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
+                <span className="absolute -left-7.25 top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
                 <span className="font-display font-bold text-white text-sm">
                   Lorem ipsum
                 </span>
@@ -368,7 +333,7 @@ export default function JuriDashboardPage() {
 
               {/* Item 3 */}
               <div className="relative flex items-center justify-between gap-4">
-                <span className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
+                <span className="absolute -left-7.25 top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
                 <span className="font-display font-bold text-white text-sm">
                   Lorem ipsum
                 </span>
@@ -380,7 +345,7 @@ export default function JuriDashboardPage() {
 
               {/* Item 4 */}
               <div className="relative flex items-center justify-between gap-4">
-                <span className="absolute -left-[29px] top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
+                <span className="absolute -left-7.25 top-1.5 w-2.5 h-2.5 rounded-full bg-accent" />
                 <span className="font-display font-bold text-white text-sm">
                   Lorem ipsum
                 </span>

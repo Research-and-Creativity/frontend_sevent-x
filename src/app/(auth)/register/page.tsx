@@ -265,10 +265,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="h-screen flex justify-end bg-[#05070F] overflow-hidden relative">
+    <div className="h-screen flex justify-end bg-background overflow-hidden relative">
       <div
         ref={transitionLayerRef}
-        className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center"
+        className="fixed inset-0 z-100 pointer-events-none hidden overflow-hidden items-center justify-center"
       >
         <div
           ref={circleImgRef}
@@ -295,7 +295,7 @@ export default function RegisterPage() {
         ref={staticCircleRef}
         className="hidden lg:flex w-1/2 h-full items-center justify-start relative z-0"
       >
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl -translate-x-[28%] shrink-0">
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[-28%] shrink-0">
           <img
             src="/images/auth-collage.jpg"
             className="w-full h-full object-cover"
@@ -361,7 +361,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#2E5CFF] hover:bg-[#2448D9] text-white font-medium h-12 rounded-md shadow-lg mt-4 transition-all"
+              className="w-full bg-primary hover:bg-primary-hover text-white font-medium h-12 rounded-md shadow-lg mt-4 transition-all"
             >
               {isLoading ? (
                 <>
@@ -375,7 +375,7 @@ export default function RegisterPage() {
 
           <div className="relative flex items-center justify-center my-5">
             <div className="border-t border-white/10 w-full" />
-            <span className="bg-[#05070F] px-4 text-xs text-white/40">or</span>
+            <span className="bg-background px-4 text-xs text-white/40">or</span>
             <div className="border-t border-white/10 w-full" />
           </div>
 
@@ -383,7 +383,7 @@ export default function RegisterPage() {
             <Button
               type="button"
               onClick={initiateGoogleLogin}
-              className="w-full bg-white hover:bg-gray-100 text-[#05070F] font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-white hover:bg-gray-100 text-background font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

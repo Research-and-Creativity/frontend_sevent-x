@@ -41,25 +41,17 @@ export default function EvaluationConsolePage() {
   const mockSubmission: Submission = {
     id: submissionId,
     teamId: "t-4092",
-    competitionId: "1",
-    title: "Predictive Crop Yield Engine",
-    description:
-      "Our solution harnesses decentralized edge computing nodes paired with localized soil sensors to build real-time prediction models for crop yields in sub-Saharan climates. By minimizing reliance on cloud-dependent networks, smallholder farmers gain localized forecasting without heavy infrastructure constraints.",
     fileUrl: "https://example.com/AuraTech_PitchDeck_v2.pdf",
-    repoUrl: "https://github.com/auratech/crop-engine",
-    videoUrl: "https://youtube.com/watch?v=CropYieldEngine_Demo",
-    status: "SUBMITTED",
+    linkUrl: "https://github.com/auratech/crop-engine",
     submittedAt: "2026-10-12T11:59:00Z",
-    updatedAt: "2026-10-12T11:59:00Z",
   };
 
   const mockTeam: Team = {
     id: "4092",
-    name: "Aura Tech",
+    teamName: "Aura Tech",
     competitionId: "1",
-    leaderId: "u-1",
-    inviteCode: "AURATECH",
-    status: "VERIFIED",
+    teamCode: "AURATECH",
+    status: "APPROVE",
     members: [
       { id: "tm-1", teamId: "4092", userId: "u-1", role: "LEADER", joinedAt: "" },
       { id: "tm-2", teamId: "4092", userId: "u-2", role: "MEMBER", joinedAt: "" },
@@ -187,10 +179,10 @@ export default function EvaluationConsolePage() {
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="font-display text-2xl font-bold text-white tracking-tight">
-                  {mockSubmission.title}
+                  {mockTeam.teamName} - Project Submission
                 </h2>
                 <p className="text-xs font-mono">
-                  <span className="text-[#3CD7FF] font-semibold">{mockTeam.name}</span>
+                  <span className="text-[#3CD7FF] font-semibold">{mockTeam.teamName}</span>
                   <span className="text-text-secondary"> • {(mockTeam.members?.length || 3)} MEMBERS</span>
                 </p>
               </div>
@@ -208,7 +200,7 @@ export default function EvaluationConsolePage() {
                 Project Overview
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed">
-                {mockSubmission.description}
+                Our solution harnesses decentralized edge computing nodes paired with localized soil sensors to build real-time prediction models for crop yields in sub-Saharan climates. By minimizing reliance on cloud-dependent networks, smallholder farmers gain localized forecasting without heavy infrastructure constraints.
               </p>
             </div>
 
@@ -263,7 +255,7 @@ export default function EvaluationConsolePage() {
                     </div>
                   </div>
                   <a
-                    href={mockSubmission.repoUrl || "#"}
+                    href={mockSubmission.linkUrl || "#"}
                     target="_blank"
                     rel="noreferrer"
                     className="text-text-secondary hover:text-white transition-colors shrink-0"
@@ -289,7 +281,7 @@ export default function EvaluationConsolePage() {
                     </div>
                   </div>
                   <a
-                    href={mockSubmission.videoUrl || "#"}
+                    href={mockSubmission.linkUrl || "#"}
                     target="_blank"
                     rel="noreferrer"
                     className="text-text-secondary hover:text-white transition-colors shrink-0"
@@ -506,9 +498,9 @@ export default function EvaluationConsolePage() {
                 type="button"
                 disabled={isSubmitted || isSubmitting}
                 onClick={() => setShowConfirmModal(true)}
-                className="bg-[#2DE4E0] hover:bg-[#2DE4E0]/90 text-[#05070F] text-xs font-display font-bold h-11 px-8 rounded-xl flex-[2] flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                className="bg-accent hover:bg-accent/90 text-background text-xs font-display font-bold h-11 px-8 rounded-xl flex-2 flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
               >
-                <Check className="w-4 h-4 stroke-[3]" />
+                <Check className="w-4 h-4 stroke-3" />
                 <span>{isSubmitting ? "Submitting..." : "Submit Score"}</span>
               </Button>
             </div>
@@ -542,7 +534,7 @@ export default function EvaluationConsolePage() {
               </Button>
               <Button
                 onClick={handleConfirmSubmit}
-                className="bg-[#2DE4E0] text-[#05070F] font-bold text-xs h-9 px-5 rounded-xl"
+                className="bg-accent text-background font-bold text-xs h-9 px-5 rounded-xl"
               >
                 Ya, Kirim Sekarang
               </Button>

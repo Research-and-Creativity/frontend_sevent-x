@@ -25,11 +25,10 @@ export default function PesertaSubmissionPage() {
   // Pass 1: UI-Only with mock data adhering to Team type from src/types/api.ts
   const mockTeam: Team = {
     id: "t-101",
-    name: "Team Alpha",
+    teamName: "Team Alpha",
     competitionId: "1",
-    leaderId: "u-1",
-    inviteCode: "ALPHA2026",
-    status: "PENDING",
+    teamCode: "ALPHA2026",
+    status: "REVIEW",
     members: [
       { id: "tm-1", teamId: "t-101", userId: "u-1", role: "LEADER", joinedAt: "" },
       { id: "tm-2", teamId: "t-101", userId: "u-2", role: "MEMBER", joinedAt: "" },
@@ -105,7 +104,7 @@ export default function PesertaSubmissionPage() {
 
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-3">
-                <span className="text-text-secondary min-w-[130px]">Status Tim:</span>
+                <span className="text-text-secondary min-w-32.5">Status Tim:</span>
                 <div className="flex items-center gap-2">
                   <span className="font-display font-bold text-amber-400">
                     Menunggu Review
@@ -114,7 +113,7 @@ export default function PesertaSubmissionPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-text-secondary min-w-[130px]">Bukti Pembayaran:</span>
+                <span className="text-text-secondary min-w-32.5">Bukti Pembayaran:</span>
                 <div className="flex items-center gap-2">
                   <span className="font-display font-bold text-amber-400">
                     Menunggu Review
@@ -295,9 +294,9 @@ export default function PesertaSubmissionPage() {
             </Card>
 
             {/* Card B: Team Banner ("Submitting as") */}
-            <div className="relative overflow-hidden bg-gradient-to-r from-[#0C1738] via-[#0F1E4A] to-[#0A122E] border border-white/10 rounded-2xl p-6 space-y-2 shadow-lg">
+            <div className="relative overflow-hidden bg-linear-to-r from-[#0C1738] via-[#0F1E4A] to-[#0A122E] border border-white/10 rounded-2xl p-6 space-y-2 shadow-lg">
               {/* Background Graphic Accent */}
-              <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/30 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/30 via-transparent to-transparent pointer-events-none" />
 
               <span className="font-mono text-xs text-text-secondary/80 uppercase tracking-wider block">
                 Submitting as
@@ -305,7 +304,7 @@ export default function PesertaSubmissionPage() {
 
               <div className="flex items-center gap-3 relative z-10 pt-1">
                 <h3 className="font-display font-bold text-xl sm:text-2xl text-white tracking-tight">
-                  {mockTeam.name}
+                  {mockTeam.teamName}
                 </h3>
                 <span className="bg-white/10 border border-white/20 text-white font-mono text-xs font-semibold px-2.5 py-1 rounded-lg">
                   {memberCount} Members

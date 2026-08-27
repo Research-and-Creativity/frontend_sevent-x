@@ -406,7 +406,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
 
       {/* Main Content Workspace Container */}
       <main className="flex-1 lg:ml-64 pt-20 lg:pt-24 p-6 sm:p-8 md:p-10 lg:px-12 pb-16 min-h-screen bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D]">
-        <div className="max-w-[1500px] mx-auto space-y-8">{children}</div>
+        <div className="max-w-375 mx-auto space-y-8">{children}</div>
       </main>
     </div>
   );

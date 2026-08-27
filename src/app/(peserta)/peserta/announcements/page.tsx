@@ -11,113 +11,75 @@ export default function PesertaAnnouncementsPage() {
     {
       id: "n-1",
       title: "Perpanjangan Deadline Submission",
-      slug: "perpanjangan-deadline-submission",
       content:
         "Batas akhir pengumpulan karya tahap penyisihan diperpanjang hingga tanggal 10 Agustus 2024 pukul 23.59 WIB. Pastikan seluruh berkas terunggah lengkap.",
-      excerpt:
-        "Batas akhir pengumpulan karya tahap penyisihan diperpanjang hingga tanggal 10 Agustus 2024 pukul 23.59 WIB.",
-      category: "important",
+      tag: "IMPORTANT",
       authorId: "admin-1",
       author: {
         id: "admin-1",
-        email: "panitia@seventx.id",
-        name: "Panitia",
-        role: "ADMIN",
-        createdAt: "2024-08-01T00:00:00Z",
-        updatedAt: "2024-08-01T00:00:00Z",
+        fullName: "Panitia",
       },
-      publishedAt: "2024-08-05T00:00:00Z",
-      isPublished: true,
       createdAt: "2024-08-05T00:00:00Z",
       updatedAt: "2024-08-05T00:00:00Z",
     },
     {
       id: "n-2",
       title: "Jadwal Presentasi Final",
-      slug: "jadwal-presentasi-final",
       content:
         "Presentasi final akan dilaksanakan secara hibrida pada tanggal 20 Agustus 2024. Detail urutan tampil dan link room Zoom dapat diakses melalui portal.",
-      excerpt:
-        "Presentasi final akan dilaksanakan secara hibrida pada tanggal 20 Agustus 2024.",
-      category: "Info",
+      tag: "INFO",
       authorId: "admin-1",
       author: {
         id: "admin-1",
-        email: "panitia@seventx.id",
-        name: "Panitia",
-        role: "ADMIN",
-        createdAt: "2024-08-01T00:00:00Z",
-        updatedAt: "2024-08-01T00:00:00Z",
+        fullName: "Panitia",
       },
-      publishedAt: "2024-08-03T00:00:00Z",
-      isPublished: true,
       createdAt: "2024-08-03T00:00:00Z",
       updatedAt: "2024-08-03T00:00:00Z",
     },
     {
       id: "n-3",
       title: "Update Format Laporan",
-      slug: "update-format-laporan",
       content:
         "Telah diterbitkan pustaka template laporan terbaru v1.2. Harap mengunduh berkas pendukung revisi di halaman guidebook sebelum melakukan submit final.",
-      excerpt:
-        "Telah diterbitkan pustaka template laporan terbaru v1.2. Harap mengunduh berkas pendukung revisi.",
-      category: "Update",
+      tag: "UPDATE",
       authorId: "admin-1",
       author: {
         id: "admin-1",
-        email: "panitia@seventx.id",
-        name: "Panitia",
-        role: "ADMIN",
-        createdAt: "2024-08-01T00:00:00Z",
-        updatedAt: "2024-08-01T00:00:00Z",
+        fullName: "Panitia",
       },
-      publishedAt: "2024-08-01T00:00:00Z",
-      isPublished: true,
       createdAt: "2024-08-01T00:00:00Z",
       updatedAt: "2024-08-01T00:00:00Z",
     },
     {
       id: "n-4",
       title: "Pengumuman Hasil Seleksi Tahap 1",
-      slug: "pengumuman-hasil-seleksi-tahap-1",
       content:
         "Selamat kepada 15 tim terbaik yang dinyatakan lolos ke babak semifinal SEVENT X 2024. Daftar peserta resmi dapat dilihat pada pengumuman ini.",
-      excerpt:
-        "Selamat kepada 15 tim terbaik yang dinyatakan lolos ke babak semifinal SEVENT X 2024.",
-      category: "Info",
+      tag: "INFO",
       authorId: "admin-1",
       author: {
         id: "admin-1",
-        email: "panitia@seventx.id",
-        name: "Panitia",
-        role: "ADMIN",
-        createdAt: "2024-08-01T00:00:00Z",
-        updatedAt: "2024-08-01T00:00:00Z",
+        fullName: "Panitia",
       },
-      publishedAt: "2024-07-28T00:00:00Z",
-      isPublished: true,
       createdAt: "2024-07-28T00:00:00Z",
       updatedAt: "2024-07-28T00:00:00Z",
     },
   ];
 
-  // Active Filter State: "All" | "important" | "Update"
+  // Active Filter State: "All" | "IMPORTANT" | "INFO" | "UPDATE"
   const [activeFilter, setActiveFilter] = useState<string>("All");
 
   // Client-side filter
   const filteredNews = mockNews.filter((item) => {
     if (activeFilter === "All") return true;
-    if (activeFilter === "important") return item.category === "important";
-    if (activeFilter === "Update") return item.category === "Update";
-    return true;
+    return item.tag === activeFilter;
   });
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Filter Tabs Header */}
       <div className="flex items-center gap-2.5">
-        {["All", "important", "Update"].map((filter) => {
+        {["All", "IMPORTANT", "INFO", "UPDATE"].map((filter) => {
           const isActive = activeFilter === filter;
           return (
             <Button
@@ -139,12 +101,12 @@ export default function PesertaAnnouncementsPage() {
       {/* Announcement Cards List */}
       <div className="space-y-4">
         {filteredNews.map((item) => {
-          const category = item.category;
-          const isImportant = category === "important";
-          const isInfo = category === "Info";
-          const isUpdate = category === "Update";
+          const tag = item.tag;
+          const isImportant = tag === "IMPORTANT";
+          const isInfo = tag === "INFO";
+          const isUpdate = tag === "UPDATE";
 
-          const formattedDate = new Date(item.publishedAt || item.createdAt).toLocaleDateString(
+          const formattedDate = new Date(item.createdAt).toLocaleDateString(
             "id-ID",
             { day: "numeric", month: "long", year: "numeric" }
           );
@@ -169,7 +131,7 @@ export default function PesertaAnnouncementsPage() {
                       : "bg-card-hover border-border text-text-secondary"
                   }`}
                 >
-                  {category}
+                  {tag}
                 </span>
 
                 <span className="text-xs font-mono text-text-secondary">
@@ -182,9 +144,9 @@ export default function PesertaAnnouncementsPage() {
                 {item.title}
               </h2>
 
-              {/* Description / Content Excerpt */}
+              {/* Description / Content */}
               <p className="text-xs sm:text-sm text-text-secondary line-clamp-2 leading-relaxed">
-                {item.excerpt || item.content}
+                {item.content}
               </p>
 
               {/* Footer: Posted By */}

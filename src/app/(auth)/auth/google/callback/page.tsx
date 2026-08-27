@@ -113,7 +113,7 @@ function GoogleCallbackContent() {
               </div>
               <Button
                 onClick={() => router.push("/login")}
-                className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:from-[#2448D9] hover:to-[#172d8a] text-white font-semibold h-11 rounded-lg"
+                className="w-full bg-linear-to-r from-[#2E5CFF] to-[#1E3BB3] hover:from-[#2448D9] hover:to-[#172d8a] text-white font-semibold h-11 rounded-lg"
               >
                 Back to Login
               </Button>
@@ -123,7 +123,7 @@ function GoogleCallbackContent() {
       </div>
 
       <div className="hidden lg:flex w-1/2 absolute right-0 top-0 bottom-0 pointer-events-none z-0 overflow-hidden items-center">
-        <div className="w-[140%] aspect-square absolute right-[-40%] rounded-full overflow-hidden border-l-[12px] border-white/5 shadow-2xl">
+        <div className="w-[140%] aspect-square absolute right-[-40%] rounded-full overflow-hidden border-l-12 border-white/5 shadow-2xl">
           <img
             src="/images/auth-collage.jpg"
             alt="SEVENT Event Collage"

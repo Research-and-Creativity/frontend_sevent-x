@@ -19,29 +19,21 @@ if (typeof window !== "undefined") {
 const mockCompetitions: Competition[] = [
   {
     id: "1",
-    title: "UI/UX Design",
+    name: "UI/UX Design",
     slug: "ui-ux-design",
     description: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
-    category: "UI_UX",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-15T23:59:59Z",
-    registrationFee: 50000,
-    maxTeamMembers: 3,
-    status: "OPEN",
+    maxMember: 3,
+    isActive: true,
     createdAt: "2026-08-01T00:00:00Z",
     updatedAt: "2026-08-01T00:00:00Z",
   },
   {
     id: "2",
-    title: "Software Devlopments",
+    name: "Software Developments",
     slug: "software-developments",
     description: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
-    category: "WEB_DEV",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-15T23:59:59Z",
-    registrationFee: 50000,
-    maxTeamMembers: 3,
-    status: "OPEN",
+    maxMember: 3,
+    isActive: true,
     createdAt: "2026-08-01T00:00:00Z",
     updatedAt: "2026-08-01T00:00:00Z",
   },
@@ -121,7 +113,7 @@ export function CompetitionsSection() {
         <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-4">
             Competition{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-300">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-white via-indigo-200 to-indigo-300">
               In Year
             </span>
           </h2>
@@ -156,13 +148,14 @@ export function CompetitionsSection() {
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {competitions.map((comp) => {
               const prize = (comp as any).prizePool || (comp as any).prize;
-              const iconKey = comp.category?.toUpperCase().includes("WEB")
-                ? "WEB_DEV"
-                : comp.category?.toUpperCase().includes("UI")
-                ? "UI_UX"
-                : comp.category?.toUpperCase().includes("CP")
-                ? "CP"
-                : "AI";
+              const iconKey =
+                comp.name?.toUpperCase().includes("WEB") || comp.slug?.includes("web")
+                  ? "WEB_DEV"
+                  : comp.name?.toUpperCase().includes("UI") || comp.slug?.includes("ui")
+                  ? "UI_UX"
+                  : comp.name?.toUpperCase().includes("CP") || comp.slug?.includes("competitive")
+                  ? "CP"
+                  : "AI";
 
               return (
                 <motion.div
@@ -176,7 +169,7 @@ export function CompetitionsSection() {
                         {categoryIcons[iconKey] || <Code className="w-5 h-5 text-white" />}
                       </div>
                       <CardTitle className="font-display text-2xl font-bold text-white mb-3">
-                        {comp.title}
+                        {comp.name}
                       </CardTitle>
                       <CardDescription className="text-white/70 text-sm leading-relaxed">
                         {comp.description}
@@ -186,7 +179,7 @@ export function CompetitionsSection() {
                     {/* Sembunyikan bagian PRIZE POOL jika field prize belum ada di backend */}
                     {prize && (
                       <CardContent className="p-0 pt-6 border-t border-white/10">
-                        <p className="font-mono text-xs uppercase tracking-wider text-[#2DE4E0] font-semibold mb-1">
+                        <p className="font-mono text-xs uppercase tracking-wider text-accent font-semibold mb-1">
                           PRIZE POOL
                         </p>
                         <p className="font-display text-3xl font-extrabold text-white">
