@@ -2,11 +2,20 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
+import { apiClient } from "@/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import {
   Code2,
   LayoutPanelLeft,
@@ -23,6 +32,7 @@ import {
   Trophy,
   Calendar,
   Newspaper,
+  LogOut,
 } from "lucide-react";
 
 type Role = "juri" | "admin" | "peserta";
@@ -117,13 +127,28 @@ const NAV_ITEMS: Record<
 export default function NavbarDashboard({ role, children }: NavbarType) {
   const currentLinks = NAV_ITEMS[role] || NAV_ITEMS.peserta;
   const pathname = usePathname();
+  const router = useRouter();
   const pageTitle = currentLinks.find((link) => link.url === pathname);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const { user: storeUser } = useAuthStore();
+  const { user: storeUser, clearAuth } = useAuthStore();
   const { data: userMe } = useUserMe();
   const currentUser = userMe || storeUser;
   const userName = currentUser?.fullName || currentUser?.email || "name user";
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await apiClient.post("/api/auth/logout");
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      clearAuth();
+      toast.success("Successfully logged out");
+      router.push("/");
+    }
+  };
 
   // tutup menu mobile otomatis tiap kali pindah halaman
   useEffect(() => {
@@ -175,23 +200,6 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               </Button>
             </Link>
           )}
-
-          <div className="flex items-center gap-2 pl-2 border-l border-border/40">
-            <Avatar className="w-8 h-8 rounded-lg border border-border">
-              <AvatarImage src={currentUser?.avatar || undefined} />
-              <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
-                {userName.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="text-left hidden sm:block">
-              <p className="text-xs font-bold text-white leading-tight">
-                {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
-              </p>
-              <span className="text-[10px] font-mono text-text-secondary uppercase block">
-                {role === "juri" ? "SENIOR JUDGE" : role === "admin" ? "ADMINISTRATOR" : "PARTICIPANT"}
-              </span>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -275,33 +283,61 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
             </nav>
           )}
 
-          {/* User Profile Card */}
-          <div className="bg-[#040E21] border border-border/80 p-3 rounded-xl flex items-center gap-3">
-            <Avatar className="w-8 h-8 rounded-lg border border-border shrink-0">
-              <AvatarImage
-                src={currentUser?.avatar || undefined}
-                alt={userName}
-              />
-              <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
-                {userName.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="overflow-hidden text-left">
-              <p className="text-xs font-bold text-white truncate">
-                {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
-              </p>
-              {role === "juri" && (
-                <span className="text-[10px] font-mono font-bold text-accent block">
-                  SENIOR JUDGE
-                </span>
-              )}
-              {role === "admin" && (
-                <span className="text-[10px] font-mono font-bold text-rose-400 block">
-                  SYSTEM ADMIN
-                </span>
-              )}
-            </div>
-          </div>
+          {/* User Profile Card with Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="w-full bg-[#040E21] hover:bg-[#101838] border border-border/80 hover:border-white/20 p-2.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer text-left outline-none group"
+              >
+                <Avatar className="w-8 h-8 rounded-lg border border-border shrink-0">
+                  <AvatarImage
+                    src={currentUser?.avatar || undefined}
+                    alt={userName}
+                  />
+                  <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
+                    {userName.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="overflow-hidden text-left flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white truncate group-hover:text-accent transition-colors">
+                    {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
+                  </p>
+                  {role === "juri" && (
+                    <span className="text-[10px] font-mono font-bold text-accent block">
+                      SENIOR JUDGE
+                    </span>
+                  )}
+                  {role === "admin" && (
+                    <span className="text-[10px] font-mono font-bold text-rose-400 block">
+                      SYSTEM ADMIN
+                    </span>
+                  )}
+                  {role === "peserta" && (
+                    <span className="text-[10px] font-mono text-text-secondary block">
+                      PARTICIPANT
+                    </span>
+                  )}
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              sideOffset={8}
+              className="w-56 bg-[#040E21] border border-border/80 text-white rounded-xl p-1.5 shadow-2xl backdrop-blur-xl"
+            >
+              <DropdownMenuItem
+                disabled={isLoggingOut}
+                onClick={handleLogout}
+                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-rose-400" />
+                <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
@@ -330,22 +366,46 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
       {isMobileMenuOpen && (
         <nav className="lg:hidden fixed inset-0 z-30 h-screen w-full bg-surface/95 backdrop-blur-xl pt-20 px-6 pb-8 flex flex-col justify-between overflow-y-auto">
           <div className="space-y-6">
-            <div className="bg-card border border-border/80 p-3.5 rounded-xl flex items-center gap-3">
-              <Avatar className="w-9 h-9 rounded-lg border border-border shrink-0">
-                <AvatarImage src={currentUser?.avatar || undefined} />
-                <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
-                  {userName.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="overflow-hidden text-left">
-                <p className="text-sm font-bold text-white truncate">
-                  {userName}
-                </p>
-                <p className="text-xs text-text-secondary truncate">
-                  {currentUser?.email || ""}
-                </p>
-              </div>
-            </div>
+            {/* Mobile User Profile Card with Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full bg-card hover:bg-card-hover border border-border/80 p-3.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer text-left outline-none"
+                >
+                  <Avatar className="w-9 h-9 rounded-lg border border-border shrink-0">
+                    <AvatarImage src={currentUser?.avatar || undefined} />
+                    <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
+                      {userName.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="overflow-hidden text-left flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">
+                      {userName}
+                    </p>
+                    <p className="text-xs text-text-secondary truncate">
+                      {currentUser?.email || ""}
+                    </p>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                side="bottom"
+                align="start"
+                sideOffset={8}
+                className="w-64 bg-[#040E21] border border-border/80 text-white rounded-xl p-1.5 shadow-2xl backdrop-blur-xl"
+              >
+                <DropdownMenuItem
+                  disabled={isLoggingOut}
+                  onClick={handleLogout}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-rose-400" />
+                  <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <ul className="flex flex-col gap-1.5 w-full">
               {currentLinks.map((link) => {
