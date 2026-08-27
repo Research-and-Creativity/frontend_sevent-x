@@ -181,7 +181,7 @@ export default function PesertaTeamPage() {
 
   const handleKickMember = async (member: TeamMember) => {
     if (!isLeader || !team) return;
-    const memberName = member.user?.fullName || member.user?.name || member.user?.email || "Anggota";
+    const memberName = member.user?.fullName || "Anggota";
     try {
       await apiClient.delete(`/api/teams/${team.id}/members/${member.id}`);
       const updated = team.members?.filter((m) => m.id !== member.id);
@@ -552,8 +552,7 @@ export default function PesertaTeamPage() {
               <div className="space-y-2.5">
                 {team.members?.map((member) => {
                   const isMemberLeader = member.role === "LEADER";
-                  const memberName =
-                    member.user?.fullName || member.user?.name || member.user?.email || "Anggota Tim";
+                  const memberName = member.user?.fullName || "Anggota Tim";
                   const canKick = isLeader && member.userId !== currentUser?.id;
 
                   return (

@@ -3,8 +3,7 @@ export type UserRole = "PESERTA" | "JURI" | "ADMIN";
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  fullName?: string;
+  fullName: string;
   role: UserRole;
   avatar?: string | null;
   phone?: string | null;
@@ -13,19 +12,26 @@ export interface User {
   updatedAt: string;
 }
 
-export interface Competition {
+export type TimelinePhase = "REGISTRATION" | "UPLOAD_KARYA" | "PENJURIAN" | "FINAL";
+
+export interface Timeline {
   id: string;
-  title: string;
-  slug: string;
-  description: string;
-  category: string;
+  competitionId: string;
+  phase: TimelinePhase;
   startDate: string;
   endDate: string;
-  registrationFee: number;
-  maxTeamMembers: number;
-  status: "UPCOMING" | "OPEN" | "CLOSED" | "COMPLETED";
-  bannerUrl?: string | null;
-  guidebookUrl?: string | null;
+}
+
+export interface Competition {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  maxMember: number;
+  isActive: boolean;
+  twibbonFrameUrl?: string | null;
+  twibbonCaption?: string | null;
+  timelines?: Timeline[];
   createdAt: string;
   updatedAt: string;
 }
@@ -44,21 +50,31 @@ export interface TeamMember {
   id: string;
   teamId: string;
   userId: string;
-  user?: User;
+  user?: {
+    id: string;
+    email: string;
+    fullName: string;
+    institution: string;
+  };
   role: "LEADER" | "MEMBER";
   joinedAt: string;
 }
 
 export interface Team {
   id: string;
-  name: string;
+  teamName: string;
+  teamCode: string;
   competitionId: string;
-  competition?: Competition;
-  leaderId: string;
-  leader?: User;
-  inviteCode: string;
-  status: "PENDING" | "VERIFIED" | "REJECTED";
+  competition?: {
+    id: string;
+    name: string;
+    slug: string;
+    maxMember: number;
+  };
+  status: "REVIEW" | "APPROVE" | "REJECT";
   members?: TeamMember[];
+  paymentProof?: { id: string; fileUrl: string; status: string } | null;
+  submission?: Submission | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,17 +82,15 @@ export interface Team {
 export interface Submission {
   id: string;
   teamId: string;
-  team?: Team;
-  competitionId: string;
-  competition?: Competition;
-  title: string;
-  description?: string | null;
+  team?: {
+    id: string;
+    teamName: string;
+    teamCode: string;
+    competition?: { id: string; name: string; slug: string };
+  };
   fileUrl?: string | null;
-  repoUrl?: string | null;
-  videoUrl?: string | null;
-  status: "SUBMITTED" | "UNDER_REVIEW" | "SCORED";
+  linkUrl?: string | null;
   submittedAt: string;
-  updatedAt: string;
 }
 
 export interface ScoreCriteria {
@@ -107,18 +121,15 @@ export interface Score {
   updatedAt: string;
 }
 
+export type NewsTag = "IMPORTANT" | "INFO" | "UPDATE";
+
 export interface NewsPost {
   id: string;
   title: string;
-  slug: string;
   content: string;
-  excerpt?: string | null;
-  coverImage?: string | null;
+  tag: NewsTag;
   authorId: string;
-  author?: User;
-  category: string;
-  publishedAt?: string | null;
-  isPublished: boolean;
+  author?: { id: string; fullName: string };
   createdAt: string;
   updatedAt: string;
 }

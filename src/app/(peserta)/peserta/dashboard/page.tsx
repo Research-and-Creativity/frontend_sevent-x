@@ -54,14 +54,12 @@ export default function PesertaDashboardPage() {
     refetch: refetchNews,
   } = useNews(2);
 
-  const competitionId = team?.competitionId;
-
   const {
     data: timeline = [],
     isLoading: isTimelineLoading,
     isError: isTimelineError,
     refetch: refetchTimeline,
-  } = useCompetitionTimeline(competitionId);
+  } = useCompetitionTimeline(team?.competition?.slug);
 
   // Find Upload Karya or Active Stage for Deadline Calculations
   const uploadStage = timeline.find(
@@ -101,9 +99,9 @@ export default function PesertaDashboardPage() {
   }, [targetEndDate]);
 
   // Derived Metrics
-  const userName = user?.name || user?.email?.split("@")[0] || "Peserta";
+  const userName = user?.fullName || user?.email?.split("@")[0] || "Peserta";
   const memberCount = team?.members?.length || 0;
-  const maxMembers = 5;
+  const maxMembers = team?.competition?.maxMember || 0;
   const teamProgress = Math.min(100, Math.round((memberCount / maxMembers) * 100));
 
   // Helper date formatter
@@ -178,9 +176,9 @@ export default function PesertaDashboardPage() {
             Welcome back, {userName}!
           </h2>
           <p className="text-xs sm:text-sm text-text-secondary">
-            {team && competitionId && timeLeft ? (
+            {team && timeLeft ? (
               <>
-                Tersisa <span className="text-accent font-semibold">{timeLeft.days} hari lagi</span> untuk mengunggah karya final tim <strong className="text-white">{team.name}</strong>.
+                Tersisa <span className="text-accent font-semibold">{timeLeft.days} hari lagi</span> untuk mengunggah karya final tim <strong className="text-white">{team.teamName}</strong>.
               </>
             ) : (
               "Lengkapi tim & kompetisi terlebih dahulu untuk memulai kompetisi."
@@ -248,11 +246,11 @@ export default function PesertaDashboardPage() {
               <div className="flex items-center gap-2.5">
                 <span className={`w-2.5 h-2.5 rounded-full ${submission ? "bg-accent shadow-[0_0_8px_rgba(45,228,224,0.8)]" : "bg-amber-400"}`} />
                 <span className={`font-display text-2xl font-bold ${submission ? "text-accent" : "text-amber-400"}`}>
-                  {submission ? (submission.status === "SUBMITTED" ? "Submitted" : "In Progress") : "Belum Submit"}
+                  {submission ? "Submitted" : "Belum Submit"}
                 </span>
               </div>
               <p className="text-xs text-text-secondary mt-3">
-                {submission ? formatLastSaved(submission.updatedAt || submission.submittedAt) : "Belum ada berkas karya diunggah"}
+                {submission ? formatLastSaved(submission.submittedAt) : "Belum ada berkas karya diunggah"}
               </p>
             </div>
           </Card>
@@ -316,7 +314,7 @@ export default function PesertaDashboardPage() {
               </div>
             ) : news.length > 0 ? (
               news.slice(0, 2).map((item, index) => {
-                const isImportant = item.category === "ANNOUNCEMENT" || index === 0;
+                const isImportant = item.tag === "IMPORTANT" || index === 0;
                 return (
                   <div
                     key={item.id || index}
@@ -330,17 +328,17 @@ export default function PesertaDashboardPage() {
                             : "bg-card-hover text-text-secondary border border-border"
                         }`}
                       >
-                        {item.category || "Announcement"}
+                        {item.tag || "INFO"}
                       </span>
                       <span className="text-xs font-mono text-text-secondary">
-                        {item.publishedAt ? formatDate(item.publishedAt) : "Terbaru"}
+                        {formatDate(item.createdAt)}
                       </span>
                     </div>
                     <h4 className="font-display font-bold text-base text-white hover:text-accent transition-colors">
                       {item.title}
                     </h4>
                     <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
-                      {item.excerpt || item.content}
+                      {item.content?.slice(0, 120)}{item.content?.length > 120 ? "..." : ""}
                     </p>
                   </div>
                 );

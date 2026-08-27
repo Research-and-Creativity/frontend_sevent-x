@@ -39,7 +39,7 @@ function GoogleCallbackContent() {
         setAuth(user, accessToken);
         setStatus("success");
         toast.success(
-          `Google auth successful! Welcome, ${user.fullName || user.username}.`,
+          `Google auth successful! Welcome, ${user.fullName}.`,
         );
 
         const role = user.role;
