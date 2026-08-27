@@ -84,10 +84,16 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const newAccessToken = response.data?.accessToken;
+        const resData = response.data?.data || response.data;
+        const newAccessToken = resData?.accessToken;
+        const newUser = resData?.user;
 
         if (newAccessToken) {
-          useAuthStore.getState().setAccessToken(newAccessToken);
+          if (newUser) {
+            useAuthStore.getState().setAuth(newUser, newAccessToken);
+          } else {
+            useAuthStore.getState().setAccessToken(newAccessToken);
+          }
           processQueue(null, newAccessToken);
 
           if (originalRequest.headers) {
