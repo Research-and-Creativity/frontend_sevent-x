@@ -22,7 +22,6 @@ export function HeroSection() {
   const subtitleWrapperRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
-  const buttonsRef = useRef<HTMLDivElement>(null);
 
   // Memecah teks judul menjadi array huruf untuk dianimasikan per karakter
   const titleText = "SEVENT X";
@@ -33,60 +32,50 @@ export function HeroSection() {
       if (typeof window === "undefined") return;
 
       const reduceMotion = prefersReducedMotion();
+      if (reduceMotion) return;
 
-      const revealAll = () => {
-        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 1, x: 0 });
-        if (titleRef.current) gsap.set(".title-char", { opacity: 1, y: 0 });
-        if (subtitleRef.current) gsap.set(subtitleRef.current, { opacity: 1, y: "0%" });
-        if (descRef.current) gsap.set(descRef.current, { opacity: 1, y: 0 });
-        gsap.set(".hero-btn", { opacity: 1, y: 0 });
-      };
+      // Bulletproof entrance animation using fromTo
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      if (reduceMotion) {
-        revealAll();
-        return;
+      if (badgeRef.current) {
+        tl.fromTo(
+          badgeRef.current,
+          { opacity: 0, x: -20 },
+          { opacity: 1, x: 0, duration: 0.8 }
+        );
       }
 
-      try {
-        // 1. SETUP INITIAL STATE
-        if (badgeRef.current) gsap.set(badgeRef.current, { opacity: 0, x: -20 });
-        gsap.set(".title-char", { opacity: 0, y: 40 });
-        if (subtitleRef.current) gsap.set(subtitleRef.current, { y: "100%" });
-        if (descRef.current) gsap.set(descRef.current, { opacity: 0, y: 20 });
-        gsap.set(".hero-btn", { opacity: 0, y: 20 });
+      tl.fromTo(
+        ".title-char",
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.03 },
+        "-=0.6"
+      );
 
-        // 2. ENTRANCE TIMELINE
-        const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
-
-        if (badgeRef.current) {
-          tl.to(badgeRef.current, { opacity: 1, x: 0, duration: 1.2 });
-        }
-        tl.to(".title-char", { opacity: 1, y: 0, duration: 1.2, stagger: 0.04 }, "-=0.8");
-        if (subtitleRef.current) {
-          tl.to(subtitleRef.current, { y: "0%", duration: 1.2 }, "-=0.9");
-        }
-        if (descRef.current) {
-          tl.to(descRef.current, { opacity: 1, y: 0, duration: 1.2 }, "-=1");
-        }
-        tl.to(".hero-btn", { opacity: 1, y: 0, duration: 1.2, stagger: 0.15 }, "-=1.1");
-
-        // 3. PARALLAX SCROLL
-        if (contentRef.current && containerRef.current) {
-          gsap.to(contentRef.current, {
-            y: -120,
-            opacity: 0,
-            ease: "none",
-            scrollTrigger: {
-              trigger: containerRef.current,
-              start: "top top",
-              end: "bottom top",
-              scrub: true,
-            },
-          });
-        }
-      } catch {
-        revealAll();
+      if (subtitleRef.current) {
+        tl.fromTo(
+          subtitleRef.current,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8 },
+          "-=0.6"
+        );
       }
+
+      if (descRef.current) {
+        tl.fromTo(
+          descRef.current,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8 },
+          "-=0.6"
+        );
+      }
+
+      tl.fromTo(
+        ".hero-btn",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 },
+        "-=0.6"
+      );
     },
     { scope: containerRef }
   );
@@ -95,7 +84,7 @@ export function HeroSection() {
     <section
       id="hero"
       ref={containerRef}
-      className="relative min-h-[90vh] md:min-h-screen flex items-center pt-28 pb-20 px-4 md:px-8 bg-transparent overflow-hidden"
+      className="relative min-h-[85vh] md:min-h-screen flex items-center pt-28 pb-20 px-4 md:px-8 bg-transparent overflow-hidden"
     >
       <div className="max-w-6xl mx-auto w-full z-10">
         <div
@@ -144,7 +133,6 @@ export function HeroSection() {
 
           {/* Action Buttons */}
           <div
-            ref={buttonsRef}
             className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto"
           >
             <Link href="/login" className="w-full sm:w-auto hero-btn">

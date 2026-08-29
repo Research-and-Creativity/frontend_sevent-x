@@ -2,21 +2,55 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Users, Code2, Sparkles, Cpu, Layers } from "lucide-react";
-import { Team, Submission } from "@/types/api";
+import { Search, Users, Cpu, Layers, Sparkles } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { Team, Submission, Competition } from "@/types/api";
 
 interface MockDirectoryCard {
   team: Team;
   submission: Submission;
   category: string;
+  competitionSlug?: string;
   status: "Scored" | "Pending";
   icon: React.ReactNode;
 }
 
 export default function JuriTeamDirectoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCompSlug, setSelectedCompSlug] = useState<string>("");
+
+  // 1. Fetch Competitions List
+  const { data: competitions = [] } = useQuery<Competition[]>({
+    queryKey: ["juriCompetitionsList"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/competitions");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Query submissions from backend with competitionSlug query param
+  useQuery({
+    queryKey: ["juriSubmissions", selectedCompSlug],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/submissions", {
+          params: selectedCompSlug ? { competitionSlug: selectedCompSlug } : undefined,
+        });
+        return res.data?.data || res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
 
   // Pass 1: 3 Mock Data Cards following Team & Submission interfaces from src/types/api.ts
   const mockDirectoryData: MockDirectoryCard[] = [
@@ -44,6 +78,7 @@ export default function JuriTeamDirectoryPage() {
         submittedAt: "2026-10-12T11:59:00Z",
       },
       category: "UI/UX",
+      competitionSlug: "ui-ux-design",
       status: "Scored",
       icon: <Cpu className="w-6 h-6 text-accent" />,
     },
@@ -69,7 +104,8 @@ export default function JuriTeamDirectoryPage() {
         linkUrl: "https://github.com/nexus/navigator",
         submittedAt: "2026-10-15T18:00:00Z",
       },
-      category: "UI/UX",
+      category: "Web Dev",
+      competitionSlug: "web-development",
       status: "Pending",
       icon: <Layers className="w-6 h-6 text-accent" />,
     },
@@ -97,23 +133,25 @@ export default function JuriTeamDirectoryPage() {
         linkUrl: "https://github.com/drifters/analytics",
         submittedAt: "2026-10-16T09:00:00Z",
       },
-      category: "UI/UX",
+      category: "Web Dev",
+      competitionSlug: "web-development",
       status: "Scored",
       icon: <Sparkles className="w-6 h-6 text-accent" />,
     },
   ];
 
-  // Client-side search filter
-  const filteredData = mockDirectoryData.filter(({ team }) => {
-    return (
+  // Client-side search and competitionSlug filter
+  const filteredData = mockDirectoryData.filter(({ team, competitionSlug }) => {
+    const matchSearch =
       team.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      team.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchComp = !selectedCompSlug || competitionSlug === selectedCompSlug;
+    return matchSearch && matchComp;
   });
 
   return (
     <div className="space-y-8">
-      {/* 2. Section Title & Search/Filter Controls (Directly on Page Background) */}
+      {/* 2. Section Title & Search/Filter Controls */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">
@@ -124,28 +162,35 @@ export default function JuriTeamDirectoryPage() {
           </p>
         </div>
 
-        {/* 3. Search Bar + Filter Button (Right-Aligned) */}
-        <div className="flex items-center gap-3 self-end md:self-auto">
+        {/* 3. Search Bar + Competition Slug Filter Dropdown */}
+        <div className="flex flex-wrap items-center gap-3 self-end md:self-auto">
+          {/* Competition Slug Filter Dropdown */}
+          <div className="w-52">
+            <select
+              value={selectedCompSlug}
+              onChange={(e) => setSelectedCompSlug(e.target.value)}
+              className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
+            >
+              <option value="" className="bg-card text-white">All Competitions</option>
+              {competitions.map((comp) => (
+                <option key={comp.id || comp.slug} value={comp.slug} className="bg-card text-white">
+                  {comp.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Search Input */}
-          <div className="relative w-64 sm:w-72">
-            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-3" />
+          <div className="relative w-56 sm:w-64">
+            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-2.5" />
             <input
               type="text"
               placeholder="Search teams..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors font-mono"
+              className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors font-mono"
             />
           </div>
-
-          {/* Filter Button */}
-          <Button
-            variant="outline"
-            className="bg-surface hover:bg-card-hover border-border text-white text-xs font-mono font-semibold px-4 h-10 rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
-          >
-            <Filter className="w-4 h-4 text-text-secondary" />
-            <span>Filter</span>
-          </Button>
         </div>
       </div>
 

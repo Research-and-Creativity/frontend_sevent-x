@@ -1,20 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, ExternalLink, CheckCircle2, XCircle, Search } from "lucide-react";
+import { Users, ExternalLink, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { Competition } from "@/types/api";
 
 export default function AdminTeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCompSlug, setSelectedCompSlug] = useState<string>("");
+
+  // 1. Fetch competitions list
+  const { data: competitions = [] } = useQuery<Competition[]>({
+    queryKey: ["adminCompetitionsList"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/competitions");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [teams, setTeams] = useState([
-    { id: "t-101", name: "Team Alpha", category: "Web Development", leader: "Alex Septiadi", membersCount: 3, status: "PENDING", paymentProof: "bukti_bayar_alpha.jpg" },
-    { id: "t-102", name: "Nexus Innovators", category: "UI/UX Design", leader: "Budi Santoso", membersCount: 4, status: "VERIFIED", paymentProof: "bukti_bayar_nexus.png" },
-    { id: "t-103", name: "CyberCrafters", category: "Web Development", leader: "Citra Dewi", membersCount: 3, status: "PENDING", paymentProof: "bukti_bayar_cyber.jpg" },
-    { id: "t-104", name: "ByteSquad", category: "Web Development", leader: "Deni Pratama", membersCount: 5, status: "VERIFIED", paymentProof: "bukti_bayar_bytesquad.pdf" },
+    { id: "t-101", name: "Team Alpha", category: "Web Development", slug: "web-development", leader: "Alex Septiadi", membersCount: 3, status: "PENDING", paymentProof: "bukti_bayar_alpha.jpg" },
+    { id: "t-102", name: "Nexus Innovators", category: "UI/UX Design", slug: "ui-ux-design", leader: "Budi Santoso", membersCount: 4, status: "VERIFIED", paymentProof: "bukti_bayar_nexus.png" },
+    { id: "t-103", name: "CyberCrafters", category: "Web Development", slug: "web-development", leader: "Citra Dewi", membersCount: 3, status: "PENDING", paymentProof: "bukti_bayar_cyber.jpg" },
+    { id: "t-104", name: "ByteSquad", category: "Web Development", slug: "web-development", leader: "Deni Pratama", membersCount: 5, status: "VERIFIED", paymentProof: "bukti_bayar_bytesquad.pdf" },
   ]);
+
+  // Fetch teams from backend if available
+  useQuery({
+    queryKey: ["adminTeams", selectedCompSlug],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/teams", {
+          params: selectedCompSlug ? { competitionSlug: selectedCompSlug } : undefined,
+        });
+        const list = res.data?.data || res.data;
+        if (Array.isArray(list) && list.length > 0) {
+          setTeams(list);
+        }
+        return list;
+      } catch {
+        return null;
+      }
+    },
+  });
 
   const handleVerifyTeam = async (id: string, newStatus: "VERIFIED" | "REJECTED") => {
     try {
@@ -26,11 +64,14 @@ export default function AdminTeamsPage() {
     toast.success(`Status tim berhasil diubah menjadi ${newStatus}!`);
   };
 
-  const filteredTeams = teams.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams.filter((t: any) => {
+    const matchSearch =
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.leader?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchComp = !selectedCompSlug || t.slug === selectedCompSlug || t.competition?.slug === selectedCompSlug;
+    return matchSearch && matchComp;
+  });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -44,15 +85,34 @@ export default function AdminTeamsPage() {
           </p>
         </div>
 
-        <div className="relative w-64">
-          <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-3" />
-          <input
-            type="text"
-            placeholder="Cari tim, ketua, ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Competition Slug Filter Dropdown */}
+          <div className="w-56">
+            <select
+              value={selectedCompSlug}
+              onChange={(e) => setSelectedCompSlug(e.target.value)}
+              className="w-full bg-surface border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
+            >
+              <option value="" className="bg-card text-white">Semua Cabang Kompetisi</option>
+              {competitions.map((comp) => (
+                <option key={comp.id || comp.slug} value={comp.slug} className="bg-card text-white">
+                  {comp.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-56">
+            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-2.5" />
+            <input
+              type="text"
+              placeholder="Cari tim, ketua, ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-surface border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent"
+            />
+          </div>
         </div>
       </div>
 

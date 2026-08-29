@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { Competition, TimelineStage } from "@/types/api";
+import { getPhaseLabel } from "@/hooks/use-peserta";
 import {
   Card,
   CardHeader,
@@ -30,8 +31,8 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const getStageIcon = (stageName: string, index: number) => {
-  const name = stageName.toLowerCase();
+const getStageIcon = (stageName?: string, index: number = 0) => {
+  const name = (stageName ?? "").toLowerCase();
   if (name.includes("register") || name.includes("pendaftaran") || index === 0) {
     return <UserPlus className="w-5 h-5 text-[#151936]" />;
   }
@@ -88,14 +89,14 @@ export function TimelineSection() {
     isError: isTimelineError,
     refetch: refetchTimeline,
   } = useQuery<TimelineStage[]>({
-    queryKey: ["publicCompetitionTimeline", activeComp?.id],
+    queryKey: ["publicCompetitionTimeline", activeComp?.slug],
     queryFn: async () => {
-      if (!activeComp?.id) return [];
-      const res = await apiClient.get(`/api/competitions/${activeComp.id}/timeline`);
+      if (!activeComp?.slug) return [];
+      const res = await apiClient.get(`/api/competitions/${activeComp.slug}/timeline`);
       const list = res.data?.data || res.data;
       return Array.isArray(list) ? list : [];
     },
-    enabled: !!activeComp?.id,
+    enabled: !!activeComp?.slug,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -104,7 +105,7 @@ export function TimelineSection() {
   // Map raw timeline to visual structure
   const timelineEvents = rawTimeline.map((stage, idx) => ({
     id: stage.id || `stage-${idx}`,
-    title: stage.stageName,
+    title: stage.stageName || (stage.phase ? getPhaseLabel(stage.phase) : `Tahap ${idx + 1}`),
     date: formatDate(stage.endDate || stage.startDate),
     description: stage.description || "Tahapan resmi dalam kompetisi SEVENT X 2026.",
     icon: getStageIcon(stage.stageName, idx),

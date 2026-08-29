@@ -11,36 +11,12 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
-
-const mockCompetitions: Competition[] = [
-  {
-    id: "1",
-    name: "UI/UX Design",
-    slug: "ui-ux-design",
-    description: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
-    maxMember: 3,
-    isActive: true,
-    createdAt: "2026-08-01T00:00:00Z",
-    updatedAt: "2026-08-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Software Developments",
-    slug: "software-developments",
-    description: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
-    maxMember: 3,
-    isActive: true,
-    createdAt: "2026-08-01T00:00:00Z",
-    updatedAt: "2026-08-01T00:00:00Z",
-  },
-];
-
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, RefreshCw } from "lucide-react";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   WEB_DEV: <Cpu className="w-5 h-5 text-white" />,
@@ -69,45 +45,69 @@ export function CompetitionsSection() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // 1. Animate Header Independently (once: true, fromTo for reliability)
   useGSAP(
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
 
       if (headerRef.current) {
-        gsap.from(headerRef.current, {
-          opacity: 0,
-          y: 30,
-          duration: 0.8,
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: "top 80%",
-          },
-        });
+        gsap.fromTo(
+          headerRef.current,
+          { opacity: 0, y: 25 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
       }
+    },
+    { scope: containerRef }
+  );
+
+  // 2. Animate Cards when data arrives
+  useGSAP(
+    () => {
+      if (prefersReducedMotion() || typeof window === "undefined") return;
 
       if (
         cardsRef.current &&
         cardsRef.current.children &&
         cardsRef.current.children.length > 0
       ) {
-        gsap.from(cardsRef.current.children, {
-          opacity: 0,
-          y: 40,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: cardsRef.current,
-            start: "top 75%",
-          },
-        });
+        gsap.fromTo(
+          cardsRef.current.children,
+          { opacity: 0, y: 35 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: cardsRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
       }
     },
     { scope: containerRef, dependencies: [competitions, isLoading] }
   );
 
   return (
-    <section id="competitions" ref={containerRef} className="pb-24 px-6 md:px-16 bg-transparent relative">
+    <section
+      id="competitions"
+      ref={containerRef}
+      className="pb-24 px-6 md:px-16 bg-transparent relative"
+    >
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
         <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
@@ -147,7 +147,7 @@ export function CompetitionsSection() {
         ) : (
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {competitions.map((comp) => {
-              const prize = (comp as any).prizePool || (comp as any).prize;
+              const prize = comp.prizePool;
               const iconKey =
                 comp.name?.toUpperCase().includes("WEB") || comp.slug?.includes("web")
                   ? "WEB_DEV"
@@ -176,7 +176,7 @@ export function CompetitionsSection() {
                       </CardDescription>
                     </CardHeader>
 
-                    {/* Sembunyikan bagian PRIZE POOL jika field prize belum ada di backend */}
+                    {/* Tampilkan PRIZE POOL hanya jika comp.prizePool ada isinya */}
                     {prize && (
                       <CardContent className="p-0 pt-6 border-t border-white/10">
                         <p className="font-mono text-xs uppercase tracking-wider text-accent font-semibold mb-1">

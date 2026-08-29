@@ -9,12 +9,9 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Loader2,
-  UploadCloud,
+  Upload,
   FileCheck,
   X,
-  Building2,
-  CreditCard,
-  FileText,
   AlertCircle,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,7 +35,6 @@ export default function CompleteProfilePage() {
 
   // If user is not logged in, redirect to login
   useEffect(() => {
-    // Wait a tick for session restoration
     const timer = setTimeout(() => {
       if (!isAuthenticated && !user) {
         toast.error("Silakan login terlebih dahulu.");
@@ -55,7 +51,6 @@ export default function CompleteProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Ukuran file maksimal 5MB.");
       return;
@@ -72,7 +67,6 @@ export default function CompleteProfilePage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    // Validation
     if (!institution.trim()) {
       toast.error("Asal institusi / sekolah / universitas wajib diisi.");
       return;
@@ -101,15 +95,13 @@ export default function CompleteProfilePage() {
       }
 
       // 2. POST /api/user/documents with type=KTM
-      setCurrentStep("Mengunggah dokumen KTM / Student Card...");
+      setCurrentStep("Mengunggah dokumen KTM...");
       try {
         const ktmFormData = new FormData();
         ktmFormData.append("type", "KTM");
         ktmFormData.append("file", ktmFile);
 
-        await apiClient.post("/api/user/documents", ktmFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiClient.post("/api/user/documents", ktmFormData);
       } catch (err: any) {
         const msg =
           err.response?.data?.message ||
@@ -124,9 +116,7 @@ export default function CompleteProfilePage() {
         ktpFormData.append("type", "KTP_PASSPORT_SIM");
         ktpFormData.append("file", ktpFile);
 
-        await apiClient.post("/api/user/documents", ktpFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await apiClient.post("/api/user/documents", ktpFormData);
       } catch (err: any) {
         const msg =
           err.response?.data?.message ||
@@ -134,12 +124,11 @@ export default function CompleteProfilePage() {
         throw new Error(`[KTP/Passport/SIM] ${msg}`);
       }
 
-      // All 3 succeeded!
       updateUser({ institution: institution.trim() });
       queryClient.invalidateQueries({ queryKey: ["userMe"] });
       queryClient.invalidateQueries({ queryKey: ["userDocuments"] });
 
-      toast.success("Profil dan dokumen identitas berhasil dilengkapi!");
+      toast.success("Profil dan dokumen verifikasi berhasil dilengkapi!");
 
       const role = user?.role;
       if (role === "ADMIN") {
@@ -160,65 +149,61 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="h-screen flex justify-end bg-background overflow-hidden relative">
-      {/* Decorative Left Circle / Collage */}
+      {/* Decorative Left Circle (Identical to Register / Login Split Screen) */}
       <div className="hidden lg:flex w-1/2 h-full items-center justify-start relative z-0">
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[-28%] shrink-0 border-r border-white/10">
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[-28%] shrink-0">
           <img
             src="/images/auth-collage.jpg"
             className="w-full h-full object-cover"
-            alt="SEVENT X Collage"
+            alt="Collage"
           />
         </div>
       </div>
 
-      {/* Right Form Container */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-20 z-50 relative py-10 overflow-y-auto">
+      {/* Right Form Container (Left-aligned form matching Login / Register) */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative py-10 overflow-y-auto">
         <div className="max-w-md w-full mx-auto space-y-6">
           <div className="space-y-2">
-            <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-white">
-              Lengkapi Profil <span className="text-[#00E5FF]">Kamu</span>
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-2">
+              Complete Your <span className="text-[#00E5FF]">Profile</span>
             </h1>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              Lengkapi data institusi dan unggah dokumen verifikasi identitas
-              untuk memenuhi syarat partisipasi kompetisi SEVENT X.
+            <p className="text-sm text-white/50 leading-relaxed">
+              Lengkapi informasi institusi dan unggah dokumen verifikasi identitas
+              untuk melanjutkan ke dashboard peserta.
             </p>
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-danger/10 border border-danger/30 flex items-start gap-3 text-danger text-xs animate-in fade-in">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div className="space-y-1">
+            <div className="p-3.5 rounded-md bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-400 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
                 <p className="font-semibold">Terjadi Kesalahan:</p>
-                <p>{errorMessage}</p>
+                <p className="text-[11px] text-white/70 mt-0.5">{errorMessage}</p>
               </div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Field 1: Asal Institusi */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/80 flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#00E5FF]" />
-                <span>Asal Institusi / Universitas / Sekolah</span>
-                <span className="text-rose-400">*</span>
+            <div className="space-y-1">
+              <label className="text-xs text-white/70 font-medium">
+                Asal Institusi / Universitas / Sekolah <span className="text-rose-400">*</span>
               </label>
               <Input
                 id="institution"
                 type="text"
                 disabled={isLoading}
-                placeholder="Contoh: Universitas Indonesia / SMAN 1"
+                placeholder="Contoh: Universitas Indonesia"
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
-                className="bg-card/60 border border-white/20 text-white placeholder:text-white/30 h-12 rounded-xl focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all"
+                className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
               />
             </div>
 
             {/* Field 2: Upload KTM/Student Card */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/80 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-[#00E5FF]" />
-                <span>Upload KTM / Kartu Pelajar</span>
-                <span className="text-rose-400">*</span>
+            <div className="space-y-1">
+              <label className="text-xs text-white/70 font-medium">
+                KTM / Kartu Pelajar <span className="text-rose-400">*</span>
               </label>
 
               <input
@@ -233,31 +218,22 @@ export default function CompleteProfilePage() {
               {!ktmFile ? (
                 <div
                   onClick={() => ktmInputRef.current?.click()}
-                  className="border-2 border-dashed border-white/20 hover:border-[#00E5FF] hover:bg-card-hover/40 rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
+                  className="border border-dashed border-white/20 hover:border-[#00E5FF] rounded-md p-3.5 text-center cursor-pointer transition-colors flex items-center justify-center gap-2 group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:text-[#00E5FF] group-hover:bg-[#00E5FF]/10 transition-colors">
-                    <UploadCloud className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-white">
-                      Pilih file KTM / Kartu Pelajar
-                    </p>
-                    <p className="text-[11px] text-text-secondary mt-0.5">
-                      JPG, PNG, atau PDF (Maks. 5MB)
-                    </p>
-                  </div>
+                  <Upload className="w-4 h-4 text-white/40 group-hover:text-[#00E5FF] transition-colors" />
+                  <span className="text-xs text-white/60">
+                    Upload KTM / Kartu Pelajar (Maks. 5MB)
+                  </span>
                 </div>
               ) : (
-                <div className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 rounded-xl p-3.5 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-9 h-9 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] flex items-center justify-center shrink-0">
-                      <FileCheck className="w-5 h-5" />
-                    </div>
-                    <div className="overflow-hidden text-left">
-                      <p className="text-xs font-semibold text-white truncate">
+                <div className="border border-white/20 rounded-md p-3 flex items-center justify-between gap-3 bg-surface/40">
+                  <div className="flex items-center gap-2.5 overflow-hidden text-left">
+                    <FileCheck className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-medium text-white truncate">
                         {ktmFile.name}
                       </p>
-                      <p className="text-[10px] text-text-secondary">
+                      <p className="text-[10px] text-white/40 font-mono">
                         {(ktmFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
@@ -266,7 +242,7 @@ export default function CompleteProfilePage() {
                     type="button"
                     disabled={isLoading}
                     onClick={() => setKtmFile(null)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-text-secondary hover:text-rose-400 transition-colors cursor-pointer"
+                    className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-rose-400 transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -275,11 +251,9 @@ export default function CompleteProfilePage() {
             </div>
 
             {/* Field 3: Upload KTP/Passport/SIM */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/80 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#00E5FF]" />
-                <span>Upload KTP / Passport / SIM</span>
-                <span className="text-rose-400">*</span>
+            <div className="space-y-1">
+              <label className="text-xs text-white/70 font-medium">
+                KTP / Passport / SIM <span className="text-rose-400">*</span>
               </label>
 
               <input
@@ -294,31 +268,22 @@ export default function CompleteProfilePage() {
               {!ktpFile ? (
                 <div
                   onClick={() => ktpInputRef.current?.click()}
-                  className="border-2 border-dashed border-white/20 hover:border-[#00E5FF] hover:bg-card-hover/40 rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group"
+                  className="border border-dashed border-white/20 hover:border-[#00E5FF] rounded-md p-3.5 text-center cursor-pointer transition-colors flex items-center justify-center gap-2 group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:text-[#00E5FF] group-hover:bg-[#00E5FF]/10 transition-colors">
-                    <UploadCloud className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-white">
-                      Pilih file KTP / Passport / SIM
-                    </p>
-                    <p className="text-[11px] text-text-secondary mt-0.5">
-                      JPG, PNG, atau PDF (Maks. 5MB)
-                    </p>
-                  </div>
+                  <Upload className="w-4 h-4 text-white/40 group-hover:text-[#00E5FF] transition-colors" />
+                  <span className="text-xs text-white/60">
+                    Upload KTP / Passport / SIM (Maks. 5MB)
+                  </span>
                 </div>
               ) : (
-                <div className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 rounded-xl p-3.5 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-9 h-9 rounded-lg bg-[#00E5FF]/15 text-[#00E5FF] flex items-center justify-center shrink-0">
-                      <FileCheck className="w-5 h-5" />
-                    </div>
-                    <div className="overflow-hidden text-left">
-                      <p className="text-xs font-semibold text-white truncate">
+                <div className="border border-white/20 rounded-md p-3 flex items-center justify-between gap-3 bg-surface/40">
+                  <div className="flex items-center gap-2.5 overflow-hidden text-left">
+                    <FileCheck className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                    <div className="overflow-hidden">
+                      <p className="text-xs font-medium text-white truncate">
                         {ktpFile.name}
                       </p>
-                      <p className="text-[10px] text-text-secondary">
+                      <p className="text-[10px] text-white/40 font-mono">
                         {(ktpFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
@@ -327,7 +292,7 @@ export default function CompleteProfilePage() {
                     type="button"
                     disabled={isLoading}
                     onClick={() => setKtpFile(null)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-text-secondary hover:text-rose-400 transition-colors cursor-pointer"
+                    className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-rose-400 transition-colors cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -339,7 +304,7 @@ export default function CompleteProfilePage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-linear-to-r from-[#2E5CFF] to-[#1E3BB3] hover:from-[#2448D9] hover:to-[#172d8a] text-white font-semibold h-12 rounded-xl shadow-lg mt-6 transition-all cursor-pointer"
+              className="w-full bg-linear-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md shadow-lg mt-4 transition-all cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

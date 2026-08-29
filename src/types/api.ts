@@ -29,6 +29,7 @@ export interface Competition {
   description: string;
   maxMember: number;
   isActive: boolean;
+  prizePool?: string | null;
   twibbonFrameUrl?: string | null;
   twibbonCaption?: string | null;
   timelines?: Timeline[];
@@ -39,6 +40,7 @@ export interface Competition {
 export interface TimelineStage {
   id: string;
   stageName: string;
+  phase?: TimelinePhase | string;
   startDate: string;
   endDate: string;
   description: string;
@@ -74,7 +76,17 @@ export interface Team {
   };
   status: "REVIEW" | "APPROVE" | "REJECT";
   members?: TeamMember[];
-  paymentProof?: { id: string; fileUrl: string; status: string } | null;
+  paymentProof?: {
+    id: string;
+    fileUrl: string;
+    status: string;
+    rejectionReason?: string | null;
+    reviewCount?: number;
+    lastRejectedAt?: string | null;
+  } | null;
+  rejectionReason?: string | null;
+  reviewCount?: number;
+  lastRejectedAt?: string | null;
   submission?: Submission | null;
   createdAt: string;
   updatedAt: string;

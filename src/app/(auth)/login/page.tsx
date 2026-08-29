@@ -21,7 +21,7 @@ import {
 } from "@/lib/auth-transition";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
   password: z.string().min(1, "Password is required"),
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -262,7 +262,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await apiClient.post("/api/auth/login", data);
-      const { user, accessToken } = response.data;
+      const { user, accessToken } = response.data.data;
       if (!accessToken || !user) throw new Error("Invalid response");
       setAuth(user, accessToken);
       toast.success(`Welcome back, ${user.fullName}!`);
@@ -272,6 +272,7 @@ export default function LoginPage() {
       else if (role === "JURI") router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
     } catch (error: any) {
+      console.log(error)
       toast.error(error.response?.data?.message || "Invalid credentials.");
     } finally {
       setIsLoading(false);
@@ -314,14 +315,14 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
               <Input
-                type="text"
-                placeholder="username"
+                type="email"
+                placeholder="Email"
                 className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
-                {...register("username")}
+                {...register("email")}
               />
-              {errors.username && (
+              {errors.email && (
                 <p className="text-xs text-red-400">
-                  {errors.username.message}
+                  {errors.email.message}
                 </p>
               )}
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
+import { Loader2 } from "lucide-react";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isSessionReady, setIsSessionReady] = useState(false);
@@ -42,14 +43,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   if (!isSessionReady) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
-        <div className="relative flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-surface border border-accent/30 flex items-center justify-center shadow-lg shadow-accent/10 animate-pulse">
-            <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="font-mono text-xs text-text-secondary tracking-widest uppercase animate-pulse">
-            Loading SEVENT X...
-          </p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-white/70">
+          <Loader2 className="w-4 h-4 animate-spin text-accent" />
+          <span className="font-mono text-xs tracking-wider uppercase">
+            Memverifikasi sesi...
+          </span>
         </div>
       </div>
     );

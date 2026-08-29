@@ -33,6 +33,7 @@ import {
   Calendar,
   Newspaper,
   LogOut,
+  UserCheck,
 } from "lucide-react";
 
 type Role = "juri" | "admin" | "peserta";
@@ -100,6 +101,11 @@ const NAV_ITEMS: Record<
       url: "/admin/documents",
       name: "User Documents",
       icon: <FileCheck className="w-5 h-5" />,
+    },
+    {
+      url: "/admin/judges",
+      name: "Judges",
+      icon: <UserCheck className="w-5 h-5" />,
     },
     {
       url: "/admin/competitions",

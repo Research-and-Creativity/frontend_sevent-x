@@ -248,7 +248,7 @@ export default function RegisterPage() {
       let accessToken = res.data?.accessToken;
       if (!accessToken || !user) {
         const loginRes = await apiClient.post("/api/auth/login", {
-          username: data.username,
+          email: data.email,
           password: data.password,
         });
         user = loginRes.data?.user;

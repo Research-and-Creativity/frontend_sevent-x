@@ -136,28 +136,43 @@ export function AppraisersSection() {
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
 
-      gsap.from(headerRef.current, {
-        opacity: 0,
-        y: 20, // Diperhalus jarak animasinya
-        duration: 1,
-        ease: "power2.out", // Lebih natural dari power3
-        scrollTrigger: {
-          trigger: headerRef.current,
-          start: "top 85%",
-        },
-      });
+      if (headerRef.current) {
+        gsap.fromTo(
+          headerRef.current,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      }
 
       if (containerRef.current) {
-        gsap.from(containerRef.current.querySelector(".embla"), {
-          opacity: 0,
-          y: 30,
-          duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 80%",
-          },
-        });
+        const emblaElem = containerRef.current.querySelector(".embla");
+        if (emblaElem) {
+          gsap.fromTo(
+            emblaElem,
+            { opacity: 0, y: 25 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 80%",
+                once: true,
+              },
+            }
+          );
+        }
       }
     },
     { scope: containerRef },

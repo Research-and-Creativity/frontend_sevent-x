@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { Competition } from "@/types/api";
 
 interface CalculatedRankItem {
   rank: number;
@@ -17,7 +19,24 @@ interface CalculatedRankItem {
 }
 
 export default function AdminResultsPage() {
-  const [selectedCompetition, setSelectedCompetition] = useState("comp-1");
+  // 1. Fetch competitions list
+  const { data: competitions = [] } = useQuery<Competition[]>({
+    queryKey: ["adminCompetitionsList"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/competitions");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [selectedCompSlug, setSelectedCompSlug] = useState("");
+  const activeSlug = selectedCompSlug || competitions[0]?.slug || "web-development";
+
   const [roundName, setRoundName] = useState("Final Round");
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
@@ -84,33 +103,36 @@ export default function AdminResultsPage() {
     },
   ];
 
-  // Handler: Calculate Scores
+  // Handler: Calculate Scores (sends competitionSlug and receives calculated rankings directly)
   const handleCalculateScores = async () => {
     setIsCalculating(true);
     try {
-      await apiClient.post("/api/admin/announcements/calculate", {
-        competitionId: selectedCompetition,
+      const res = await apiClient.post("/api/admin/announcements/calculate", {
+        competitionSlug: activeSlug,
         round: roundName,
       });
+      const data = res.data?.data || res.data;
+      if (Array.isArray(data) && data.length > 0) {
+        setRankings(data);
+      } else {
+        setRankings(mockCalculatedRankings);
+      }
     } catch {
-      // Fallback
-    }
-
-    setTimeout(() => {
+      setRankings(mockCalculatedRankings);
+    } finally {
       setIsCalculating(false);
       setHasCalculated(true);
-      setRankings(mockCalculatedRankings);
       toast.success("Kalkulasi skor akumulasi juri berhasil dihitung!");
-    }, 600);
+    }
   };
 
-  // Handler: Publish Results
+  // Handler: Publish Results (sends competitionSlug)
   const handlePublishResults = async () => {
     if (!hasCalculated) return;
     setIsPublishing(true);
     try {
       await apiClient.patch("/api/admin/announcements/publish", {
-        competitionId: selectedCompetition,
+        competitionSlug: activeSlug,
         round: roundName,
       });
     } catch {
@@ -126,7 +148,7 @@ export default function AdminResultsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header & Subtitle Singkat (TANPA Instructional Card Berlebihan) */}
+      {/* 1. Header & Subtitle Singkat */}
       <div className="pb-2 border-b border-border/40">
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
           Publish Results & Winner Announcement
@@ -139,26 +161,35 @@ export default function AdminResultsPage() {
       {/* 2. Selector Controls Bar: Pilih Kompetisi, Round, & Tombol Hitung */}
       <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-          {/* Dropdown Pilih Kompetisi */}
+          {/* Dropdown Pilih Kompetisi (berbasis slug) */}
           <div className="sm:col-span-5 space-y-1.5">
             <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
               Pilih Kompetisi
             </label>
             <select
-              value={selectedCompetition}
+              value={activeSlug}
               onChange={(e) => {
-                setSelectedCompetition(e.target.value);
+                setSelectedCompSlug(e.target.value);
                 setHasCalculated(false);
                 setIsPublished(false);
               }}
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
             >
-              <option value="comp-1" className="bg-card text-white">
-                National Web Development Competition 2026
-              </option>
-              <option value="comp-2" className="bg-card text-white">
-                National UI/UX Design Challenge 2026
-              </option>
+              {competitions.map((comp) => (
+                <option key={comp.id || comp.slug} value={comp.slug} className="bg-card text-white">
+                  {comp.name}
+                </option>
+              ))}
+              {competitions.length === 0 && (
+                <>
+                  <option value="web-development" className="bg-card text-white">
+                    National Web Development Competition 2026
+                  </option>
+                  <option value="ui-ux-design" className="bg-card text-white">
+                    National UI/UX Design Challenge 2026
+                  </option>
+                </>
+              )}
             </select>
           </div>
 

@@ -70,29 +70,48 @@ export function getPhaseLabel(phase: string): string {
   return labels[phase] || phase;
 }
 
-// Timeline diambil dari detail competition (getCompetitionBySlug), 
-// karena endpoint timeline terpisah belum pasti ada.
-// isActive/isCompleted dihitung di sini berdasarkan tanggal sekarang.
+// Timeline diambil dari GET /api/competitions/:slug/timeline
 export function useCompetitionTimeline(slug?: string) {
   return useQuery<TimelineStage[]>({
     queryKey: ["competitionTimeline", slug],
     queryFn: async () => {
       if (!slug) return [];
-      const res = await apiClient.get(`/api/competitions/${slug}`);
-      const competition = res.data?.data;
-      const timelines = competition?.timelines || [];
-      const now = Date.now();
-      return timelines.map((t: any) => ({
-        id: t.id,
-        phase: t.phase,
-        stageName: getPhaseLabel(t.phase),
-        startDate: t.startDate,
-        endDate: t.endDate,
-        isCompleted: new Date(t.endDate).getTime() < now,
-        isActive:
-          new Date(t.startDate).getTime() <= now &&
-          now <= new Date(t.endDate).getTime(),
-      }));
+      try {
+        const res = await apiClient.get(`/api/competitions/${slug}/timeline`);
+        const list = res.data?.data || res.data;
+        const timelines = Array.isArray(list) ? list : [];
+        const now = Date.now();
+        return timelines.map((t: any) => ({
+          id: t.id,
+          phase: t.phase,
+          stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
+          startDate: t.startDate,
+          endDate: t.endDate,
+          description: t.description || "",
+          isCompleted: new Date(t.endDate).getTime() < now,
+          isActive:
+            new Date(t.startDate).getTime() <= now &&
+            now <= new Date(t.endDate).getTime(),
+        }));
+      } catch {
+        // Fallback: get from detail competition
+        const res = await apiClient.get(`/api/competitions/${slug}`);
+        const competition = res.data?.data || res.data;
+        const timelines = competition?.timelines || [];
+        const now = Date.now();
+        return timelines.map((t: any) => ({
+          id: t.id,
+          phase: t.phase,
+          stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
+          startDate: t.startDate,
+          endDate: t.endDate,
+          description: t.description || "",
+          isCompleted: new Date(t.endDate).getTime() < now,
+          isActive:
+            new Date(t.startDate).getTime() <= now &&
+            now <= new Date(t.endDate).getTime(),
+        }));
+      }
     },
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
@@ -121,6 +140,9 @@ export interface UserDocumentItem {
   type: string;
   fileUrl: string;
   status: "REVIEW" | "APPROVE" | "REJECT" | string;
+  rejectionReason?: string | null;
+  reviewCount?: number;
+  lastRejectedAt?: string | null;
 }
 
 // Hook 7: Fetch User Documents GET /api/user/documents
@@ -150,8 +172,11 @@ export function useUserDocuments() {
 export function useCreateTeam() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; competitionId: string }) => {
-      const res = await apiClient.post("/api/teams", data);
+    mutationFn: async (data: { name: string; competitionSlug?: string; competitionId?: string }) => {
+      const res = await apiClient.post("/api/teams", {
+        teamName: data.name,
+        competitionSlug: data.competitionSlug || data.competitionId,
+      });
       return res.data?.data || res.data;
     },
     onSuccess: () => {
@@ -173,5 +198,52 @@ export function useJoinTeam() {
     },
   });
 }
+
+// Hook 10: Update Team Name PATCH /api/teams/me
+export function useUpdateTeamName() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (teamName: string) => {
+      const res = await apiClient.patch("/api/teams/me", { teamName, name: teamName });
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Hook 11: Leave / Disband Team DELETE /api/teams/me
+export function useLeaveTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.delete("/api/teams/me");
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Hook 12: Transfer Leadership POST /api/teams/me/transfer-leadership
+export function useTransferLeadership() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (newLeaderId: string) => {
+      const res = await apiClient.post("/api/teams/me/transfer-leadership", {
+        newLeaderId,
+        targetUserId: newLeaderId,
+        memberId: newLeaderId,
+      });
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
 
 
