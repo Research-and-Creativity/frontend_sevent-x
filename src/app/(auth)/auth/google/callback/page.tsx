@@ -42,11 +42,15 @@ function GoogleCallbackContent() {
           `Google auth successful! Welcome, ${user.fullName}.`,
         );
 
-        const role = user.role;
         setTimeout(() => {
-          if (role === "ADMIN") router.push("/admin/dashboard");
-          else if (role === "JURI") router.push("/juri/dashboard");
-          else router.push("/peserta/dashboard");
+          if (!user.institution || user.institution.trim() === "") {
+            router.push("/complete-profile");
+          } else {
+            const role = user.role;
+            if (role === "ADMIN") router.push("/admin/dashboard");
+            else if (role === "JURI") router.push("/juri/dashboard");
+            else router.push("/peserta/dashboard");
+          }
         }, 1200);
       } catch (err: any) {
         setStatus("error");

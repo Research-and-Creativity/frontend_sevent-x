@@ -18,12 +18,17 @@ export default function PesertaLayout({
 
   const currentUser = userMe || storeUser;
 
-  // Protection Guard: Ensure user is logged in as PESERTA or ADMIN
+  // Protection Guard: Ensure user is logged in as PESERTA or ADMIN, and profile is completed
   useEffect(() => {
     if (!isUserLoading && currentUser) {
       if (currentUser.role !== "PESERTA" && currentUser.role !== "ADMIN") {
         toast.error("Access denied. Peserta portal is restricted to participant accounts.");
         router.push("/login");
+        return;
+      }
+      if (!currentUser.institution || currentUser.institution.trim() === "") {
+        toast.info("Harap lengkapi data profil & dokumen verifikasi terlebih dahulu.");
+        router.push("/complete-profile");
       }
     }
   }, [currentUser, isUserLoading, router]);
