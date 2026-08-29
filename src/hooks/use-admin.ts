@@ -140,4 +140,83 @@ export function useAdminOverview() {
   });
 }
 
+export interface AdminUserDocumentItem {
+  id: string;
+  userId: string;
+  type: "TWIBBON" | "SHARE_STORY" | "KTM" | "KTP" | string;
+  fileUrl: string;
+  status: "REVIEW" | "APPROVE" | "REJECT" | string;
+  rejectionReason?: string | null;
+  reviewCount?: number;
+  lastRejectedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    institution?: string | null;
+    teamMember?: {
+      role: string;
+      team?: {
+        id: string;
+        teamName: string;
+        teamCode: string;
+        competition?: {
+          id: string;
+          name: string;
+          slug: string;
+        };
+      };
+    } | null;
+  };
+}
+
+// Hook 7: Fetch Admin User Documents GET /api/admin/user-documents
+export function useAdminUserDocuments(status?: string, type?: string) {
+  return useQuery<AdminUserDocumentItem[]>({
+    queryKey: ["adminUserDocuments", status, type],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/admin/user-documents", {
+        params: {
+          ...(status && status !== "ALL" ? { status } : status === "ALL" ? { status: "ALL" } : {}),
+          ...(type && type !== "ALL" ? { type } : {}),
+        },
+      });
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+  });
+}
+
+// Hook 8: Update User Document Status PATCH /api/admin/user-documents/:id/status
+export function useUpdateUserDocumentStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      documentId,
+      status,
+      reason,
+    }: {
+      documentId: string;
+      status: "APPROVE" | "REJECT";
+      reason?: string;
+    }) => {
+      const res = await apiClient.patch(
+        `/api/admin/user-documents/${documentId}/status`,
+        {
+          status,
+          ...(reason ? { reason: reason.trim() } : {}),
+        }
+      );
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminUserDocuments"] });
+      queryClient.invalidateQueries({ queryKey: ["adminOverview"] });
+    },
+  });
+}
+
+
 

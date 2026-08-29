@@ -88,7 +88,8 @@ export default function PesertaTeamPage() {
 
   const [twibbonUrl, setTwibbonUrl] = useState("");
   const [storyUrl, setStoryUrl] = useState("");
-  const [isSavingDocs, setIsSavingDocs] = useState(false);
+  const [isSavingTwibbon, setIsSavingTwibbon] = useState(false);
+  const [isSavingStory, setIsSavingStory] = useState(false);
   const [twibbonError, setTwibbonError] = useState<string | null>(null);
   const [storyError, setStoryError] = useState<string | null>(null);
 
@@ -417,67 +418,71 @@ export default function PesertaTeamPage() {
     }
   };
 
-  // Individual Docs Upload with Client-Side Validation
-  const handleSaveIndividualDocs = async (e: React.FormEvent) => {
+  // Individual Doc: Save Twibbon
+  const handleSaveTwibbon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isAllDocsApproved) return;
+    if (isTwibbonApproved) return;
 
-    let hasError = false;
-
-    // Validate Twibbon if not yet approved
-    if (!isTwibbonApproved) {
-      if (!twibbonUrl.trim()) {
-        setTwibbonError("Silakan isi link Twibbon terlebih dahulu");
-        hasError = true;
-      } else if (!isValidUrl(twibbonUrl.trim())) {
-        setTwibbonError(
-          "Format URL tidak valid. Gunakan awalan http:// atau https://"
-        );
-        hasError = true;
-      } else {
-        setTwibbonError(null);
-      }
+    if (!twibbonUrl.trim()) {
+      setTwibbonError("Silakan isi link Twibbon terlebih dahulu");
+      return;
     }
-
-    // Validate Story if not yet approved
-    if (!isStoryApproved) {
-      if (!storyUrl.trim()) {
-        setStoryError("Silakan isi link Share Story terlebih dahulu");
-        hasError = true;
-      } else if (!isValidUrl(storyUrl.trim())) {
-        setStoryError(
-          "Format URL tidak valid. Gunakan awalan http:// atau https://"
-        );
-        hasError = true;
-      } else {
-        setStoryError(null);
-      }
+    if (!isValidUrl(twibbonUrl.trim())) {
+      setTwibbonError(
+        "Format URL tidak valid. Gunakan awalan http:// atau https://"
+      );
+      return;
     }
+    setTwibbonError(null);
 
-    if (hasError) return;
-
-    setIsSavingDocs(true);
+    setIsSavingTwibbon(true);
     try {
-      if (twibbonUrl.trim() && !isTwibbonApproved) {
-        await apiClient.post("/api/user/documents/link", {
-          type: "TWIBBON",
-          url: twibbonUrl.trim(),
-        });
-      }
-      if (storyUrl.trim() && !isStoryApproved) {
-        await apiClient.post("/api/user/documents/link", {
-          type: "SHARE_STORY",
-          url: storyUrl.trim(),
-        });
-      }
-      toast.success("Tautan berkas individu berhasil disimpan!");
+      await apiClient.post("/api/user/documents/link", {
+        type: "TWIBBON",
+        url: twibbonUrl.trim(),
+      });
+      toast.success("Tautan Twibbon berhasil disimpan!");
       refetchUserDocs();
     } catch (err: any) {
       toast.error(
-        err.response?.data?.message || "Gagal menyimpan tautan berkas."
+        err.response?.data?.message || "Gagal menyimpan tautan Twibbon."
       );
     } finally {
-      setIsSavingDocs(false);
+      setIsSavingTwibbon(false);
+    }
+  };
+
+  // Individual Doc: Save Share Story
+  const handleSaveShareStory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isStoryApproved) return;
+
+    if (!storyUrl.trim()) {
+      setStoryError("Silakan isi link Share Story terlebih dahulu");
+      return;
+    }
+    if (!isValidUrl(storyUrl.trim())) {
+      setStoryError(
+        "Format URL tidak valid. Gunakan awalan http:// atau https://"
+      );
+      return;
+    }
+    setStoryError(null);
+
+    setIsSavingStory(true);
+    try {
+      await apiClient.post("/api/user/documents/link", {
+        type: "SHARE_STORY",
+        url: storyUrl.trim(),
+      });
+      toast.success("Tautan Share Story berhasil disimpan!");
+      refetchUserDocs();
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message || "Gagal menyimpan tautan Share Story."
+      );
+    } finally {
+      setIsSavingStory(false);
     }
   };
 
@@ -994,7 +999,7 @@ export default function PesertaTeamPage() {
           </Card>
 
           {/* SECTION 3: DOKUMEN BERKAS INDIVIDU (TWIBBON & SHARE STORY - With Validation & Lock) */}
-          <Card className="bg-card/90 border border-white/10 rounded-xl p-6 sm:p-8 space-y-4">
+          <Card className="bg-card/90 border border-white/10 rounded-xl p-6 sm:p-8 space-y-6">
             <div className="pb-3 border-b border-border/40">
               <h3 className="font-display text-lg font-bold text-white tracking-tight flex items-center gap-2">
                 <span>Dokumen Berkas Individu (Twibbon & Share Story)</span>
@@ -1005,15 +1010,21 @@ export default function PesertaTeamPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSaveIndividualDocs} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Input Twibbon */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Form 1: Twibbon */}
+              <form
+                onSubmit={handleSaveTwibbon}
+                className="space-y-4 flex flex-col justify-between p-4 rounded-xl bg-surface/50 border border-white/5"
+              >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
                       Link Twibbon Instagram
                     </label>
-                    {renderStatusBadge(twibbonDoc?.status, twibbonDoc?.reviewCount)}
+                    {renderStatusBadge(
+                      twibbonDoc?.status,
+                      twibbonDoc?.reviewCount
+                    )}
                   </div>
 
                   {(twibbonDoc?.status?.toUpperCase() === "REJECT" ||
@@ -1035,7 +1046,7 @@ export default function PesertaTeamPage() {
 
                   <input
                     type="url"
-                    disabled={isSavingDocs || isTwibbonApproved}
+                    disabled={isSavingTwibbon || isTwibbonApproved}
                     placeholder="https://instagram.com/p/..."
                     value={twibbonUrl}
                     onChange={(e) => {
@@ -1058,7 +1069,9 @@ export default function PesertaTeamPage() {
                     (twibbonDoc?.reviewCount ?? 1) > 1 &&
                     twibbonDoc?.rejectionReason && (
                       <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5">
-                        <span className="text-white/60 not-italic font-medium">Sebelumnya ditolak:</span>
+                        <span className="text-white/60 not-italic font-medium">
+                          Sebelumnya ditolak:
+                        </span>
                         <span>{twibbonDoc.rejectionReason}</span>
                       </p>
                     )}
@@ -1069,7 +1082,35 @@ export default function PesertaTeamPage() {
                   )}
                 </div>
 
-                {/* Input Share Story */}
+                <Button
+                  type="submit"
+                  disabled={isSavingTwibbon || isTwibbonApproved}
+                  className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
+                >
+                  {isSavingTwibbon ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : isTwibbonApproved ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-400" />
+                      <span>Twibbon Terverifikasi</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                      <span>Simpan Twibbon</span>
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {/* Form 2: Share Story */}
+              <form
+                onSubmit={handleSaveShareStory}
+                className="space-y-4 flex flex-col justify-between p-4 rounded-xl bg-surface/50 border border-white/5"
+              >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
@@ -1097,7 +1138,7 @@ export default function PesertaTeamPage() {
 
                   <input
                     type="url"
-                    disabled={isSavingDocs || isStoryApproved}
+                    disabled={isSavingStory || isStoryApproved}
                     placeholder="https://instagram.com/stories/..."
                     value={storyUrl}
                     onChange={(e) => {
@@ -1120,7 +1161,9 @@ export default function PesertaTeamPage() {
                     (storyDoc?.reviewCount ?? 1) > 1 &&
                     storyDoc?.rejectionReason && (
                       <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5">
-                        <span className="text-white/60 not-italic font-medium">Sebelumnya ditolak:</span>
+                        <span className="text-white/60 not-italic font-medium">
+                          Sebelumnya ditolak:
+                        </span>
                         <span>{storyDoc.rejectionReason}</span>
                       </p>
                     )}
@@ -1130,30 +1173,31 @@ export default function PesertaTeamPage() {
                     </p>
                   )}
                 </div>
-              </div>
 
-              <Button
-                type="submit"
-                disabled={isSavingDocs || isAllDocsApproved}
-                className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-5 h-9 rounded-lg cursor-pointer disabled:opacity-50"
-              >
-                {isSavingDocs ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    <span>Menyimpan...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                    <span>
-                      {isAllDocsApproved
-                        ? "Seluruh Dokumen Terverifikasi"
-                        : "Simpan Tautan Berkas"}
-                    </span>
-                  </>
-                )}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={isSavingStory || isStoryApproved}
+                  className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
+                >
+                  {isSavingStory ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : isStoryApproved ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-400" />
+                      <span>Share Story Terverifikasi</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                      <span>Simpan Share Story</span>
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
           </Card>
         </div>
       )}
