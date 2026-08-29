@@ -163,3 +163,38 @@ export interface Announcement {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TeamAnnouncementItem {
+  id: string;
+  competitionId: string;
+  teamId: string;
+  isFinalist: boolean;
+  round: string;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  competition?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  team?: {
+    id: string;
+    teamName: string;
+    teamCode: string;
+  };
+}
+
+export interface MyAnnouncementResponse {
+  team: {
+    id: string;
+    teamName: string;
+    teamCode: string;
+    competition?: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  };
+  announcements: TeamAnnouncementItem[];
+}

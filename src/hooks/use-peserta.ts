@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { User, Team, Submission, NewsPost, Competition } from "@/types/api";
+import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse } from "@/types/api";
 
 export interface TimelineStage {
   id: string;
@@ -311,6 +311,95 @@ export function useCreateOrUpdateSubmission() {
     },
   });
 }
+
+// Hook 15: Fetch Team Announcements (Finalist / Results) GET /api/announcements/me
+export function useMyAnnouncements() {
+  return useQuery<MyAnnouncementResponse | null>({
+    queryKey: ["myAnnouncements"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/announcements/me");
+        return res.data?.data ?? null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export interface NewsPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface NewsFeedResponse {
+  news: NewsPost[];
+  pagination: NewsPagination;
+}
+
+// Hook 16: Fetch News Feed with Tag Filter & Pagination GET /api/news
+export function useNewsFeed(params?: { tag?: string; page?: number; limit?: number }) {
+  return useQuery<NewsFeedResponse>({
+    queryKey: ["newsFeed", params?.tag, params?.page, params?.limit],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.tag && params.tag !== "All") {
+        queryParams.append("tag", params.tag);
+      }
+      if (params?.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params?.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const queryString = queryParams.toString();
+      const endpoint = queryString ? `/api/news?${queryString}` : "/api/news";
+      const res = await apiClient.get(endpoint);
+      const data = res.data?.data;
+
+      if (data && Array.isArray(data.news)) {
+        return {
+          news: data.news,
+          pagination: data.pagination || {
+            page: params?.page || 1,
+            limit: params?.limit || 10,
+            total: data.news.length,
+            totalPages: 1,
+          },
+        };
+      }
+      if (Array.isArray(data)) {
+        return {
+          news: data,
+          pagination: {
+            page: 1,
+            limit: data.length,
+            total: data.length,
+            totalPages: 1,
+          },
+        };
+      }
+      return {
+        news: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 1,
+        },
+      };
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
 
 
 
