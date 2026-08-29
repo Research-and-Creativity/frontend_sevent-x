@@ -30,7 +30,10 @@ export function useUserTeam() {
       const res = await apiClient.get("/api/teams/me");
       return res.data?.data ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -164,7 +167,10 @@ export function useUserDocuments() {
         }
       }
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 

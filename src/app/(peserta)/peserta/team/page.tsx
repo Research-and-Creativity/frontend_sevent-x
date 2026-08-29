@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useUserMe,
   useUserTeam,
@@ -26,6 +26,8 @@ import {
   UploadCloud,
   CheckCircle2,
   AlertCircle,
+  Clock,
+  ExternalLink,
   FileText,
   CreditCard,
   Users,
@@ -77,6 +79,7 @@ export default function PesertaTeamPage() {
   // Payment Proof States & Validation
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
   const [isUploadingPayment, setIsUploadingPayment] = useState(false);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [isPaymentConfirmOpen, setIsPaymentConfirmOpen] = useState(false);
 
@@ -88,6 +91,8 @@ export default function PesertaTeamPage() {
 
   const [twibbonUrl, setTwibbonUrl] = useState("");
   const [storyUrl, setStoryUrl] = useState("");
+  const [isEditingTwibbon, setIsEditingTwibbon] = useState(false);
+  const [isEditingStory, setIsEditingStory] = useState(false);
   const [isSavingTwibbon, setIsSavingTwibbon] = useState(false);
   const [isSavingStory, setIsSavingStory] = useState(false);
   const [twibbonError, setTwibbonError] = useState<string | null>(null);
@@ -140,18 +145,124 @@ export default function PesertaTeamPage() {
     (team as any)?.reviewCount ||
     1;
 
+  const paymentFileUrl =
+    typeof team?.paymentProof === "string"
+      ? team.paymentProof
+      : paymentProofObj?.fileUrl || (paymentProofObj as any)?.url || null;
+
   const isPaymentApproved =
     paymentProofStatus?.toUpperCase() === "APPROVE" ||
     paymentProofStatus?.toUpperCase() === "APPROVED" ||
     paymentProofStatus?.toUpperCase() === "VERIFIED";
+  const isPaymentReview =
+    paymentProofStatus?.toUpperCase() === "REVIEW" ||
+    paymentProofStatus?.toUpperCase() === "PENDING";
+  const isPaymentRejected =
+    paymentProofStatus?.toUpperCase() === "REJECT" ||
+    paymentProofStatus?.toUpperCase() === "REJECTED";
 
+  const twibbonStatusUpper = twibbonDoc?.status?.toUpperCase() || null;
   const isTwibbonApproved =
-    twibbonDoc?.status?.toUpperCase() === "APPROVE" ||
-    twibbonDoc?.status?.toUpperCase() === "APPROVED";
+    twibbonStatusUpper === "APPROVE" || twibbonStatusUpper === "APPROVED";
+  const isTwibbonReview =
+    twibbonStatusUpper === "REVIEW" || twibbonStatusUpper === "PENDING";
+  const isTwibbonRejected =
+    twibbonStatusUpper === "REJECT" || twibbonStatusUpper === "REJECTED";
+
+  const storyStatusUpper = storyDoc?.status?.toUpperCase() || null;
   const isStoryApproved =
-    storyDoc?.status?.toUpperCase() === "APPROVE" ||
-    storyDoc?.status?.toUpperCase() === "APPROVED";
+    storyStatusUpper === "APPROVE" || storyStatusUpper === "APPROVED";
+  const isStoryReview =
+    storyStatusUpper === "REVIEW" || storyStatusUpper === "PENDING";
+  const isStoryRejected =
+    storyStatusUpper === "REJECT" || storyStatusUpper === "REJECTED";
+
   const isAllDocsApproved = Boolean(isTwibbonApproved && isStoryApproved);
+
+  // Status Change Detection & Real-Time Polling Toast Notification
+  const prevStatusesRef = useRef<{
+    payment?: string | null;
+    twibbon?: string | null;
+    story?: string | null;
+    isInitialized: boolean;
+  }>({
+    payment: undefined,
+    twibbon: undefined,
+    story: undefined,
+    isInitialized: false,
+  });
+
+  useEffect(() => {
+    const currentPayment = paymentProofStatus?.toUpperCase() ?? null;
+    const currentTwibbon = twibbonDoc?.status?.toUpperCase() ?? null;
+    const currentStory = storyDoc?.status?.toUpperCase() ?? null;
+
+    if (!prevStatusesRef.current.isInitialized) {
+      if (
+        paymentProofStatus !== undefined ||
+        twibbonDoc !== undefined ||
+        storyDoc !== undefined
+      ) {
+        prevStatusesRef.current = {
+          payment: currentPayment,
+          twibbon: currentTwibbon,
+          story: currentStory,
+          isInitialized: true,
+        };
+      }
+      return;
+    }
+
+    // Check Payment Status Change
+    const prevPayment = prevStatusesRef.current.payment;
+    if (prevPayment !== undefined && prevPayment !== currentPayment && currentPayment !== null) {
+      if (
+        currentPayment === "APPROVE" ||
+        currentPayment === "APPROVED" ||
+        currentPayment === "VERIFIED"
+      ) {
+        toast.success("Bukti pembayaran tim Anda telah diverifikasi oleh admin!");
+      } else if (currentPayment === "REJECT" || currentPayment === "REJECTED") {
+        toast.error(
+          `Bukti pembayaran ditolak: ${paymentRejectionReason || "Silakan cek alasan dan unggah ulang."}`
+        );
+      }
+      prevStatusesRef.current.payment = currentPayment;
+    }
+
+    // Check Twibbon Status Change
+    const prevTwibbon = prevStatusesRef.current.twibbon;
+    if (prevTwibbon !== undefined && prevTwibbon !== currentTwibbon && currentTwibbon !== null) {
+      if (currentTwibbon === "APPROVE" || currentTwibbon === "APPROVED") {
+        toast.success("Tautan Twibbon Anda telah disetujui oleh admin!");
+      } else if (currentTwibbon === "REJECT" || currentTwibbon === "REJECTED") {
+        toast.error(
+          `Tautan Twibbon ditolak: ${twibbonDoc?.rejectionReason || "Silakan cek alasan dan perbaiki."}`
+        );
+      }
+      prevStatusesRef.current.twibbon = currentTwibbon;
+    }
+
+    // Check Share Story Status Change
+    const prevStory = prevStatusesRef.current.story;
+    if (prevStory !== undefined && prevStory !== currentStory && currentStory !== null) {
+      if (currentStory === "APPROVE" || currentStory === "APPROVED") {
+        toast.success("Tautan Share Story Anda telah disetujui oleh admin!");
+      } else if (currentStory === "REJECT" || currentStory === "REJECTED") {
+        toast.error(
+          `Tautan Share Story ditolak: ${storyDoc?.rejectionReason || "Silakan cek alasan dan perbaiki."}`
+        );
+      }
+      prevStatusesRef.current.story = currentStory;
+    }
+  }, [
+    paymentProofStatus,
+    twibbonDoc?.status,
+    storyDoc?.status,
+    paymentRejectionReason,
+    twibbonDoc?.rejectionReason,
+    storyDoc?.rejectionReason,
+  ]);
 
   // Determine active Competition
   const currentComp = competitions.find(
@@ -408,6 +519,7 @@ export default function PesertaTeamPage() {
       );
       setPaymentFile(null);
       setIsPaymentConfirmOpen(false);
+      setIsEditingPayment(false);
       refetchTeam();
     } catch (err: any) {
       toast.error(
@@ -442,6 +554,7 @@ export default function PesertaTeamPage() {
         url: twibbonUrl.trim(),
       });
       toast.success("Tautan Twibbon berhasil disimpan!");
+      setIsEditingTwibbon(false);
       refetchUserDocs();
     } catch (err: any) {
       toast.error(
@@ -476,6 +589,7 @@ export default function PesertaTeamPage() {
         url: storyUrl.trim(),
       });
       toast.success("Tautan Share Story berhasil disimpan!");
+      setIsEditingStory(false);
       refetchUserDocs();
     } catch (err: any) {
       toast.error(
@@ -898,19 +1012,81 @@ export default function PesertaTeamPage() {
                   </p>
                 </div>
               </div>
-            ) : isLeader ? (
-              /* State: Leader can upload/re-upload if not approved */
-              <form onSubmit={handleUploadPaymentProof} className="space-y-4">
-                <p className="text-xs text-text-secondary">
-                  Biaya Pendaftaran:{" "}
-                  <span className="text-white font-semibold">
-                    Rp 150.000 / Tim
-                  </span>{" "}
-                  (Mandiri 131-00-1928-8472 a.n SEVENT X)
-                </p>
+            ) : isPaymentReview && !isEditingPayment ? (
+              /* State: Sedang Ditinjau Admin (Locked with "Ubah" button) */
+              <div className="space-y-3">
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Clock className="w-4 h-4 shrink-0 text-amber-400" />
+                    <div className="space-y-0.5">
+                      <p className="font-semibold text-amber-300">
+                        Sedang ditinjau admin.
+                      </p>
+                      {paymentFileUrl && (
+                        <a
+                          href={paymentFileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent hover:underline text-[11px] inline-flex items-center gap-1 font-mono"
+                        >
+                          <span className="truncate max-w-[200px] sm:max-w-xs">
+                            {paymentFileUrl.split("/").pop() || "Lihat Bukti Pembayaran"}
+                          </span>
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  {isLeader && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsEditingPayment(true)}
+                      className="bg-surface border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs h-7 px-3 rounded-lg cursor-pointer shrink-0"
+                    >
+                      <Pencil className="w-3 h-3 mr-1" />
+                      <span>Ubah</span>
+                    </Button>
+                  )}
+                </div>
 
-                {paymentProofStatus?.toUpperCase() === "REJECT" ||
-                paymentProofStatus?.toUpperCase() === "REJECTED" ? (
+                {paymentReviewCount > 1 && paymentRejectionReason && (
+                  <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5 pt-0.5">
+                    <span className="text-white/60 not-italic font-medium">Sebelumnya ditolak:</span>
+                    <span>{paymentRejectionReason}</span>
+                  </p>
+                )}
+              </div>
+            ) : isLeader ? (
+              /* State: Leader can upload / edit payment proof */
+              <form onSubmit={handleUploadPaymentProof} className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-text-secondary">
+                    Biaya Pendaftaran:{" "}
+                    <span className="text-white font-semibold">
+                      Rp 150.000 / Tim
+                    </span>{" "}
+                    (Mandiri 131-00-1928-8472 a.n SEVENT X)
+                  </p>
+                  {isEditingPayment && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsEditingPayment(false);
+                        setPaymentFile(null);
+                        setPaymentError(null);
+                      }}
+                      className="text-xs text-text-secondary hover:text-white h-7 px-2"
+                    >
+                      Batal
+                    </Button>
+                  )}
+                </div>
+
+                {isPaymentRejected ? (
                   <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2.5">
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
                     <div className="space-y-1">
@@ -923,6 +1099,11 @@ export default function PesertaTeamPage() {
                         Silakan perbaiki dan unggah ulang bukti pembayaran yang valid.
                       </p>
                     </div>
+                  </div>
+                ) : isEditingPayment ? (
+                  <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+                    <Pencil className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                    <span>Mode ubah aktif: Pilih file baru untuk memperbarui bukti pembayaran.</span>
                   </div>
                 ) : null}
 
@@ -969,7 +1150,7 @@ export default function PesertaTeamPage() {
                     </p>
                   )}
 
-                  {paymentProofStatus?.toUpperCase() === "REVIEW" &&
+                  {isPaymentReview &&
                     paymentReviewCount > 1 &&
                     paymentRejectionReason && (
                       <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5 pt-1">
@@ -1027,13 +1208,17 @@ export default function PesertaTeamPage() {
                     )}
                   </div>
 
-                  {(twibbonDoc?.status?.toUpperCase() === "REJECT" ||
-                    twibbonDoc?.status?.toUpperCase() === "REJECTED") && (
+                  {isTwibbonApproved ? (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="font-medium">Sudah terverifikasi.</span>
+                    </div>
+                  ) : isTwibbonRejected ? (
                     <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-300 flex items-start gap-2 animate-in fade-in">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400 mt-0.5" />
                       <div className="space-y-0.5">
                         <p className="font-medium text-rose-400">
-                          {twibbonDoc.rejectionReason
+                          {twibbonDoc?.rejectionReason
                             ? `Ditolak: ${twibbonDoc.rejectionReason}`
                             : "Tautan Twibbon sebelumnya ditolak oleh admin."}
                         </p>
@@ -1042,18 +1227,44 @@ export default function PesertaTeamPage() {
                         </p>
                       </div>
                     </div>
-                  )}
+                  ) : isTwibbonReview && !isEditingTwibbon ? (
+                    <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="font-medium">Sedang ditinjau admin.</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsEditingTwibbon(true)}
+                        className="bg-surface border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-[11px] h-6 px-2.5 rounded-lg cursor-pointer shrink-0"
+                      >
+                        <Pencil className="w-2.5 h-2.5 mr-1" />
+                        <span>Ubah</span>
+                      </Button>
+                    </div>
+                  ) : isEditingTwibbon ? (
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[11px] text-amber-300 flex items-center gap-1.5">
+                      <Pencil className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span>Mode ubah aktif: Masukkan link baru Twibbon.</span>
+                    </div>
+                  ) : null}
 
                   <input
                     type="url"
-                    disabled={isSavingTwibbon || isTwibbonApproved}
+                    disabled={
+                      isSavingTwibbon ||
+                      isTwibbonApproved ||
+                      (isTwibbonReview && !isEditingTwibbon)
+                    }
                     placeholder="https://instagram.com/p/..."
                     value={twibbonUrl}
                     onChange={(e) => {
                       setTwibbonUrl(e.target.value);
                       if (twibbonError) setTwibbonError(null);
                     }}
-                    className={`w-full bg-surface border rounded-xl px-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full bg-surface border rounded-xl px-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                       twibbonError
                         ? "border-rose-500/60 bg-rose-500/5 focus:border-rose-500"
                         : "border-border/80 focus:border-accent"
@@ -1065,7 +1276,7 @@ export default function PesertaTeamPage() {
                       <span>{twibbonError}</span>
                     </p>
                   )}
-                  {twibbonDoc?.status?.toUpperCase() === "REVIEW" &&
+                  {isTwibbonReview &&
                     (twibbonDoc?.reviewCount ?? 1) > 1 &&
                     twibbonDoc?.rejectionReason && (
                       <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5">
@@ -1075,35 +1286,68 @@ export default function PesertaTeamPage() {
                         <span>{twibbonDoc.rejectionReason}</span>
                       </p>
                     )}
-                  {isTwibbonApproved && (
-                    <p className="text-[11px] text-emerald-400">
-                      Sudah terverifikasi, hubungi admin jika perlu perubahan.
-                    </p>
-                  )}
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSavingTwibbon || isTwibbonApproved}
-                  className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  {isSavingTwibbon ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : isTwibbonApproved ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-400" />
-                      <span>Twibbon Terverifikasi</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                      <span>Simpan Twibbon</span>
-                    </>
-                  )}
-                </Button>
+                {isTwibbonApproved ? (
+                  <Button
+                    type="button"
+                    disabled
+                    className="w-full bg-surface border border-white/10 text-emerald-400 text-xs font-semibold h-9 rounded-lg disabled:opacity-60 mt-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                    <span>Twibbon Terverifikasi</span>
+                  </Button>
+                ) : isTwibbonReview && !isEditingTwibbon ? null : isEditingTwibbon ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingTwibbon(false);
+                        setTwibbonUrl(twibbonDoc?.fileUrl || "");
+                        setTwibbonError(null);
+                      }}
+                      className="w-1/3 bg-surface border-white/10 text-white/80 hover:bg-card-hover text-xs font-semibold h-9 rounded-lg cursor-pointer"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSavingTwibbon}
+                      className="flex-1 bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50"
+                    >
+                      {isSavingTwibbon ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                          <span>Simpan Twibbon</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSavingTwibbon}
+                    className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
+                  >
+                    {isSavingTwibbon ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                        <span>Simpan Twibbon</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </form>
 
               {/* Form 2: Share Story */}
@@ -1119,13 +1363,17 @@ export default function PesertaTeamPage() {
                     {renderStatusBadge(storyDoc?.status, storyDoc?.reviewCount)}
                   </div>
 
-                  {(storyDoc?.status?.toUpperCase() === "REJECT" ||
-                    storyDoc?.status?.toUpperCase() === "REJECTED") && (
+                  {isStoryApproved ? (
+                    <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="font-medium">Sudah terverifikasi.</span>
+                    </div>
+                  ) : isStoryRejected ? (
                     <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-300 flex items-start gap-2 animate-in fade-in">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400 mt-0.5" />
                       <div className="space-y-0.5">
                         <p className="font-medium text-rose-400">
-                          {storyDoc.rejectionReason
+                          {storyDoc?.rejectionReason
                             ? `Ditolak: ${storyDoc.rejectionReason}`
                             : "Tautan Share Story sebelumnya ditolak oleh admin."}
                         </p>
@@ -1134,18 +1382,44 @@ export default function PesertaTeamPage() {
                         </p>
                       </div>
                     </div>
-                  )}
+                  ) : isStoryReview && !isEditingStory ? (
+                    <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="font-medium">Sedang ditinjau admin.</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsEditingStory(true)}
+                        className="bg-surface border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-[11px] h-6 px-2.5 rounded-lg cursor-pointer shrink-0"
+                      >
+                        <Pencil className="w-2.5 h-2.5 mr-1" />
+                        <span>Ubah</span>
+                      </Button>
+                    </div>
+                  ) : isEditingStory ? (
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[11px] text-amber-300 flex items-center gap-1.5">
+                      <Pencil className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span>Mode ubah aktif: Masukkan link baru Share Story.</span>
+                    </div>
+                  ) : null}
 
                   <input
                     type="url"
-                    disabled={isSavingStory || isStoryApproved}
+                    disabled={
+                      isSavingStory ||
+                      isStoryApproved ||
+                      (isStoryReview && !isEditingStory)
+                    }
                     placeholder="https://instagram.com/stories/..."
                     value={storyUrl}
                     onChange={(e) => {
                       setStoryUrl(e.target.value);
                       if (storyError) setStoryError(null);
                     }}
-                    className={`w-full bg-surface border rounded-xl px-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full bg-surface border rounded-xl px-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                       storyError
                         ? "border-rose-500/60 bg-rose-500/5 focus:border-rose-500"
                         : "border-border/80 focus:border-accent"
@@ -1157,7 +1431,7 @@ export default function PesertaTeamPage() {
                       <span>{storyError}</span>
                     </p>
                   )}
-                  {storyDoc?.status?.toUpperCase() === "REVIEW" &&
+                  {isStoryReview &&
                     (storyDoc?.reviewCount ?? 1) > 1 &&
                     storyDoc?.rejectionReason && (
                       <p className="text-[11px] text-text-secondary/70 italic flex items-center gap-1.5">
@@ -1167,35 +1441,68 @@ export default function PesertaTeamPage() {
                         <span>{storyDoc.rejectionReason}</span>
                       </p>
                     )}
-                  {isStoryApproved && (
-                    <p className="text-[11px] text-emerald-400">
-                      Sudah terverifikasi, hubungi admin jika perlu perubahan.
-                    </p>
-                  )}
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSavingStory || isStoryApproved}
-                  className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  {isSavingStory ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : isStoryApproved ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-400" />
-                      <span>Share Story Terverifikasi</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                      <span>Simpan Share Story</span>
-                    </>
-                  )}
-                </Button>
+                {isStoryApproved ? (
+                  <Button
+                    type="button"
+                    disabled
+                    className="w-full bg-surface border border-white/10 text-emerald-400 text-xs font-semibold h-9 rounded-lg disabled:opacity-60 mt-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                    <span>Share Story Terverifikasi</span>
+                  </Button>
+                ) : isStoryReview && !isEditingStory ? null : isEditingStory ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingStory(false);
+                        setStoryUrl(storyDoc?.fileUrl || "");
+                        setStoryError(null);
+                      }}
+                      className="w-1/3 bg-surface border-white/10 text-white/80 hover:bg-card-hover text-xs font-semibold h-9 rounded-lg cursor-pointer"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSavingStory}
+                      className="flex-1 bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50"
+                    >
+                      {isSavingStory ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                          <span>Simpan Share Story</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSavingStory}
+                    className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-9 rounded-lg cursor-pointer disabled:opacity-50 mt-2"
+                  >
+                    {isSavingStory ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                        <span>Simpan Share Story</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </form>
             </div>
           </Card>
