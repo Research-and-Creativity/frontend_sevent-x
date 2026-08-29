@@ -121,3 +121,23 @@ export function useUpdatePaymentProofStatus() {
   });
 }
 
+export interface AdminOverviewStats {
+  totalTeams: number;
+  totalPeserta: number;
+  pendingReview: number;
+  totalCompetitions: number;
+}
+
+// Hook 6: Fetch Admin Dashboard Overview GET /api/admin/overview
+export function useAdminOverview() {
+  return useQuery<AdminOverviewStats>({
+    queryKey: ["adminOverview"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/admin/overview");
+      return res.data?.data || res.data;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+

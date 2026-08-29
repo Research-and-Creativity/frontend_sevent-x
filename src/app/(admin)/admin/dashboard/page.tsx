@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users,
   FileCheck,
@@ -13,8 +14,11 @@ import {
   ChevronRight,
   ShieldAlert,
 } from "lucide-react";
+import { useAdminOverview } from "@/hooks/use-admin";
 
 export default function AdminOverviewDashboardPage() {
+  const { data: stats, isLoading } = useAdminOverview();
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Welcome Banner */}
@@ -33,28 +37,56 @@ export default function AdminOverviewDashboardPage() {
 
       {/* 4 Summary Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Total Tim */}
         <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Pending Teams</span>
-          <p className="font-display text-3xl font-bold text-amber-400">12</p>
-          <p className="text-xs text-text-secondary">Butuh verifikasi pembayaran</p>
+          <span className="font-mono text-xs text-text-secondary uppercase">Total Tim</span>
+          {isLoading ? (
+            <Skeleton className="h-9 w-16 bg-surface/60 rounded-lg" />
+          ) : (
+            <p className="font-display text-3xl font-bold text-white">
+              {stats?.totalTeams !== undefined ? stats.totalTeams : "-"}
+            </p>
+          )}
+          <p className="text-xs text-text-secondary">Jumlah tim terdaftar</p>
         </Card>
 
+        {/* Card 2: Total Peserta */}
         <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Pending Documents</span>
-          <p className="font-display text-3xl font-bold text-amber-400">28</p>
-          <p className="text-xs text-text-secondary">Berkas KTM/KTP belum direview</p>
+          <span className="font-mono text-xs text-text-secondary uppercase">Total Peserta</span>
+          {isLoading ? (
+            <Skeleton className="h-9 w-16 bg-surface/60 rounded-lg" />
+          ) : (
+            <p className="font-display text-3xl font-bold text-accent">
+              {stats?.totalPeserta !== undefined ? stats.totalPeserta : "-"}
+            </p>
+          )}
+          <p className="text-xs text-text-secondary">Akun peserta terdaftar</p>
         </Card>
 
+        {/* Card 3: Perlu Ditinjau */}
         <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Active Competitions</span>
-          <p className="font-display text-3xl font-bold text-white">2</p>
-          <p className="text-xs text-text-secondary">Web Dev & UI/UX Design</p>
+          <span className="font-mono text-xs text-text-secondary uppercase">Perlu Ditinjau</span>
+          {isLoading ? (
+            <Skeleton className="h-9 w-16 bg-surface/60 rounded-lg" />
+          ) : (
+            <p className="font-display text-3xl font-bold text-amber-400">
+              {stats?.pendingReview !== undefined ? stats.pendingReview : "-"}
+            </p>
+          )}
+          <p className="text-xs text-text-secondary">Pembayaran & berkas pending</p>
         </Card>
 
+        {/* Card 4: Cabang Kompetisi */}
         <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Published News</span>
-          <p className="font-display text-3xl font-bold text-accent">5</p>
-          <p className="text-xs text-text-secondary">Artikel pengumuman aktif</p>
+          <span className="font-mono text-xs text-text-secondary uppercase">Cabang Kompetisi</span>
+          {isLoading ? (
+            <Skeleton className="h-9 w-16 bg-surface/60 rounded-lg" />
+          ) : (
+            <p className="font-display text-3xl font-bold text-white">
+              {stats?.totalCompetitions !== undefined ? stats.totalCompetitions : "-"}
+            </p>
+          )}
+          <p className="text-xs text-text-secondary">Kategori perlombaan aktif</p>
         </Card>
       </div>
 
