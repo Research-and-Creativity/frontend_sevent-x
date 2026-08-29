@@ -251,7 +251,7 @@ export default function PesertaTeamPage() {
     }
     try {
       const joined = await joinTeamMutation.mutateAsync({
-        inviteCode: joinCode.trim(),
+        teamCode: joinCode.trim(),
       });
       if (joined) setLocalTeam(joined);
       toast.success("Berhasil bergabung dengan tim!");

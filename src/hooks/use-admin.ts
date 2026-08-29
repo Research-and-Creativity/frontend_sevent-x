@@ -92,3 +92,32 @@ export function useRemoveJudge() {
     },
   });
 }
+
+// Hook 5: Update Team Payment Proof Status PATCH /api/teams/:id/payment-proof/status
+export function useUpdatePaymentProofStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      teamId,
+      status,
+      reason,
+    }: {
+      teamId: string;
+      status: "APPROVE" | "REJECT";
+      reason?: string;
+    }) => {
+      const res = await apiClient.patch(
+        `/api/teams/${teamId}/payment-proof/status`,
+        {
+          status,
+          ...(reason ? { reason: reason.trim() } : {}),
+        }
+      );
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminTeams"] });
+    },
+  });
+}
+

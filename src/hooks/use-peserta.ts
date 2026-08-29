@@ -189,8 +189,10 @@ export function useCreateTeam() {
 export function useJoinTeam() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { inviteCode: string }) => {
-      const res = await apiClient.post("/api/teams/join", data);
+    mutationFn: async (data: { teamCode: string }) => {
+      const res = await apiClient.post("/api/teams/join", {
+        teamCode: data.teamCode,
+      });
       return res.data?.data || res.data;
     },
     onSuccess: () => {
