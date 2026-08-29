@@ -101,9 +101,16 @@ export interface Submission {
     teamCode: string;
     competition?: { id: string; name: string; slug: string };
   };
+  projectTitle?: string;
+  description?: string;
+  githubUrl?: string;
+  demoVideoUrl?: string;
+  deploymentUrl?: string | null;
   fileUrl?: string | null;
   linkUrl?: string | null;
   submittedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ScoreCriteria {

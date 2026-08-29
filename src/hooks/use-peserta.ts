@@ -253,5 +253,65 @@ export function useTransferLeadership() {
   });
 }
 
+export interface TeamEligibilityMember {
+  userId: string;
+  fullName: string;
+  role: "LEADER" | "MEMBER" | string;
+  twibbonApproved: boolean;
+  shareStoryApproved: boolean;
+  ktmApproved: boolean;
+  ktpApproved: boolean;
+  allDocumentsApproved: boolean;
+}
+
+export interface TeamEligibilityRequirements {
+  teamApproved: boolean;
+  paymentApproved: boolean;
+  timelineActive: boolean;
+  members: TeamEligibilityMember[];
+  allMembersDocumentsApproved: boolean;
+}
+
+export interface TeamEligibilityResponse {
+  isEligible: boolean;
+  message?: string;
+  requirements: TeamEligibilityRequirements;
+}
+
+// Hook 13: Fetch Team Submission Eligibility GET /api/teams/me/eligibility
+export function useSubmissionEligibility() {
+  return useQuery<TeamEligibilityResponse | null>({
+    queryKey: ["submissionEligibility"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/teams/me/eligibility");
+        return res.data?.data || res.data || null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+// Hook 14: Submit or Update Submission POST /api/submissions
+export function useCreateOrUpdateSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await apiClient.post("/api/submissions", formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userSubmission"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+    },
+  });
+}
+
+
 
 
