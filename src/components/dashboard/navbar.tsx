@@ -252,14 +252,30 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
         {/* Bottom Section: View Rules Button, Settings/FAQ & User Card */}
         <div className="space-y-4 pt-4 border-t border-border/60">
           {/* View Rules Button */}
-          <Link href="/guidebook.pdf" target="_blank" className="block">
+          {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+            <Link
+              href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <Button
+                variant="outline"
+                className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border text-white text-xs font-semibold h-10 rounded-xl transition-all"
+              >
+                View Rules
+              </Button>
+            </Link>
+          ) : (
             <Button
               variant="outline"
-              className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border text-white text-xs font-semibold h-10 rounded-xl transition-all"
+              disabled
+              title="Guidebook belum tersedia"
+              className="w-full bg-[#040E21] border border-border/40 text-text-secondary text-xs font-semibold h-10 rounded-xl cursor-not-allowed opacity-50"
             >
               View Rules
             </Button>
-          </Link>
+          )}
 
           {/* Secondary Links: Settings & FAQ (Hidden for Admin) */}
           {role !== "admin" && (
@@ -458,14 +474,30 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
           </div>
 
           <div className="pt-4 border-t border-border">
-            <Link href="/guidebook.pdf" target="_blank" className="block">
+            {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+              <Link
+                href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <Button
+                  variant="outline"
+                  className="w-full bg-surface border-border text-white text-xs font-semibold h-10 rounded-xl"
+                >
+                  View Rules
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="outline"
-                className="w-full bg-surface border-border text-white text-xs font-semibold h-10 rounded-xl"
+                disabled
+                title="Guidebook belum tersedia"
+                className="w-full bg-surface border-border/40 text-text-secondary text-xs font-semibold h-10 rounded-xl cursor-not-allowed opacity-50"
               >
                 View Rules
               </Button>
-            </Link>
+            )}
           </div>
         </nav>
       )}

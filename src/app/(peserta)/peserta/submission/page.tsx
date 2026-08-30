@@ -27,7 +27,10 @@ import {
   Loader2,
   FileCheck,
   ShieldAlert,
+  PenLine,
+  Eye,
 } from "lucide-react";
+import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import {
   useUserMe,
   useUserTeam,
@@ -60,6 +63,7 @@ export default function PesertaSubmissionPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [descTab, setDescTab] = useState<"write" | "preview">("write");
 
   // Field Validation Errors
   const [errors, setErrors] = useState<{
@@ -509,30 +513,77 @@ export default function PesertaSubmissionPage() {
                 )}
               </div>
 
-              {/* Input 2: Detailed Description */}
+              {/* Input 2: Detailed Description with Markdown Tabs */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-mono font-semibold uppercase text-text-secondary tracking-wider">
                     Deskripsi Lengkap <span className="text-rose-400">*</span>
                   </label>
-                  <span className="text-[11px] font-mono text-text-secondary/70">
-                    Mendukung Markdown
-                  </span>
+
+                  {/* Markdown Tabs: Tulis & Pratinjau */}
+                  <div className="flex items-center gap-1 bg-surface border border-border/80 rounded-lg p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setDescTab("write")}
+                      className={`px-2.5 py-1 text-[11px] font-medium rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+                        descTab === "write"
+                          ? "bg-card text-white shadow-xs font-semibold"
+                          : "text-text-secondary hover:text-white"
+                      }`}
+                    >
+                      <PenLine className="w-3 h-3" />
+                      <span>Tulis</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDescTab("preview")}
+                      className={`px-2.5 py-1 text-[11px] font-medium rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+                        descTab === "preview"
+                          ? "bg-card text-accent shadow-xs font-semibold"
+                          : "text-text-secondary hover:text-white"
+                      }`}
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Pratinjau</span>
+                    </button>
+                  </div>
                 </div>
-                <textarea
-                  rows={6}
-                  placeholder="Jelaskan latar belakang masalah, solusi yang ditawarkan, fitur utama, dan arsitektur teknologi karya Anda..."
-                  value={description}
-                  onChange={(e) => {
-                    setDescription(e.target.value);
-                    if (errors.description) setErrors((prev) => ({ ...prev, description: null }));
-                  }}
-                  className={`w-full bg-surface border rounded-xl px-4 py-3 text-sm text-white placeholder-text-secondary/50 focus:outline-none transition-colors resize-none leading-relaxed ${
-                    errors.description
-                      ? "border-rose-500/60 bg-rose-500/5 focus:border-rose-500"
-                      : "border-border/80 focus:border-accent"
-                  }`}
-                />
+
+                {descTab === "write" ? (
+                  <>
+                    <textarea
+                      rows={6}
+                      placeholder="Jelaskan latar belakang masalah, solusi yang ditawarkan, fitur utama, dan arsitektur teknologi karya Anda... (Mendukung format Markdown seperti ## Heading, **tebal**, - list, `code`, dan [link](url))"
+                      value={description}
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (errors.description) setErrors((prev) => ({ ...prev, description: null }));
+                      }}
+                      className={`w-full bg-surface border rounded-xl px-4 py-3 text-sm text-white placeholder-text-secondary/50 focus:outline-none transition-colors resize-none leading-relaxed ${
+                        errors.description
+                          ? "border-rose-500/60 bg-rose-500/5 focus:border-rose-500"
+                          : "border-border/80 focus:border-accent"
+                      }`}
+                    />
+                    <div className="flex items-center justify-between text-[10px] text-text-secondary/70 font-mono px-1">
+                      <span>Mendukung Markdown GFM</span>
+                      <span>{description.length} karakter</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full min-h-[160px] max-h-[360px] overflow-y-auto bg-surface/90 border border-border/80 rounded-xl p-4 transition-colors">
+                    {description.trim() ? (
+                      <MarkdownRenderer content={description} />
+                    ) : (
+                      <div className="py-8 text-center space-y-1 text-text-secondary/60">
+                        <FileText className="w-6 h-6 mx-auto opacity-40 mb-1" />
+                        <p className="text-xs italic">Belum ada deskripsi untuk dipratinjau.</p>
+                        <p className="text-[11px]">Tulis penjelasan proyek Anda di tab &quot;Tulis&quot;.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {errors.description && (
                   <p className="text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />

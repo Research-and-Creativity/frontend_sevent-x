@@ -143,14 +143,30 @@ export function HeroSection() {
                 Register Now
               </Button>
             </Link>
-            <Link href="#competitions" className="w-full sm:w-auto hero-btn">
+            {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+              <Link
+                href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto hero-btn"
+              >
+                <Button
+                  variant="outline"
+                  className="cursor-pointer w-full sm:w-auto border border-[#6ED3D8] bg-[#0E142E] hover:bg-[#6ED3D8]/10 text-[#6ED3D8] hover:text-[#6ED3D8] font-mono text-sm px-10 py-6 rounded-xl transition-all shadow-[0_0_15px_rgba(0,229,255,0.1)] hover:shadow-[0_0_25px_rgba(0,229,255,0.2)]"
+                >
+                  View Rules
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="outline"
-                className="cursor-pointer w-full sm:w-auto border border-[#6ED3D8] bg-[#0E142E] hover:bg-[#6ED3D8]/10 text-[#6ED3D8] hover:text-[#6ED3D8] font-mono text-sm px-10 py-6 rounded-xl transition-all shadow-[0_0_15px_rgba(0,229,255,0.1)] hover:shadow-[0_0_25px_rgba(0,229,255,0.2)]"
+                disabled
+                title="Guidebook belum tersedia"
+                className="w-full sm:w-auto border border-[#6ED3D8]/40 bg-[#0E142E] text-text-secondary font-mono text-sm px-10 py-6 rounded-xl cursor-not-allowed opacity-50 hero-btn"
               >
                 View Rules
               </Button>
-            </Link>
+            )}
           </div>
         </div>
       </div>

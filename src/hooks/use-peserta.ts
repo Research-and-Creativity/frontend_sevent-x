@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
 import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse } from "@/types/api";
 
 export interface TimelineStage {
@@ -399,6 +400,53 @@ export function useNewsFeed(params?: { tag?: string; page?: number; limit?: numb
     staleTime: 30 * 1000,
   });
 }
+
+// Hook 17: Update User Profile PATCH /api/user/me
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  const updateUser = useAuthStore((state) => state.updateUser);
+  return useMutation({
+    mutationFn: async (data: { fullName: string; institution?: string }) => {
+      const res = await apiClient.patch("/api/user/me", data);
+      return res.data?.data || res.data;
+    },
+    onSuccess: (updatedUser: any) => {
+      queryClient.invalidateQueries({ queryKey: ["userMe"] });
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+      if (updatedUser) {
+        updateUser(updatedUser);
+      }
+    },
+  });
+}
+
+// Hook 18: Change Password POST /api/auth/change-password
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await apiClient.post("/api/auth/change-password", data);
+      return res.data?.data || res.data;
+    },
+  });
+}
+
+// Hook 19: Upload User Document File (KTM, KTP_PASSPORT_SIM) POST /api/user/documents
+export function useUploadUserDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await apiClient.post("/api/user/documents", formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userDocuments"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+      queryClient.invalidateQueries({ queryKey: ["userMe"] });
+    },
+  });
+}
+
 
 
 

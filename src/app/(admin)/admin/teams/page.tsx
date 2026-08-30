@@ -23,6 +23,11 @@ import { Team } from "@/types/api";
 import { useCompetitions } from "@/hooks/use-peserta";
 import { useUpdatePaymentProofStatus } from "@/hooks/use-admin";
 
+import {
+  AdminApproveModal,
+  AdminRejectModal,
+} from "@/components/admin/admin-review-modals";
+
 export default function AdminTeamsPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,17 +70,26 @@ export default function AdminTeamsPage() {
     }
   };
 
-  // Modal State for Reject
+  // Modal State for Approve & Reject
+  const [approveModalTeam, setApproveModalTeam] = useState<Team | null>(null);
   const [rejectModalTeam, setRejectModalTeam] = useState<Team | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
 
-  const handleApprove = async (team: Team) => {
+  const handleOpenApproveModal = (team: Team) => {
+    setApproveModalTeam(team);
+  };
+
+  const handleConfirmApprove = async () => {
+    if (!approveModalTeam) return;
+
     try {
       await updatePaymentStatusMutation.mutateAsync({
-        teamId: team.id,
+        teamId: approveModalTeam.id,
         status: "APPROVE",
       });
-      toast.success(`Bukti pembayaran tim "${team.teamName}" berhasil disetujui!`);
+      toast.success(
+        `Bukti pembayaran tim "${approveModalTeam.teamName}" berhasil disetujui!`
+      );
+      setApproveModalTeam(null);
     } catch (err: any) {
       toast.error(
         err.response?.data?.message || "Gagal menyetujui bukti pembayaran."
@@ -85,24 +99,21 @@ export default function AdminTeamsPage() {
 
   const handleOpenRejectModal = (team: Team) => {
     setRejectModalTeam(team);
-    setRejectReason("");
   };
 
-  const handleConfirmReject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rejectModalTeam || !rejectReason.trim()) return;
+  const handleConfirmReject = async (reason: string) => {
+    if (!rejectModalTeam) return;
 
     try {
       await updatePaymentStatusMutation.mutateAsync({
         teamId: rejectModalTeam.id,
         status: "REJECT",
-        reason: rejectReason.trim(),
+        reason: reason.trim(),
       });
       toast.success(
         `Bukti pembayaran tim "${rejectModalTeam.teamName}" berhasil ditolak.`
       );
       setRejectModalTeam(null);
-      setRejectReason("");
     } catch (err: any) {
       toast.error(
         err.response?.data?.message || "Gagal menolak bukti pembayaran."
@@ -392,7 +403,7 @@ export default function AdminTeamsPage() {
                             isApproved ||
                             updatePaymentStatusMutation.isPending
                           }
-                          onClick={() => handleApprove(t)}
+                          onClick={() => handleOpenApproveModal(t)}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] h-7 px-3 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Approve
@@ -416,82 +427,61 @@ export default function AdminTeamsPage() {
         )}
       </Card>
 
+      {/* APPROVE PAYMENT PROOF CONFIRMATION MODAL */}
+      {approveModalTeam && (() => {
+        const pObj =
+          approveModalTeam.paymentProof ||
+          (approveModalTeam as any).documents?.find(
+            (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
+          );
+        const stUpper = (pObj?.status || approveModalTeam.status || "").toUpperCase();
+        const isPrevRejected = stUpper === "REJECT" || stUpper === "REJECTED";
+        const prevReason =
+          pObj?.rejectionReason || (approveModalTeam as any).rejectionReason || null;
+
+        return (
+          <AdminApproveModal
+            isOpen={Boolean(approveModalTeam)}
+            onClose={() => setApproveModalTeam(null)}
+            onConfirm={handleConfirmApprove}
+            isLoading={updatePaymentStatusMutation.isPending}
+            title={`Approve ${approveModalTeam.teamName}?`}
+            targetName={approveModalTeam.teamName}
+            targetDetail={`Team ID: #${approveModalTeam.id} • ${approveModalTeam.competition?.name || "Kompetisi"}`}
+            contextMessage="Bukti pembayaran tim akan ditandai terverifikasi dan status tim akan disetujui."
+            isPreviouslyRejected={isPrevRejected}
+            previousRejectionReason={prevReason}
+            confirmButtonText="Ya, Approve"
+          />
+        );
+      })()}
+
       {/* REJECT PAYMENT PROOF CONFIRMATION MODAL */}
-      {rejectModalTeam && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="bg-surface border border-rose-500/30 rounded-2xl p-6 max-w-md w-full space-y-5 relative animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-rose-500/20">
-              <h3 className="font-display text-xl font-bold text-rose-400 tracking-tight flex items-center gap-2">
-                <XCircle className="w-5 h-5" />
-                <span>Tolak Bukti Pembayaran</span>
-              </h3>
-              <button
-                onClick={() => setRejectModalTeam(null)}
-                className="text-text-secondary hover:text-white p-1 rounded-lg hover:bg-card cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {rejectModalTeam && (() => {
+        const pObj =
+          rejectModalTeam.paymentProof ||
+          (rejectModalTeam as any).documents?.find(
+            (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
+          );
+        const stUpper = (pObj?.status || rejectModalTeam.status || "").toUpperCase();
+        const isPrevApproved =
+          stUpper === "APPROVE" || stUpper === "APPROVED" || stUpper === "VERIFIED";
 
-            <div className="p-3 bg-card border border-white/10 rounded-xl space-y-1">
-              <p className="text-xs font-bold text-white">
-                {rejectModalTeam.teamName}
-              </p>
-              <p className="text-[10px] text-text-secondary font-mono">
-                Team ID: #{rejectModalTeam.id}
-              </p>
-            </div>
-
-            <form onSubmit={handleConfirmReject} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                  Alasan Penolakan <span className="text-rose-400">*</span>
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Contoh: Bukti transfer tidak sesuai nominal, foto buram, dll"
-                  className="w-full bg-card border border-border/80 rounded-xl p-3 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-rose-500 transition-colors resize-none"
-                />
-                <p className="text-[10px] text-text-secondary">
-                  Alasan ini akan ditampilkan langsung ke peserta di dashboard tim
-                  agar mereka dapat melakukan perbaikan.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-border/40">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setRejectModalTeam(null)}
-                  className="bg-card border-border text-text-secondary text-xs h-9 rounded-xl cursor-pointer"
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    !rejectReason.trim() ||
-                    updatePaymentStatusMutation.isPending
-                  }
-                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold h-9 rounded-xl px-4 cursor-pointer disabled:opacity-50"
-                >
-                  {updatePaymentStatusMutation.isPending ? (
-                    <div className="flex items-center gap-1.5">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Memproses...</span>
-                    </div>
-                  ) : (
-                    "Tolak Pembayaran"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
+        return (
+          <AdminRejectModal
+            isOpen={Boolean(rejectModalTeam)}
+            onClose={() => setRejectModalTeam(null)}
+            onConfirm={handleConfirmReject}
+            isLoading={updatePaymentStatusMutation.isPending}
+            title="Tolak Bukti Pembayaran"
+            targetName={rejectModalTeam.teamName}
+            targetDetail={`Team ID: #${rejectModalTeam.id} • ${rejectModalTeam.competition?.name || "Kompetisi"}`}
+            isPreviouslyApproved={isPrevApproved}
+            placeholder="Contoh: Bukti transfer tidak sesuai nominal, foto buram, rekening palsu, dll"
+            confirmButtonText="Tolak Pembayaran"
+          />
+        );
+      })()}
     </div>
   );
 }

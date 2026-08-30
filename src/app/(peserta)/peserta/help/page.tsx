@@ -144,15 +144,31 @@ export default function PesertaFAQPage() {
           </p>
         </div>
 
-        <Link href="/guidebook.pdf" target="_blank">
+        {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+          <Link
+            href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button
+              variant="outline"
+              className="bg-surface hover:bg-card-hover border-border text-white text-xs font-semibold px-4 h-9 rounded-xl flex items-center gap-2 cursor-pointer shrink-0"
+            >
+              <BookOpen className="w-4 h-4 text-accent" />
+              <span>Unduh Guidebook (PDF)</span>
+            </Button>
+          </Link>
+        ) : (
           <Button
             variant="outline"
-            className="bg-surface hover:bg-card-hover border-border text-white text-xs font-semibold px-4 h-9 rounded-xl flex items-center gap-2 cursor-pointer shrink-0"
+            disabled
+            title="Guidebook belum tersedia"
+            className="bg-surface border-border/40 text-text-secondary text-xs font-semibold px-4 h-9 rounded-xl flex items-center gap-2 cursor-not-allowed opacity-50 shrink-0"
           >
-            <BookOpen className="w-4 h-4 text-accent" />
-            <span>Unduh Guidebook (PDF)</span>
+            <BookOpen className="w-4 h-4 text-text-secondary" />
+            <span>Guidebook Belum Tersedia</span>
           </Button>
-        </Link>
+        )}
       </Card>
     </div>
   );
