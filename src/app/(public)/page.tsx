@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/landing/navbar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { CompetitionsSection } from "@/components/landing/competitions-section";
+import { SponsorshipSection } from "@/components/landing/sponsorship-section";
 import { TimelineSection } from "@/components/landing/timeline-section";
 import { AppraisersSection } from "@/components/landing/appraisers-section";
 import { Footer } from "@/components/landing/footer";
@@ -12,6 +13,7 @@ export default function LandingPage() {
       <main className="flex-1">
         <HeroSection />
         <CompetitionsSection />
+        <SponsorshipSection />
         <TimelineSection />
         <AppraisersSection />
       </main>
