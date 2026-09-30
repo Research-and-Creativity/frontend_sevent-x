@@ -1,9 +1,5 @@
 "use client";
 
-// Ported from freebbonize (github.com/GithubFarelAlghazali/freebbonize)
-// Original author: Farel Alghazali
-// Adapted for SEVENT-X by: seventx team
-
 import { Camera, ArrowRight } from "lucide-react";
 import type { TransformType } from "./types";
 
@@ -36,12 +32,9 @@ export default function TwibbonAdjust({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="font-display text-3xl font-bold text-white mb-1">
+        <h2 className="font-display text-3xl font-bold text-white mb-4">
           Sesuaikan <span className="text-[#00E5FF]">Foto</span>
         </h2>
-        <p className="text-white/40 text-xs">
-          Drag foto di canvas untuk menggeser posisinya.
-        </p>
       </div>
 
       <ul className="flex flex-col gap-3">

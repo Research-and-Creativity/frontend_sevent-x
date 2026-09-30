@@ -1,11 +1,7 @@
 "use client";
 
-// Ported from freebbonize (github.com/GithubFarelAlghazali/freebbonize)
-// Original author: Farel Alghazali
-// Adapted for SEVENT-X by: seventx team
-
 import { useState } from "react";
-import { Download, Pencil, Clipboard, ClipboardCheck, RotateCcw } from "lucide-react";
+import { Download, Clipboard, ClipboardCheck, RotateCcw } from "lucide-react";
 import campaignData from "./campaign-data";
 import type { CaptionValues } from "./types";
 
@@ -52,16 +48,12 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h2 className="font-display text-3xl font-bold text-white mb-1">
+      <div className="mb-2">
+        <h2 className="font-display text-3xl font-bold text-white">
           Download &amp; <span className="text-[#00E5FF]">Share</span>
         </h2>
-        <p className="text-white/40 text-xs">
-          Isi keterangan lalu salin caption-nya untuk dibagikan bersama foto.
-        </p>
       </div>
 
-      {/* Caption fill-in fields */}
       <div className="flex flex-col gap-2">
         {captionProps.map((key) => (
           <div key={key} className="flex flex-col gap-1">
@@ -81,7 +73,6 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
         ))}
       </div>
 
-      {/* Caption preview */}
       <div className="relative rounded-lg bg-white/5 border border-white/10 p-3">
         <p className="text-white/60 text-xs leading-relaxed whitespace-pre-line pr-8">
           {filledCaption}
@@ -99,7 +90,6 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
         </button>
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-2">
         <button
           onClick={onReset}

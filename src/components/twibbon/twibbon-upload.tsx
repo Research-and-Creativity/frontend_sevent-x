@@ -1,9 +1,5 @@
 "use client";
 
-// Ported from freebbonize (github.com/GithubFarelAlghazali/freebbonize)
-// Original author: Farel Alghazali
-// Adapted for SEVENT-X by: seventx team
-
 import { Upload } from "lucide-react";
 
 export default function TwibbonUpload({
@@ -25,11 +21,6 @@ export default function TwibbonUpload({
         <h2 className="font-display text-3xl font-bold text-white mb-2">
           Buat <span className="text-[#00E5FF]">Twibbon</span> SEVENT-X
         </h2>
-        <p className="text-white/50 text-sm leading-relaxed">
-          {/* TODO: update copy with official event desc */}
-          Upload foto kamu, sesuaikan posisinya, lalu download hasilnya.
-          Bagikan semangat kompetisimu!
-        </p>
       </div>
 
       <label

@@ -1,9 +1,6 @@
 "use client";
 
-// Twibbon page for SEVENT-X
-// Canvas editor ported from freebbonize (github.com/GithubFarelAlghazali/freebbonize)
-// Original author: Farel Alghazali
-// Integrated & adapted for SEVENT-X by: seventx team
+// Adapted from github.com/GithubFarelAlghazali/freebbonize
 
 import { useState, useRef } from "react";
 import TwibbonCanvas from "@/components/twibbon/twibbon-canvas";
@@ -50,18 +47,13 @@ export default function TwibbonPage() {
     <div className="relative min-h-screen flex flex-col bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D] text-text-primary">
       <Navbar />
       <main className="flex-1 flex flex-col items-center pt-28 pb-12 px-4">
-        {/* Page header */}
         <div className="text-center mb-10 max-w-xl">
           <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-3">
             <span className="text-white">Twibbon </span>
             <span className="text-[#00E5FF]">SEVENT-X</span>
           </h1>
-          <p className="text-white/40 text-sm">
-            Tunjukkan semangat kompetisimu! Upload foto, sesuaikan posisi, lalu download dan bagikan.
-          </p>
         </div>
 
-        {/* Step indicator */}
         <div className="flex items-center gap-2 mb-10">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-2">
@@ -86,9 +78,7 @@ export default function TwibbonPage() {
           ))}
         </div>
 
-        {/* Main editor layout */}
         <div className="w-full max-w-3xl flex flex-col lg:flex-row gap-8 items-start justify-center">
-          {/* Canvas */}
           <div className="flex-shrink-0 flex items-center justify-center w-full lg:w-auto">
             <TwibbonCanvas
               isEditMode={step === "adjust"}
@@ -100,7 +90,6 @@ export default function TwibbonPage() {
             />
           </div>
 
-          {/* Sidebar panels */}
           <div className="flex-1 w-full lg:max-w-xs bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
             {step === "upload" && (
               <TwibbonUpload onPhotoSelected={handlePhotoSelected} />
@@ -119,7 +108,6 @@ export default function TwibbonPage() {
           </div>
         </div>
 
-        {/* Credit */}
         <p className="mt-12 text-white/20 text-xs text-center">
           Powered by{" "}
           <a
