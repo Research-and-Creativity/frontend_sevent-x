@@ -62,19 +62,15 @@ export default function TwibbonPage() {
             
             {/* Left: Canvas Area */}
             <div className="flex justify-center md:justify-end">
-              <div className="relative group">
-                {/* Subtle glow behind canvas */}
-                <div className="absolute -inset-1 bg-[#00E5FF]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-[#05070D] rounded-xl overflow-hidden ring-1 ring-white/10">
-                  <TwibbonCanvas
-                    isEditMode={step === "adjust"}
-                    transform={transform}
-                    setTransform={setTransform}
-                    userPhoto={userPhoto}
-                    frameSrc={campaignData.frameSrc}
-                    canvasRef={canvasRef}
-                  />
-                </div>
+              <div className="relative bg-[#05070D] rounded-xl overflow-hidden ring-1 ring-white/10">
+                <TwibbonCanvas
+                  isEditMode={step === "adjust"}
+                  transform={transform}
+                  setTransform={setTransform}
+                  userPhoto={userPhoto}
+                  frameSrc={campaignData.frameSrc}
+                  canvasRef={canvasRef}
+                />
               </div>
             </div>
 
