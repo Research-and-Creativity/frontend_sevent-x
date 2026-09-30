@@ -46,65 +46,56 @@ export default function TwibbonPage() {
   return (
     <div className="relative min-h-screen flex flex-col bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D] text-text-primary">
       <Navbar />
-      <main className="flex-1 flex flex-col items-center pt-28 pb-12 px-4">
-        <div className="text-center mb-10 max-w-xl">
-          <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-3">
-            <span className="text-white">Twibbon </span>
-            <span className="text-[#00E5FF]">SEVENT-X</span>
+      <main className="flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
+        <div className="text-center mb-16 max-w-2xl">
+          <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+            Twibbon SEVENT-X
           </h1>
+          <p className="text-white/50 text-sm md:text-base font-light">
+            Upload foto terbaikmu, atur posisinya, dan bagikan semangat kompetisi.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 mb-10">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  i === stepIndex
-                    ? "bg-[#00E5FF] text-[#0B0F19]"
-                    : i < stepIndex
-                    ? "bg-[#00E5FF]/20 text-[#00E5FF]"
-                    : "bg-white/5 text-white/30"
-                }`}
-              >
-                <span className="font-mono">{i + 1}</span>
-                <span>{STEP_LABELS[s]}</span>
+        {/* Unified Glass Card Layout */}
+        <div className="w-full max-w-4xl bg-white/[0.02] border border-white/10 rounded-3xl p-6 md:p-10 backdrop-blur-xl shadow-2xl shadow-black/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
+            
+            {/* Left: Canvas Area */}
+            <div className="flex justify-center md:justify-end">
+              <div className="relative group">
+                {/* Subtle glow behind canvas */}
+                <div className="absolute -inset-1 bg-[#00E5FF]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative bg-[#05070D] rounded-xl overflow-hidden ring-1 ring-white/10">
+                  <TwibbonCanvas
+                    isEditMode={step === "adjust"}
+                    transform={transform}
+                    setTransform={setTransform}
+                    userPhoto={userPhoto}
+                    frameSrc={campaignData.frameSrc}
+                    canvasRef={canvasRef}
+                  />
+                </div>
               </div>
-              {i < STEPS.length - 1 && (
-                <div
-                  className={`w-6 h-px ${i < stepIndex ? "bg-[#00E5FF]/40" : "bg-white/10"}`}
+            </div>
+
+            {/* Right: Interactive Panel */}
+            <div className="flex flex-col justify-center">
+              {step === "upload" && (
+                <TwibbonUpload onPhotoSelected={handlePhotoSelected} />
+              )}
+              {step === "adjust" && (
+                <TwibbonAdjust
+                  transform={transform}
+                  setTransform={setTransform}
+                  onPhotoSelected={handlePhotoSelected}
+                  onGenerate={() => setStep("download")}
                 />
               )}
+              {step === "download" && (
+                <TwibbonDownload canvasRef={canvasRef} onReset={handleReset} />
+              )}
             </div>
-          ))}
-        </div>
-
-        <div className="w-full max-w-3xl flex flex-col lg:flex-row gap-8 items-start justify-center">
-          <div className="flex-shrink-0 flex items-center justify-center w-full lg:w-auto">
-            <TwibbonCanvas
-              isEditMode={step === "adjust"}
-              transform={transform}
-              setTransform={setTransform}
-              userPhoto={userPhoto}
-              frameSrc={campaignData.frameSrc}
-              canvasRef={canvasRef}
-            />
-          </div>
-
-          <div className="flex-1 w-full lg:max-w-xs bg-white/[0.03] border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-            {step === "upload" && (
-              <TwibbonUpload onPhotoSelected={handlePhotoSelected} />
-            )}
-            {step === "adjust" && (
-              <TwibbonAdjust
-                transform={transform}
-                setTransform={setTransform}
-                onPhotoSelected={handlePhotoSelected}
-                onGenerate={() => setStep("download")}
-              />
-            )}
-            {step === "download" && (
-              <TwibbonDownload canvasRef={canvasRef} onReset={handleReset} />
-            )}
+            
           </div>
         </div>
 

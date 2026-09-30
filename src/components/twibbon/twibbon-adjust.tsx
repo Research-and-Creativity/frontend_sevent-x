@@ -31,9 +31,10 @@ export default function TwibbonAdjust({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h2 className="font-display text-3xl font-bold text-white mb-4">
-          Sesuaikan <span className="text-[#00E5FF]">Foto</span>
+      <div className="mb-4">
+        <div className="text-[#00E5FF] font-mono text-xs tracking-wider mb-2 uppercase">Langkah 2</div>
+        <h2 className="text-2xl font-bold text-white">
+          Atur Posisi
         </h2>
       </div>
 

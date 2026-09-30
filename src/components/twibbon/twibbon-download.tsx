@@ -48,9 +48,10 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="mb-2">
-        <h2 className="font-display text-3xl font-bold text-white">
-          Download &amp; <span className="text-[#00E5FF]">Share</span>
+      <div className="mb-4">
+        <div className="text-[#00E5FF] font-mono text-xs tracking-wider mb-2 uppercase">Langkah 3</div>
+        <h2 className="text-2xl font-bold text-white">
+          Selesai!
         </h2>
       </div>
 
