@@ -21,7 +21,8 @@ export default function PesertaLayout({
   // Protection Guard: Ensure user is logged in as PESERTA or ADMIN, and profile is completed
   useEffect(() => {
     if (!isUserLoading && currentUser) {
-      if (currentUser.role !== "PESERTA" && currentUser.role !== "ADMIN") {
+      const role = currentUser.role?.toUpperCase();
+      if (role !== "PESERTA" && role !== "ADMIN") {
         toast.error("Access denied. Peserta portal is restricted to participant accounts.");
         router.push("/login");
         return;

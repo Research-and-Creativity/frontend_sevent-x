@@ -224,26 +224,40 @@ export function TimelineSection() {
 
         {/* Timeline Content / Fallback States */}
         {isLoading ? (
-          <div className="max-w-3xl mx-auto space-y-6">
-            <Skeleton className="h-24 rounded-2xl bg-[#BAC2EC]/20 border border-white/20" />
-            <Skeleton className="h-24 rounded-2xl bg-[#BAC2EC]/20 border border-white/20" />
-            <Skeleton className="h-24 rounded-2xl bg-[#BAC2EC]/20 border border-white/20" />
+          <div className="max-w-3xl mx-auto space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-[#18214D]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-2xl p-6 flex items-center gap-5"
+              >
+                <div className="w-12 h-12 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 shrink-0 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-28 bg-[#00E5FF]/20 rounded animate-pulse" />
+                  <div className="h-5 w-1/2 bg-white/10 rounded animate-pulse" />
+                  <div className="h-3.5 w-3/4 bg-white/5 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : isTimelineError ? (
-          <div className="bg-[#BAC2EC]/10 border border-rose-500/30 rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto">
+          <div className="bg-[#18214D]/80 border border-rose-500/40 rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto backdrop-blur-md shadow-[0_0_30px_rgba(244,63,94,0.1)]">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-xs text-rose-300">Gagal memuat alur timeline kompetisi.</p>
+            <div className="space-y-1">
+              <p className="font-mono text-xs uppercase tracking-widest text-rose-400">TIMELINE_SYNC_FAILED</p>
+              <p className="text-sm text-white/70 font-light">Gagal memuat alur tahapan timeline kompetisi.</p>
+            </div>
             <button
               onClick={() => refetchTimeline()}
-              className="px-4 py-2 bg-surface hover:bg-card-hover border border-border text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-2.5 bg-[#0E142E] hover:bg-[#00E5FF]/10 border border-[#00E5FF]/50 text-[#00E5FF] font-mono text-xs tracking-wider uppercase rounded-xl inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,229,255,0.2)]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Coba Lagi</span>
+              <span>SYNC_AGAIN</span>
             </button>
           </div>
         ) : timelineEvents.length === 0 ? (
-          <div className="bg-[#BAC2EC]/10 border border-white/20 rounded-2xl p-8 text-center text-xs text-white/70 max-w-md mx-auto">
-            Timeline akan segera diumumkan.
+          <div className="bg-[#18214D]/60 border border-[#00E5FF]/20 rounded-2xl p-8 text-center space-y-2 max-w-md mx-auto backdrop-blur-md">
+            <p className="font-mono text-xs uppercase tracking-widest text-[#00E5FF]">TIMELINE_STANDBY</p>
+            <p className="text-sm text-white/60 font-light">Jadwal tahapan resmi kompetisi akan segera dirilis.</p>
           </div>
         ) : (
           <div ref={lineWrapRef} className="relative max-w-5xl mx-auto py-8">
@@ -313,15 +327,15 @@ export function TimelineSection() {
                         id={`timeline-card-${evt.id}`}
                         className="bg-[#BAC2EC] border border-white/40 rounded-2xl p-6 shadow-2xl text-[#151936] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all duration-300"
                       >
-                        <CardHeader className="p-0 mb-4">
-                          <div className="w-10 h-10 rounded-xl bg-[#9FAAE0] flex items-center justify-center mb-3 shadow-sm">
+                        <CardHeader className="p-0">
+                          <div className="w-10 h-10 rounded-xl bg-[#9FAAE0] flex items-center justify-center mb-2 shadow-sm">
                             {evt.icon}
                           </div>
                           <CardTitle className="font-display text-xl font-bold text-[#151936]">
                             {evt.title}
                           </CardTitle>
                         </CardHeader>
-                        <CardDescription className="text-[#3A406D] text-xs sm:text-sm leading-relaxed mb-6">
+                        <CardDescription className="text-[#3A406D] text -xs sm:text-sm leading-relaxed">
                           {evt.description}
                         </CardDescription>
                         <div className="pt-4 border-t border-[#A8B2E4]">

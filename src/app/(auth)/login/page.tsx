@@ -267,9 +267,9 @@ export default function LoginPage() {
       setAuth(user, accessToken);
       toast.success(`Welcome back, ${user.fullName}!`);
 
-      const role = user.role;
+      const role = user.role?.toUpperCase();
       if (role === "ADMIN") router.push("/admin/dashboard");
-      else if (role === "JURI") router.push("/juri/dashboard");
+      else if (role === "JURI" || role === "JUDGE") router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
     } catch (error: any) {
       console.log(error)

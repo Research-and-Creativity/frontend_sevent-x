@@ -1,7 +1,5 @@
 "use client";
 
-// TODO: connect ke API setelah backend endpoint publik untuk judges tersedia.
-
 import { useRef, useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
@@ -16,7 +14,6 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// ... (Interface dan const appraisers tetap sama persis seperti sebelumnya) ...
 interface Appraiser {
   id: string;
   name: string;
@@ -33,7 +30,7 @@ const appraisers: Appraiser[] = [
     name: "Abed Nego Septiadi",
     role: "Senior Engineer",
     institution: "Telkom University",
-    bio: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
+    bio: "Praktisi rekayasa perangkat lunak dengan fokus pada arsitektur sistem skala besar dan efisiensi cloud computing.",
     avatarUrl:
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
     initials: "AS",
@@ -43,7 +40,7 @@ const appraisers: Appraiser[] = [
     name: "Amanda Syahrani",
     role: "Product Designer",
     institution: "UI/UX Studio",
-    bio: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
+    bio: "Product designer dengan pengalaman merancang pengalaman digital berbasis data, riset pengguna, dan interaksi mendalam.",
     avatarUrl:
       "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
     initials: "AS",
@@ -53,7 +50,7 @@ const appraisers: Appraiser[] = [
     name: "Jhon Doe",
     role: "Tech Lead",
     institution: "Google",
-    bio: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
+    bio: "Tech lead dengan spesialisasi pengembangan sistem terdistribusi, skalabilitas performa tinggi, dan clean architecture.",
     avatarUrl:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
     initials: "JD",
@@ -63,7 +60,7 @@ const appraisers: Appraiser[] = [
     name: "Jane Smith",
     role: "UX Researcher",
     institution: "Meta",
-    bio: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
+    bio: "Peneliti UX berpengalaman dalam usability evaluation, human-centered design, dan optimasi produk digital inklusif.",
     avatarUrl:
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
     initials: "JS",
@@ -73,7 +70,7 @@ const appraisers: Appraiser[] = [
     name: "Michael Chen",
     role: "Data Scientist",
     institution: "OpenAI",
-    bio: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit, Sed Do Eiusmod Tempor Incididunt Ut Labore Et Dolore Magna Aliqua.",
+    bio: "Praktisi data science dan AI yang berfokus pada machine learning modeling, computer vision, dan analytics terapan.",
     avatarUrl:
       "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80",
     initials: "MC",
@@ -188,7 +185,7 @@ export function AppraisersSection() {
         <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight mb-4">
             <span className="text-white">The </span>
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-teal-300 to-[#00E5FF]">
+            <span className="text-[#00E5FF]">
               Expert{" "}
             </span>
             <span className="text-white">Appraisers</span>
@@ -275,7 +272,7 @@ export function AppraisersSection() {
                   aria-label={`Go to slide ${idx + 1}`}
                   className={`transition-all duration-300 cursor-pointer rounded-full ${
                     idx === selectedIndex
-                      ? "w-8 h-1.5 bg-linear-to-r from-teal-400 to-[#00E5FF]"
+                      ? "w-8 h-1.5 bg-[#00E5FF]"
                       : "w-1.5 h-1.5 bg-white/20 hover:bg-white/40"
                   }`}
                 />

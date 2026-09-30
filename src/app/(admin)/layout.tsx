@@ -21,7 +21,7 @@ export default function AdminLayout({
   // Protection Guard: Ensure logged in user is ADMIN
   useEffect(() => {
     if (!isUserLoading && currentUser) {
-      if (currentUser.role !== "ADMIN") {
+      if (currentUser.role?.toUpperCase() !== "ADMIN") {
         toast.error("Access denied. Admin portal is restricted to administrator accounts.");
         router.push("/login");
       }

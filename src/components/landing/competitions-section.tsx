@@ -125,24 +125,45 @@ export function CompetitionsSection() {
         {/* Competition Cards Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Skeleton className="h-64 rounded-2xl bg-[#242C54]/60 border border-white/10" />
-            <Skeleton className="h-64 rounded-2xl bg-[#242C54]/60 border border-white/10" />
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="bg-[#242C54]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-2xl p-8 h-full flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center mb-6 animate-pulse" />
+                  <div className="h-7 w-3/5 bg-white/10 rounded-lg animate-pulse mb-4" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-white/5 rounded animate-pulse" />
+                    <div className="h-4 w-4/5 bg-white/5 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-white/10 mt-8 space-y-2">
+                  <div className="h-3 w-20 bg-[#00E5FF]/20 rounded animate-pulse" />
+                  <div className="h-7 w-32 bg-white/10 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : isError ? (
-          <div className="bg-[#242C54]/60 border border-rose-500/30 rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto">
+          <div className="bg-[#18214D]/80 border border-rose-500/40 rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto backdrop-blur-md">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-xs text-rose-300">Gagal memuat daftar kompetisi dari server.</p>
+            <div className="space-y-1">
+              <p className="font-mono text-xs uppercase tracking-widest text-rose-400">DATA_SYNC_FAILED</p>
+              <p className="text-sm text-white/70 font-light">Tidak dapat menyinkronkan data kompetisi dari server.</p>
+            </div>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-surface hover:bg-card-hover border border-border text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-6 py-2.5 bg-[#0E142E] hover:bg-[#00E5FF]/10 border border-[#00E5FF]/50 text-[#00E5FF] font-mono text-xs tracking-wider uppercase rounded-xl inline-flex items-center gap-2 cursor-pointer transition-all hover:shadow-[0_0_15px_rgba(0,229,255,0.2)]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Coba Lagi</span>
+              <span>SYNC_AGAIN</span>
             </button>
           </div>
         ) : competitions.length === 0 ? (
-          <div className="bg-[#242C54]/60 border border-white/10 rounded-2xl p-8 text-center text-xs text-white/60">
-            Belum ada kompetisi yang dibuka saat ini.
+          <div className="bg-[#18214D]/60 border border-[#00E5FF]/20 rounded-2xl p-8 text-center space-y-2 max-w-md mx-auto backdrop-blur-md">
+            <p className="font-mono text-xs uppercase tracking-widest text-[#00E5FF]">NO_ACTIVE_COMPETITION</p>
+            <p className="text-sm text-white/60 font-light">Belum ada kompetisi yang dibuka saat ini.</p>
           </div>
         ) : (
           <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -163,7 +184,7 @@ export function CompetitionsSection() {
                   whileHover={prefersReducedMotion() ? {} : { scale: 1.02 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="bg-[#242C54]/60 backdrop-blur-md border border-white/15 rounded-2xl p-8 shadow-2xl transition-colors h-full flex flex-col justify-between">
+                  <Card className="bg-[#242C54]/60 backdrop-blur-md border border-white/15 rounded-2xl p-8 transition-colors h-full flex flex-col justify-between">
                     <CardHeader className="p-0 mb-6">
                       <div className="w-12 h-12 rounded-xl bg-[#3B467A] flex items-center justify-center mb-6 border border-white/10 shadow-md">
                         {categoryIcons[iconKey] || <Code className="w-5 h-5 text-white" />}

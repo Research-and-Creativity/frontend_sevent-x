@@ -21,7 +21,8 @@ export default function JuriLayout({
   // Protection Guard: Ensure logged in user is JURI or ADMIN
   useEffect(() => {
     if (!isUserLoading && currentUser) {
-      if (currentUser.role !== "JURI" && currentUser.role !== "ADMIN") {
+      const role = currentUser.role?.toUpperCase();
+      if (role !== "JURI" && role !== "ADMIN") {
         toast.error("Access denied. Judge portal is restricted to judge accounts.");
         router.push("/login");
       }
