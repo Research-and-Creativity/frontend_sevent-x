@@ -56,10 +56,11 @@ export function Navbar() {
   );
 
   const navLinks = [
-    { label: "Home", href: "#hero" },
-    { label: "Competitions", href: "#competitions" },
-    { label: "Timeline", href: "#timeline" },
-    { label: "Appraisers", href: "#appraisers" },
+    { label: "Home", href: "/#hero" },
+    { label: "Competitions", href: "/#competitions" },
+    { label: "Timeline", href: "/#timeline" },
+    { label: "Twibbon", href: "/twibbon" },
+    { label: "Appraisers", href: "/#appraisers" },
   ];
 
   return (
