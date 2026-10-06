@@ -31,6 +31,10 @@ const processQueue = (error: unknown, token: string | null = null) => {
 // Request Interceptor: Append Authorization Bearer token from Zustand store
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers["Content-Type"];
+    }
+
     const token = useAuthStore.getState().accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -84,10 +88,16 @@ apiClient.interceptors.response.use(
           { withCredentials: true }
         );
 
-        const newAccessToken = response.data?.accessToken;
+        const resData = response.data?.data || response.data;
+        const newAccessToken = resData?.accessToken;
+        const newUser = resData?.user;
 
         if (newAccessToken) {
-          useAuthStore.getState().setAccessToken(newAccessToken);
+          if (newUser) {
+            useAuthStore.getState().setAuth(newUser, newAccessToken);
+          } else {
+            useAuthStore.getState().setAccessToken(newAccessToken);
+          }
           processQueue(null, newAccessToken);
 
           if (originalRequest.headers) {

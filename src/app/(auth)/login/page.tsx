@@ -21,7 +21,7 @@ import {
 } from "@/lib/auth-transition";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
   password: z.string().min(1, "Password is required"),
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -262,16 +262,17 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await apiClient.post("/api/auth/login", data);
-      const { user, accessToken } = response.data;
+      const { user, accessToken } = response.data.data;
       if (!accessToken || !user) throw new Error("Invalid response");
       setAuth(user, accessToken);
-      toast.success(`Welcome back, ${user.fullName || user.username}!`);
+      toast.success(`Welcome back, ${user.fullName}!`);
 
-      const role = user.role;
+      const role = user.role?.toUpperCase();
       if (role === "ADMIN") router.push("/admin/dashboard");
-      else if (role === "JURI") router.push("/juri/dashboard");
+      else if (role === "JURI" || role === "JUDGE") router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
     } catch (error: any) {
+      console.log(error)
       toast.error(error.response?.data?.message || "Invalid credentials.");
     } finally {
       setIsLoading(false);
@@ -279,10 +280,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen flex bg-[#05070F] overflow-hidden relative">
+    <div className="h-screen flex bg-background overflow-hidden relative">
       <div
         ref={transitionLayerRef}
-        className="fixed inset-0 z-[100] pointer-events-none hidden overflow-hidden items-center justify-center"
+        className="fixed inset-0 z-100 pointer-events-none hidden overflow-hidden items-center justify-center"
       >
         <div
           ref={circleImgRef}
@@ -314,14 +315,14 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1">
               <Input
-                type="text"
-                placeholder="username"
+                type="email"
+                placeholder="Email"
                 className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
-                {...register("username")}
+                {...register("email")}
               />
-              {errors.username && (
+              {errors.email && (
                 <p className="text-xs text-red-400">
-                  {errors.username.message}
+                  {errors.email.message}
                 </p>
               )}
             </div>
@@ -356,7 +357,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md shadow-lg transition-all mt-4"
+              className="w-full bg-linear-to-r from-[#2E5CFF] to-[#1E3BB3] hover:opacity-90 text-white font-medium h-12 rounded-md transition-all mt-4"
             >
               {isLoading ? (
                 <>
@@ -371,7 +372,7 @@ export default function LoginPage() {
 
           <div className="relative flex items-center justify-center my-6">
             <div className="border-t border-white/10 w-full" />
-            <span className="bg-[#05070F] px-4 text-xs text-white/40">or</span>
+            <span className="bg-background px-4 text-xs text-white/40">or</span>
             <div className="border-t border-white/10 w-full" />
           </div>
 
@@ -379,7 +380,7 @@ export default function LoginPage() {
             <Button
               type="button"
               onClick={initiateGoogleLogin}
-              className="w-full bg-white hover:bg-gray-100 text-[#05070F] font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-white hover:bg-gray-100 text-background font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -421,7 +422,7 @@ export default function LoginPage() {
         ref={staticCircleRef}
         className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0"
       >
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[28%] shrink-0">
+        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden translate-x-[28%] shrink-0">
           <img
             src="/images/auth-collage.jpg"
             className="w-full h-full object-cover"

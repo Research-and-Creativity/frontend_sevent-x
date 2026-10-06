@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { SessionProvider } from "@/components/providers/session-provider";
 import { LenisProvider } from "@/components/providers/lenis-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
@@ -28,10 +29,12 @@ export default function RootLayout({
     >
       <body className="min-h-screen overflow-x-hidden bg-background text-text-primary antialiased selection:bg-accent selection:text-background font-sans">
         <QueryProvider>
-          <LenisProvider>
-            {children}
-            <Toaster position="top-right" richColors />
-          </LenisProvider>
+          <SessionProvider>
+            <LenisProvider>
+              {children}
+              <Toaster position="top-right" richColors />
+            </LenisProvider>
+          </SessionProvider>
         </QueryProvider>
       </body>
     </html>
