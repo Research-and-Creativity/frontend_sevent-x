@@ -20,9 +20,9 @@
   --color-success: #2ECC71;
   --color-warning: #F5B942;
   --color-danger: #FF5C5C;
-  --font-display: "Space Grotesk", sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-sans: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-mono: var(--font-space-grotesk), "Space Grotesk", monospace;
 }
 
 :root, .dark {
@@ -63,4 +63,38 @@ h1, h2, h3, h4, .font-display {
 
 .bg-noise {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+@keyframes pattern-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-3%, 2%, 0) scale(1.12); }
+  100% { transform: translate3d(0, 0, 0) scale(1.05); }
+}
+
+@keyframes loading {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.pattern-animated {
+  animation: pattern-drift 24s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pattern-animated {
+    animation: none;
+  }
+  .pattern-sway {
+    animation: none;
+  }
+}
+
+@keyframes pattern-sway {
+  0%, 100% { transform: translateY(6px) scale(1.03); }
+  50% { transform: translateY(-10px) scale(1.07); }
+}
+
+.pattern-sway {
+  animation: pattern-sway 5s ease-in-out infinite;
+  will-change: transform;
 }
