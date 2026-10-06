@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/documents", label: "Verified Team", icon: CheckCircle2 },
   ];
   const webLinks = [
-    { href: "/admin/news", label: "Gallery", icon: ImageIcon },
+    { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
     { href: "/admin/timeline", label: "Announcement", icon: Megaphone },
   ];
 
