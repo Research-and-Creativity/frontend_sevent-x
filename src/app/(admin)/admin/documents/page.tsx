@@ -1,498 +1,118 @@
 "use client";
 
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  FileCheck,
-  ExternalLink,
-  CheckCircle2,
-  XCircle,
-  Search,
-  RefreshCw,
-  AlertCircle,
-  X,
-  Loader2,
-  User as UserIcon,
-  Users,
-} from "lucide-react";
-import { toast } from "sonner";
-import {
-  AdminUserDocumentItem,
-  useAdminUserDocuments,
-  useUpdateUserDocumentStatus,
-} from "@/hooks/use-admin";
-import {
-  AdminApproveModal,
-  AdminRejectModal,
-} from "@/components/admin/admin-review-modals";
+import { Button } from "@/components/ui/button";
+import { Users, Search, AlertCircle } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { Team } from "@/types/api";
 
 export default function AdminDocumentsPage() {
-  const queryClient = useQueryClient();
-
-  // Filters State
-  const [selectedStatus, setSelectedStatus] = useState<string>("REVIEW");
-  const [selectedType, setSelectedType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isManualReloading, setIsManualReloading] = useState(false);
 
-  // 1. Fetch User Documents
-  const {
-    data: userDocs = [],
-    isLoading,
-    isFetching,
-    isError,
-    refetch,
-  } = useAdminUserDocuments(selectedStatus, selectedType);
-
-  const updateDocMutation = useUpdateUserDocumentStatus();
-
-  // Modal State for Approve & Reject
-  const [approveModalDoc, setApproveModalDoc] =
-    useState<AdminUserDocumentItem | null>(null);
-  const [rejectModalDoc, setRejectModalDoc] =
-    useState<AdminUserDocumentItem | null>(null);
-
-  const handleReloadData = async () => {
-    setIsManualReloading(true);
-    try {
-      await queryClient.invalidateQueries({ queryKey: ["adminUserDocuments"] });
-      await refetch();
-      toast.success("Daftar dokumen berhasil dimuat ulang!");
-    } catch {
-      toast.error("Gagal memuat ulang dokumen.");
-    } finally {
-      setTimeout(() => setIsManualReloading(false), 400);
-    }
-  };
-
-  const handleOpenApproveModal = (doc: AdminUserDocumentItem) => {
-    setApproveModalDoc(doc);
-  };
-
-  const handleConfirmApprove = async () => {
-    if (!approveModalDoc) return;
-
-    try {
-      await updateDocMutation.mutateAsync({
-        documentId: approveModalDoc.id,
-        status: "APPROVE",
-      });
-      toast.success(
-        `Dokumen ${approveModalDoc.type} milik ${approveModalDoc.user?.fullName || "peserta"} berhasil disetujui!`
-      );
-      setApproveModalDoc(null);
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menyetujui dokumen peserta."
-      );
-    }
-  };
-
-  const handleOpenRejectModal = (doc: AdminUserDocumentItem) => {
-    setRejectModalDoc(doc);
-  };
-
-  const handleConfirmReject = async (reason: string) => {
-    if (!rejectModalDoc) return;
-
-    try {
-      await updateDocMutation.mutateAsync({
-        documentId: rejectModalDoc.id,
-        status: "REJECT",
-        reason: reason.trim(),
-      });
-      toast.success(
-        `Dokumen ${rejectModalDoc.type} milik ${rejectModalDoc.user?.fullName || "peserta"} berhasil ditolak.`
-      );
-      setRejectModalDoc(null);
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menolak dokumen peserta."
-      );
-    }
-  };
-
-  // Client-side search filtering
-  const filteredDocs = userDocs.filter((d) => {
-    const userName = d.user?.fullName || "";
-    const email = d.user?.email || "";
-    const institution = d.user?.institution || "";
-    const teamName = d.user?.teamMember?.team?.teamName || "";
-    const teamCode = d.user?.teamMember?.team?.teamCode || "";
-    const compName = d.user?.teamMember?.team?.competition?.name || "";
-    const docType = d.type || "";
-    const docId = d.id || "";
-
-    const query = searchQuery.toLowerCase();
-    return (
-      userName.toLowerCase().includes(query) ||
-      email.toLowerCase().includes(query) ||
-      institution.toLowerCase().includes(query) ||
-      teamName.toLowerCase().includes(query) ||
-      teamCode.toLowerCase().includes(query) ||
-      compName.toLowerCase().includes(query) ||
-      docType.toLowerCase().includes(query) ||
-      docId.toLowerCase().includes(query)
-    );
+  const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
+    queryKey: ["adminTeamsVerified"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/teams");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
   });
+
+  const verifiedTeams = teams.filter((t) => {
+    const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
+    const s = (pObj?.status || (t as any).status || "").toString().toUpperCase();
+    return s.includes("APPROVE") || s.includes("VERIF") || s.includes("PAID");
+  });
+
+  const filtered = verifiedTeams.filter((t) => {
+    const name = t.teamName || (t as any).name || "";
+    const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase()) || leader.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const timeLabel = (t: Team) => {
+    const created = (t as any).createdAt || (t as any).registrationDate;
+    if (!created) return "-";
+    try { return new Date(created).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(created); }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
-        <div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            User Documents Verification
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Verifikasi berkas administrasi dan kelengkapan peserta (Twibbon, Share Story, KTM, KTP).
-          </p>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
+      </div>
+
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display text-2xl font-bold">Registered Team</h2>
+          <div className="flex items-center gap-3">
+            <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
+            </button>
+            <div className="relative">
+              <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input type="text" placeholder="Search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50" />
+            </div>
+          </div>
         </div>
 
-        {/* Filters Group */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter */}
-          <div className="w-44">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full bg-surface border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
-            >
-              <option value="ALL" className="bg-card text-white">
-                Semua Status
-              </option>
-              <option value="REVIEW" className="bg-card text-white">
-                Menunggu Review
-              </option>
-              <option value="APPROVE" className="bg-card text-white">
-                Disetujui
-              </option>
-              <option value="REJECT" className="bg-card text-white">
-                Ditolak
-              </option>
-            </select>
+        {isLoading ? (
+          <div className="space-y-3"><Skeleton className="h-12 w-full rounded-xl bg-white/5" /><Skeleton className="h-16 w-full rounded-xl bg-white/5" /></div>
+        ) : isError ? (
+          <div className="p-8 text-center space-y-3 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+            <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+            <p className="text-sm font-semibold text-white">Gagal memuat data tim</p>
+            <Button size="sm" onClick={() => refetch()} className="bg-primary text-white text-xs h-8 rounded-lg">Coba Lagi</Button>
           </div>
-
-          {/* Type Filter */}
-          <div className="w-44">
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full bg-surface border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
-            >
-              <option value="ALL" className="bg-card text-white">
-                Semua Jenis Berkas
-              </option>
-              <option value="TWIBBON" className="bg-card text-white">
-                Twibbon
-              </option>
-              <option value="SHARE_STORY" className="bg-card text-white">
-                Share Story
-              </option>
-              <option value="KTM" className="bg-card text-white">
-                KTM
-              </option>
-              <option value="KTP" className="bg-card text-white">
-                KTP
-              </option>
-            </select>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center space-y-2 bg-white/5 border border-dashed border-white/10 rounded-xl">
+            <Users className="w-8 h-8 text-white/40 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-white">Belum ada tim yang verified</p>
           </div>
+        ) : (
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-left text-white/70 border-b border-white/10">
+                <th className="pb-3 font-semibold">Team</th>
+                <th className="pb-3 font-semibold">Team Leader Name</th>
+                <th className="pb-3 font-semibold">Time Registration</th>
+                <th className="pb-3 font-semibold">Status Document</th>
+                <th className="pb-3 font-semibold">Status Payment</th>
+                <th className="pb-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {filtered.map((t) => {
+                const teamName = t.teamName || (t as any).name || "Unnamed Team";
+                const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "-";
+                return (
+                  <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-5 pr-4">{teamName}</td>
+                    <td className="py-5 pr-4">{leader}</td>
+                    <td className="py-5 pr-4">{timeLabel(t)}</td>
+                    <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Verified</span></td>
+                    <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Paid</span></td>
+                    <td className="py-5"><button className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
 
-          {/* Search Input */}
-          <div className="relative w-56">
-            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-2.5" />
-            <input
-              type="text"
-              placeholder="Cari nama, tim, berkas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent"
-            />
+        <div className="flex items-center justify-between pt-5 text-xs text-white/50">
+          <span>Showing {filtered.length} data out of {verifiedTeams.length}</span>
+          <div className="flex items-center gap-3">
+            <span>Show</span>
+            <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1"><option>10</option></select>
+            <span>data per page</span>
+            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg></button>
           </div>
         </div>
       </div>
-
-      {/* Main Table Card */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FileCheck className="w-5 h-5 text-accent" />
-            <h2 className="font-display text-xl font-bold text-white">
-              User Documents Queue
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-text-secondary">
-              {filteredDocs.length} Documents Listed
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isLoading || isFetching || isManualReloading}
-              onClick={handleReloadData}
-              className="bg-surface border-border text-text-secondary hover:text-white text-xs h-8 px-2.5 rounded-lg cursor-pointer transition-all disabled:opacity-50"
-              title="Refresh data"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${
-                  isFetching || isManualReloading ? "animate-spin text-accent" : ""
-                }`}
-              />
-            </Button>
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-12 w-full rounded-xl bg-surface/60" />
-            <Skeleton className="h-16 w-full rounded-xl bg-surface/60" />
-            <Skeleton className="h-16 w-full rounded-xl bg-surface/60" />
-          </div>
-        ) : isError ? (
-          /* Error State */
-          <div className="p-8 text-center space-y-3 bg-rose-500/5 border border-rose-500/20 rounded-xl">
-            <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-sm font-semibold text-white">
-              Gagal memuat dokumen peserta
-            </p>
-            <p className="text-xs text-text-secondary max-w-md mx-auto">
-              Terjadi kendala saat mengambil data antrean dokumen dari server.
-            </p>
-            <Button
-              size="sm"
-              onClick={() => refetch()}
-              className="bg-primary text-white text-xs h-8 rounded-lg"
-            >
-              Coba Lagi
-            </Button>
-          </div>
-        ) : filteredDocs.length === 0 ? (
-          /* Empty State */
-          <div className="p-12 text-center space-y-2 bg-surface/30 border border-dashed border-white/10 rounded-xl">
-            <FileCheck className="w-8 h-8 text-text-secondary mx-auto mb-2" />
-            <p className="text-sm font-semibold text-white">
-              Tidak ada dokumen ditemukan
-            </p>
-            <p className="text-xs text-text-secondary">
-              {searchQuery || selectedStatus !== "REVIEW" || selectedType !== "ALL"
-                ? "Tidak ada dokumen yang cocok dengan kombinasi filter dan kata kunci saat ini."
-                : "Dokumen yang diunggah oleh peserta akan muncul di antrean ini untuk diverifikasi."}
-            </p>
-          </div>
-        ) : (
-          /* Data Table */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-white/10 text-text-secondary font-mono uppercase">
-                  <th className="pb-3 font-semibold">Peserta</th>
-                  <th className="pb-3 font-semibold">Tim & Kompetisi</th>
-                  <th className="pb-3 font-semibold">Jenis Berkas</th>
-                  <th className="pb-3 font-semibold">Tautan Berkas</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredDocs.map((d) => {
-                  const userName = d.user?.fullName || "Unnamed User";
-                  const userEmail = d.user?.email || "-";
-                  const institution = d.user?.institution || null;
-
-                  const team = d.user?.teamMember?.team;
-                  const teamName = team?.teamName || "-";
-                  const teamCode = team?.teamCode || null;
-                  const compName = team?.competition?.name || "-";
-                  const role = d.user?.teamMember?.role || null;
-
-                  const statusUpper = d.status?.toUpperCase() || "REVIEW";
-                  const isApproved =
-                    statusUpper === "APPROVE" ||
-                    statusUpper === "APPROVED" ||
-                    statusUpper === "VERIFIED";
-                  const isRejected =
-                    statusUpper === "REJECT" || statusUpper === "REJECTED";
-
-                  const reviewCount = d.reviewCount ?? 1;
-                  const isRevision = reviewCount > 1;
-                  const rejectionReason = d.rejectionReason || null;
-
-                  return (
-                    <tr
-                      key={d.id}
-                      className="hover:bg-surface/50 transition-colors align-top"
-                    >
-                      {/* Participant Column */}
-                      <td className="py-4 pr-4">
-                        <p className="font-bold text-white text-sm">{userName}</p>
-                        <p className="text-[10px] text-text-secondary font-mono">
-                          {userEmail}
-                        </p>
-                        {institution && (
-                          <span className="text-[10px] text-accent/80 font-medium block mt-0.5">
-                            {institution}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Team & Competition Column */}
-                      <td className="py-4 pr-4">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5 font-medium text-white">
-                            <Users className="w-3.5 h-3.5 text-accent shrink-0" />
-                            <span>{teamName}</span>
-                            {role && (
-                              <span className="text-[9px] font-mono px-1.5 py-0.2 bg-surface text-text-secondary rounded border border-white/10">
-                                {role}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-text-secondary font-mono">
-                            {compName}
-                            {teamCode && ` • #${teamCode}`}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Document Type Column */}
-                      <td className="py-4 pr-4">
-                        <span className="font-mono font-bold text-accent px-2 py-0.5 rounded bg-accent/10 border border-accent/20 text-[10px]">
-                          {d.type}
-                        </span>
-                      </td>
-
-                      {/* Submitted File / Link Column */}
-                      <td className="py-4 pr-4">
-                        {d.fileUrl ? (
-                          <a
-                            href={d.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-accent hover:underline inline-flex items-center gap-1 font-mono text-[11px]"
-                          >
-                            <span className="truncate max-w-[150px]">
-                              {d.fileUrl.split("/").pop() || "Buka Dokumen"}
-                            </span>
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                          </a>
-                        ) : (
-                          <span className="text-text-secondary/60 font-mono text-[11px]">
-                            Tidak ada tautan
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Status & Revision Column */}
-                      <td className="py-4 pr-4 space-y-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {isApproved ? (
-                            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Disetujui
-                            </span>
-                          ) : isRejected ? (
-                            <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Ditolak
-                            </span>
-                          ) : (
-                            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Menunggu Review
-                            </span>
-                          )}
-
-                          {isRevision && (
-                            <span className="bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
-                              Revisi ke-{reviewCount}
-                            </span>
-                          )}
-                        </div>
-
-                        {rejectionReason && (
-                          <p className="text-[10px] text-text-secondary/70 italic max-w-xs leading-relaxed">
-                            <span className="text-white/60 not-italic font-medium">
-                              Alasan sebelumnya:
-                            </span>{" "}
-                            {rejectionReason}
-                          </p>
-                        )}
-                      </td>
-
-                      {/* Action Buttons */}
-                      <td className="py-4 text-right space-x-2 whitespace-nowrap">
-                        <Button
-                          size="sm"
-                          disabled={isApproved || updateDocMutation.isPending}
-                          onClick={() => handleOpenApproveModal(d)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] h-7 px-3 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={updateDocMutation.isPending}
-                          onClick={() => handleOpenRejectModal(d)}
-                          className="bg-surface text-rose-400 border-rose-500/30 hover:bg-rose-500/10 text-[11px] h-7 px-3 rounded-lg cursor-pointer disabled:opacity-40"
-                        >
-                          Reject
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-
-      {/* APPROVE USER DOCUMENT CONFIRMATION MODAL */}
-      {approveModalDoc && (() => {
-        const stUpper = (approveModalDoc.status || "").toUpperCase();
-        const isPrevRejected = stUpper === "REJECT" || stUpper === "REJECTED";
-        const prevReason = approveModalDoc.rejectionReason || null;
-
-        return (
-          <AdminApproveModal
-            isOpen={Boolean(approveModalDoc)}
-            onClose={() => setApproveModalDoc(null)}
-            onConfirm={handleConfirmApprove}
-            isLoading={updateDocMutation.isPending}
-            title={`Approve Dokumen ${approveModalDoc.type}?`}
-            targetName={`${approveModalDoc.user?.fullName || "Peserta"} (${approveModalDoc.type})`}
-            targetDetail={`Tim: ${approveModalDoc.user?.teamMember?.team?.teamName || "Belum ada tim"} • Doc ID: #${approveModalDoc.id}`}
-            contextMessage={`Dokumen ${approveModalDoc.type} milik ${approveModalDoc.user?.fullName || "peserta"} akan ditandai terverifikasi.`}
-            isPreviouslyRejected={isPrevRejected}
-            previousRejectionReason={prevReason}
-            confirmButtonText="Ya, Approve"
-          />
-        );
-      })()}
-
-      {/* REJECT USER DOCUMENT MODAL */}
-      {rejectModalDoc && (() => {
-        const stUpper = (rejectModalDoc.status || "").toUpperCase();
-        const isPrevApproved =
-          stUpper === "APPROVE" || stUpper === "APPROVED" || stUpper === "VERIFIED";
-
-        return (
-          <AdminRejectModal
-            isOpen={Boolean(rejectModalDoc)}
-            onClose={() => setRejectModalDoc(null)}
-            onConfirm={handleConfirmReject}
-            isLoading={updateDocMutation.isPending}
-            title={`Tolak Dokumen ${rejectModalDoc.type}`}
-            targetName={`${rejectModalDoc.user?.fullName || "Peserta"} (${rejectModalDoc.type})`}
-            targetDetail={`Tim: ${rejectModalDoc.user?.teamMember?.team?.teamName || "Belum ada tim"} • Doc ID: #${rejectModalDoc.id}`}
-            isPreviouslyApproved={isPrevApproved}
-            placeholder="Contoh: Akun Instagram di-private sehingga bukti twibbon tidak dapat dicek, foto buram, file corrupt, dll"
-            confirmButtonText="Tolak Dokumen"
-          />
-        );
-      })()}
     </div>
   );
 }
