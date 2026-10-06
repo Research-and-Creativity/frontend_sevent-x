@@ -10,98 +10,25 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-interface SponsorItem {
-  code: string;
-  name: string;
-}
-
-const goldSponsors: SponsorItem[] = [
-  { code: "TC", name: "TechCorp" },
-  { code: "IL", name: "InnovateLab" },
-  { code: "CB", name: "CloudBase" },
-];
-
-const silverSponsors: SponsorItem[] = [
-  { code: "DS", name: "DevStack" },
-  { code: "BF", name: "ByteFlow" },
-  { code: "CN", name: "CodeNest" },
-  { code: "DS", name: "DataSync" },
-];
-
 export function SponsorshipSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const goldGridRef = useRef<HTMLDivElement>(null);
-  const silverGridRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
-
-      // 1. Header Animation
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: 24 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.7,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: "top 90%",
-              toggleActions: "play none none none",
-            },
-          },
-        );
-      }
-
-      // 2. Gold Cards Animation
-      const goldCards = gsap.utils.toArray(".gold-card");
-      if (goldCards.length > 0 && goldGridRef.current) {
-        gsap.fromTo(
-          goldCards,
-          { opacity: 0, y: 24 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: goldGridRef.current,
-              start: "top 85%",
-              toggleActions: "play none none none",
-            },
-          },
-        );
-      }
-
-      // 3. Silver Cards Animation
-      const silverCards = gsap.utils.toArray(".silver-card");
-      if (silverCards.length > 0 && silverGridRef.current) {
-        gsap.fromTo(
-          silverCards,
-          { opacity: 0, y: 24 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.6,
-            stagger: 0.08,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: silverGridRef.current,
-              start: "top 85%",
-              toggleActions: "play none none none",
-            },
-          },
-        );
-      }
-
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 100);
+      gsap.from(".sp-header", {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        scrollTrigger: { trigger: ".sp-header", start: "top 85%" },
+      });
+      gsap.from(".sp-panel", {
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        stagger: 0.15,
+        scrollTrigger: { trigger: ".sp-panels", start: "top 80%" },
+      });
     },
     { scope: containerRef },
   );
@@ -110,78 +37,50 @@ export function SponsorshipSection() {
     <section
       id="sponsorship"
       ref={containerRef}
-      className="py-20 md:py-24 px-6 md:px-16 bg-transparent relative"
+      className="relative py-24 px-4 md:px-8 overflow-visible"
     >
-      <div className="max-w-6xl mx-auto">
-        {/* Section Header */}
-        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
-            We Sponsorship
+      <div className="max-w-5xl mx-auto relative z-10">
+        <div className="sp-header text-center max-w-3xl mx-auto mb-14">
+          <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
+            SPONSORSHIP
           </h2>
-          <p className="text-white/60 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Terima Kasih Kepada Para Sponsor Yang Telah Mendukung Kompetisi Ini.
+          <p className="text-sm text-white/50 leading-relaxed">
+            Become a sponsor and join us in shaping Indonesia's digital future.
           </p>
         </div>
 
-        {/* Section 1: Gold Sponsors */}
-        <div className="mb-14">
-          <p className="text-center font-mono text-lg font-medium tracking-[0.15em] text-[#00E5FF] mb-6">
-            GOLD SPONSORS
-          </p>
-
-          <div
-            ref={goldGridRef}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-          >
-            {goldSponsors.map((sponsor, index) => (
-              <div
-                key={`gold-${index}-${sponsor.name}`}
-                className="gold-card bg-[#18214D]/80 border border-white/10 rounded-2xl p-7 sm:p-8 flex flex-col items-center justify-center text-center transition-colors duration-200 hover:border-white/20 hover:bg-[#18214D]"
-              >
-                {/* Logo Box */}
-                <div className="w-full max-w-[200px] h-28 sm:h-32 rounded-xl bg-[#0C112C] border border-white/5 flex items-center justify-center mb-6">
-                  <span className="font-display font-bold text-2xl sm:text-3xl text-white/90 tracking-widest">
-                    {sponsor.code}
-                  </span>
-                </div>
-
-                {/* Sponsor Name */}
-                <h3 className="font-display font-semibold text-white/95 text-lg sm:text-xl">
-                  {sponsor.name}
-                </h3>
-              </div>
-            ))}
+        <div className="sp-panels grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="sp-panel border border-white/25 rounded-xl p-5 bg-white/[0.03] shadow-[0_0_25px_rgba(255,255,255,0.06)]">
+            <h3 className="font-display text-2xl font-bold tracking-widest text-white mb-5 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+              AVAILABLE TIERS
+            </h3>
+            <div className="flex flex-wrap gap-3 mb-5">
+              {["Package", "Package", "Package", "Package"].map((p, i) => (
+                <span
+                  key={i}
+                  className="text-base text-white/90 border border-[#5B5EA6] rounded px-4 py-2 bg-[#3B3F6E]/50"
+                >
+                  {p}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-white/40 leading-relaxed">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
           </div>
-        </div>
 
-        {/* Section 2: Silver Sponsors */}
-        <div>
-          <p className="text-center font-mono text-lg font-medium tracking-[0.15em] text-[#00E5FF] mb-6">
-            SILVER SPONSORS
-          </p>
-
-          <div
-            ref={silverGridRef}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
-          >
-            {silverSponsors.map((sponsor, index) => (
-              <div
-                key={`silver-${index}-${sponsor.name}`}
-                className="silver-card bg-[#18214D]/80 border border-white/10 rounded-2xl p-5 sm:p-6 flex flex-col items-center justify-center text-center transition-colors duration-200 hover:border-white/20 hover:bg-[#18214D]"
-              >
-                {/* Logo Box */}
-                <div className="w-full max-w-[150px] h-20 sm:h-24 rounded-xl bg-[#0C112C] border border-white/5 flex items-center justify-center mb-5">
-                  <span className="font-display font-bold text-xl sm:text-2xl text-white/90 tracking-widest">
-                    {sponsor.code}
-                  </span>
-                </div>
-
-                {/* Sponsor Name */}
-                <h3 className="font-display font-semibold text-white/95 text-sm sm:text-base">
-                  {sponsor.name}
-                </h3>
-              </div>
-            ))}
+          <div className="sp-panel border border-white/25 rounded-xl p-5 bg-white/[0.03] shadow-[0_0_25px_rgba(255,255,255,0.06)]">
+            <h3 className="font-display text-2xl font-bold tracking-widest text-white mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+              LET'S BUILD IT TOGETHER
+            </h3>
+            <p className="text-sm text-white/50 leading-relaxed mb-4">
+              Great technology never grows alone. Partner with SEVENT X and put
+              your name on the next generation of Indonesian engineers'
+              experience.
+            </p>
+            <button className="cursor-pointer bg-white text-[#7C83BC] text-sm font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
+              Discover More
+            </button>
           </div>
         </div>
       </div>
