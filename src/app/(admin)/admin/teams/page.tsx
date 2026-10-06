@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -139,284 +138,100 @@ export default function AdminTeamsPage() {
     return matchSearch && matchComp;
   });
 
+  const paymentStatusLabel = (t: Team) => {
+    const created = (t as any).createdAt || (t as any).registrationDate;
+    if (!created) return "-";
+    try { return new Date(created).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(created); }
+  };
+
+  const docStatusInfo = (t: Team) => {
+    const s = ((t as any).documentStatus || (t as any).status || "").toString().toUpperCase();
+    if (s.includes("APPROV") || s.includes("VERIF")) return { label: "Approved", cls: "border-[#3CB578] text-[#63CFA0]" };
+    if (s.includes("REJECT") || s.includes("REVISE")) return { label: "Revise", cls: "border-[#E5B33C] text-[#F0C969]" };
+    return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
+  };
+
+  const payStatusInfo = (t: Team) => {
+    const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
+    const s = (pObj?.status || (t as any).paymentStatus || "").toString().toUpperCase();
+    if (s.includes("APPROV") || s.includes("PAID") || s.includes("VERIF")) return { label: "Paid", cls: "border-[#3CB578] text-[#63CFA0]" };
+    if (s.includes("REJECT") || s.includes("UNPAID") || s === "NOT PAID") return { label: "Not Paid", cls: "border-[#E55353] text-[#F08080]" };
+    return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Block */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
-        <div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Teams & Payment Verification
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Verifikasi pendaftaran tim peserta dan bukti pembayaran biaya pendaftaran.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Competition Slug Filter Dropdown */}
-          <div className="w-56">
-            <select
-              value={selectedCompSlug}
-              onChange={(e) => setSelectedCompSlug(e.target.value)}
-              className="w-full bg-surface border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
-            >
-              <option value="" className="bg-card text-white">
-                Semua Cabang Kompetisi
-              </option>
-              {competitions.map((comp) => (
-                <option
-                  key={comp.id || comp.slug}
-                  value={comp.slug}
-                  className="bg-card text-white"
-                >
-                  {comp.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-56">
-            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-2.5" />
-            <input
-              type="text"
-              placeholder="Cari tim, ketua, ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent"
-            />
-          </div>
-        </div>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
       </div>
 
-      {/* Main Table Card */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-display text-2xl font-bold">Registered Team</h2>
           <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-accent" />
-            <h2 className="font-display text-xl font-bold text-white">
-              Registered Teams List
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-text-secondary">
-              {filteredTeams.length} Teams Found
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isTeamsLoading || isTeamsFetching || isManualReloading}
-              onClick={handleReloadData}
-              className="bg-surface border-border text-text-secondary hover:text-white text-xs h-8 px-2.5 rounded-lg cursor-pointer transition-all disabled:opacity-50"
-              title="Refresh data"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${
-                  isTeamsFetching || isManualReloading
-                    ? "animate-spin text-accent"
-                    : ""
-                }`}
+            <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
+            </button>
+            <div className="relative">
+              <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
-            </Button>
+            </div>
           </div>
         </div>
 
-        {/* Loading State */}
         {isTeamsLoading ? (
           <div className="space-y-3">
-            <Skeleton className="h-12 w-full rounded-xl bg-surface/60" />
-            <Skeleton className="h-16 w-full rounded-xl bg-surface/60" />
-            <Skeleton className="h-16 w-full rounded-xl bg-surface/60" />
+            <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+            <Skeleton className="h-16 w-full rounded-xl bg-white/5" />
+            <Skeleton className="h-16 w-full rounded-xl bg-white/5" />
           </div>
         ) : isTeamsError ? (
-          /* Error State */
           <div className="p-8 text-center space-y-3 bg-rose-500/5 border border-rose-500/20 rounded-xl">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-sm font-semibold text-white">
-              Gagal memuat data tim
-            </p>
-            <p className="text-xs text-text-secondary max-w-md mx-auto">
-              Terjadi kendala saat mengambil data pendaftaran tim dari server.
-            </p>
-            <Button
-              size="sm"
-              onClick={() => refetchTeams()}
-              className="bg-primary text-white text-xs h-8 rounded-lg"
-            >
-              Coba Lagi
-            </Button>
+            <p className="text-sm font-semibold text-white">Gagal memuat data tim</p>
+            <Button size="sm" onClick={() => refetchTeams()} className="bg-primary text-white text-xs h-8 rounded-lg">Coba Lagi</Button>
           </div>
         ) : filteredTeams.length === 0 ? (
-          /* Empty State */
-          <div className="p-12 text-center space-y-2 bg-surface/30 border border-dashed border-white/10 rounded-xl">
-            <Users className="w-8 h-8 text-text-secondary mx-auto mb-2" />
-            <p className="text-sm font-semibold text-white">
-              Belum ada data tim yang terdaftar
-            </p>
-            <p className="text-xs text-text-secondary">
-              {searchQuery || selectedCompSlug
-                ? "Tidak ada tim yang cocok dengan filter pencarian."
-                : "Tim yang dibuat oleh peserta akan muncul di antrean ini."}
-            </p>
+          <div className="p-12 text-center space-y-2 bg-white/5 border border-dashed border-white/10 rounded-xl">
+            <Users className="w-8 h-8 text-white/40 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-white">Belum ada data tim yang terdaftar</p>
+            <p className="text-xs text-white/40">{searchQuery || selectedCompSlug ? "Tidak ada tim yang cocok dengan filter pencarian." : "Tim yang dibuat oleh peserta akan muncul di antrean ini."}</p>
           </div>
         ) : (
-          /* Data Table */
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-text-secondary font-mono uppercase">
-                  <th className="pb-3 font-semibold">Team ID & Name</th>
-                  <th className="pb-3 font-semibold">Category</th>
-                  <th className="pb-3 font-semibold">Leader</th>
-                  <th className="pb-3 font-semibold">Payment Proof</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold text-right">Actions</th>
+                <tr className="text-left text-white/70 border-b border-white/10">
+                  <th className="pb-3 font-semibold">Team</th>
+                  <th className="pb-3 font-semibold">Team Leader Name</th>
+                  <th className="pb-3 font-semibold">Time Registration</th>
+                  <th className="pb-3 font-semibold">Status Document</th>
+                  <th className="pb-3 font-semibold">Status Payment</th>
+                  <th className="pb-3 font-semibold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredTeams.map((t) => {
                   const teamName = t.teamName || (t as any).name || "Unnamed Team";
-                  const leader =
-                    t.members?.find((m) => m.role === "LEADER")?.user?.fullName ||
-                    (t as any).leader ||
-                    "-";
-                  const membersCount = t.members?.length || (t as any).membersCount || 1;
-                  const category =
-                    t.competition?.name || (t as any).category || (t as any).competitionSlug || "-";
-
-                  const paymentProofObj =
-                    t.paymentProof ||
-                    (t as any).documents?.find(
-                      (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
-                    );
-
-                  const fileUrl =
-                    typeof paymentProofObj === "string"
-                      ? paymentProofObj
-                      : paymentProofObj?.fileUrl || null;
-
-                  const rawStatus =
-                    paymentProofObj?.status || t.status || "REVIEW";
-                  const statusUpper = rawStatus.toUpperCase();
-
-                  const reviewCount =
-                    paymentProofObj?.reviewCount ?? (t as any).reviewCount ?? 1;
-                  const rejectionReason =
-                    paymentProofObj?.rejectionReason ??
-                    (t as any).rejectionReason ??
-                    null;
-                  const isRevision = reviewCount > 1;
-
-                  const isApproved =
-                    statusUpper === "APPROVE" ||
-                    statusUpper === "APPROVED" ||
-                    statusUpper === "VERIFIED";
-                  const isRejected =
-                    statusUpper === "REJECT" || statusUpper === "REJECTED";
-
+                  const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "-";
+                  const rawStatus = paymentStatusLabel(t);
+                  const doc = docStatusInfo(t);
+                  const pay = payStatusInfo(t);
                   return (
-                    <tr
-                      key={t.id}
-                      className="hover:bg-surface/50 transition-colors align-top"
-                    >
-                      {/* Team Name & ID */}
-                      <td className="py-4 pr-4">
-                        <p className="font-bold text-white text-sm">
-                          {teamName}
-                        </p>
-                        <span className="text-[10px] text-text-secondary font-mono">
-                          ID: #{t.id} • {membersCount} Members
-                        </span>
-                      </td>
-
-                      {/* Competition Category */}
-                      <td className="py-4 pr-4 text-text-secondary font-mono">
-                        {category}
-                      </td>
-
-                      {/* Leader Name */}
-                      <td className="py-4 pr-4 text-white font-medium">
-                        {leader}
-                      </td>
-
-                      {/* Payment Proof File */}
-                      <td className="py-4 pr-4">
-                        {fileUrl ? (
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-accent hover:underline inline-flex items-center gap-1 font-mono text-[11px]"
-                          >
-                            <span className="truncate max-w-[140px]">
-                              {fileUrl.split("/").pop() || "Lihat Berkas"}
-                            </span>
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                          </a>
-                        ) : (
-                          <span className="text-text-secondary/60 font-mono text-[11px]">
-                            Belum Upload
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Status & Revision History */}
-                      <td className="py-4 pr-4 space-y-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {isApproved ? (
-                            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Terverifikasi
-                            </span>
-                          ) : isRejected ? (
-                            <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Ditolak
-                            </span>
-                          ) : (
-                            <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded">
-                              Menunggu Review
-                            </span>
-                          )}
-
-                          {isRevision && (
-                            <span className="bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
-                              Revisi ke-{reviewCount}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Previous Rejection Reason */}
-                        {rejectionReason && (
-                          <p className="text-[10px] text-text-secondary/70 italic max-w-xs leading-relaxed">
-                            <span className="text-white/60 not-italic font-medium">
-                              Alasan sebelumnya:
-                            </span>{" "}
-                            {rejectionReason}
-                          </p>
-                        )}
-                      </td>
-
-                      {/* Action Buttons */}
-                      <td className="py-4 text-right space-x-2 whitespace-nowrap">
-                        <Button
-                          size="sm"
-                          disabled={
-                            isApproved ||
-                            updatePaymentStatusMutation.isPending
-                          }
-                          onClick={() => handleOpenApproveModal(t)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] h-7 px-3 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={updatePaymentStatusMutation.isPending}
-                          onClick={() => handleOpenRejectModal(t)}
-                          className="bg-surface text-rose-400 border-rose-500/30 hover:bg-rose-500/10 text-[11px] h-7 px-3 rounded-lg cursor-pointer disabled:opacity-40"
-                        >
-                          Reject
-                        </Button>
+                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-5 pr-4">{teamName}</td>
+                      <td className="py-5 pr-4">{leader}</td>
+                      <td className="py-5 pr-4">{rawStatus}</td>
+                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span></td>
+                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span></td>
+                      <td className="py-5">
+                        <button onClick={() => handleOpenApproveModal(t)} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                       </td>
                     </tr>
                   );
@@ -425,9 +240,19 @@ export default function AdminTeamsPage() {
             </table>
           </div>
         )}
-      </Card>
 
-      {/* APPROVE PAYMENT PROOF CONFIRMATION MODAL */}
+        <div className="flex items-center justify-between pt-5 text-xs text-white/50">
+          <span>Showing {filteredTeams.length} data out of {teams.length}</span>
+          <div className="flex items-center gap-3">
+            <span>Show</span>
+            <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1"><option>10</option></select>
+            <span>data per page</span>
+            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+        </div>
+      </div>
+
       {approveModalTeam && (() => {
         const pObj =
           approveModalTeam.paymentProof ||
