@@ -2,38 +2,23 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import {
-  setAuthTransition,
-  getAuthTransition,
-  clearAuthTransition,
-} from "@/lib/auth-transition";
+import { Eye, EyeOff, Loader2, Globe, Share2, MessageCircle } from "lucide-react";
 
 const registerSchema = z
   .object({
-    fullName: z.string().min(2, "Full name must be at least 2 characters"),
+    fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        "Username can only contain letters, numbers, and underscores",
-      ),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    institution: z.string().min(2, "Institution / school name is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -45,210 +30,33 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-
-  const formRef = useRef<HTMLDivElement>(null);
-  const transitionLayerRef = useRef<HTMLDivElement>(null);
-  const circleImgRef = useRef<HTMLDivElement>(null);
-  const staticCircleRef = useRef<HTMLDivElement>(null);
-
   const [isLoading, setIsLoading] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-  });
-
-  useGSAP(() => {
-    const form = formRef.current;
-    const layer = transitionLayerRef.current;
-    const circle = circleImgRef.current;
-    const staticCircle = staticCircleRef.current;
-
-    if (!form || !layer || !circle || !staticCircle) return;
-
-    const transition = getAuthTransition();
-
-    if (!transition) {
-      gsap.set(layer, { display: "flex" });
-      gsap.set(staticCircle, { opacity: 0 });
-      gsap.set(form, { opacity: 0, x: 50 });
-
-      gsap.set(circle, { x: "0%", scale: 4, opacity: 0 });
-
-      const tl = gsap.timeline({
-        onComplete: () => {
-          gsap.set(layer, { display: "none" });
-          gsap.set(staticCircle, { opacity: 1 });
-        },
-      });
-
-      tl.to(circle, {
-        scale: 1,
-        opacity: 1,
-        duration: 1.2,
-        ease: "power3.inOut",
-      });
-
-      tl.to(
-        circle,
-        {
-          x: "-61%",
-          duration: 0.9,
-          ease: "power3.inOut",
-        },
-        "+=0.1",
-      );
-
-      tl.to(
-        form,
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.6,
-          ease: "power3.out",
-        },
-        "-=0.5",
-      );
-
-      return;
-    }
-
-    if (transition === "to-register") {
-      gsap.set(staticCircle, { opacity: 0 });
-
-      gsap.set(layer, {
-        display: "flex",
-      });
-
-      gsap.set(circle, {
-        x: "-61%",
-        y: 0,
-      });
-
-      gsap.set(form, {
-        opacity: 0,
-        x: 25,
-      });
-
-      const tl = gsap.timeline({
-        onComplete: () => {
-          clearAuthTransition();
-
-          gsap.set(layer, {
-            display: "none",
-          });
-
-          gsap.set(staticCircle, { opacity: 1 });
-        },
-      });
-
-      tl.to(
-        form,
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.6,
-          ease: "power3.out",
-        },
-        0.15,
-      );
-
-      return;
-    }
-
-    gsap.fromTo(
-      form,
-      {
-        opacity: 0,
-        x: 30,
-      },
-      {
-        opacity: 1,
-        x: 0,
-        duration: 0.8,
-        ease: "power3.out",
-      },
-    );
-  }, []);
-
-  const navigateToLogin = () => {
-    if (isAnimating) return;
-
-    setIsAnimating(true);
-
-    const layer = transitionLayerRef.current;
-    const circle = circleImgRef.current;
-    const form = formRef.current;
-    const staticCircle = staticCircleRef.current;
-
-    if (!layer || !circle || !form || !staticCircle) return;
-
-    setAuthTransition("to-login");
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        router.push("/login");
-      },
-    });
-
-    tl.set(layer, { display: "flex" }, 0);
-    tl.set(staticCircle, { opacity: 0 }, 0);
-
-    gsap.set(circle, {
-      x: "-61%",
-      y: 0,
-    });
-
-    tl.to(
-      form,
-      {
-        opacity: 0,
-        x: 100,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      0,
-    );
-
-    tl.to(
-      circle,
-      {
-        x: "0%",
-        duration: 0.9,
-        ease: "power3.inOut",
-      },
-      0,
-    );
-
-    tl.to({}, { duration: 0.08 });
-
-    tl.to(circle, {
-      x: "61%",
-      duration: 0.9,
-      ease: "power3.inOut",
-    });
-  };
+  } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const regPayload = {
+      const username = data.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_");
+      const payload = {
         fullName: data.fullName,
         email: data.email,
-        username: data.username,
+        username,
         password: data.password,
-        institution: data.institution,
+        institution: "SEVENT X",
       };
-      const res = await apiClient.post("/api/auth/register", regPayload);
+      const res = await apiClient.post("/api/auth/register", payload);
       let user = res.data?.user;
       let accessToken = res.data?.accessToken;
       if (!accessToken || !user) {
         const loginRes = await apiClient.post("/api/auth/login", {
-          email: data.email,
+          username,
           password: data.password,
         });
         user = loginRes.data?.user;
@@ -265,158 +73,130 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="h-screen flex justify-end bg-background overflow-hidden relative">
-      <div
-        ref={transitionLayerRef}
-        className="fixed inset-0 z-100 pointer-events-none hidden overflow-hidden items-center justify-center"
-      >
-        <div
-          ref={circleImgRef}
-          className="
-      absolute
-      w-[110vh]
-      h-[110vh]
-      rounded-full
-      overflow-hidden
-      shadow-2xl
-      shrink-0
-      will-change-transform
-    "
-        >
-          <img
-            src="/images/auth-collage.jpg"
-            className="w-full h-full object-cover"
-            alt=""
-          />
-        </div>
+    <div className="relative min-h-screen bg-black text-white flex flex-col overflow-hidden">
+      {/* background pattern */}
+      <Image src="/assets/image/pattern-landing2.svg" alt="" width={1440} height={1712} className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
+      {/* big watermark logos */}
+      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -left-40 bottom-[-15%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
+      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -right-40 top-[-10%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
+
+      {/* top-left brand */}
+      <div className="absolute top-8 left-8 z-10 flex items-center gap-3">
+        <Image src="/assets/image/logo-putih.png" alt="SEVENT X" width={1000} height={1262} className="w-8 h-auto" />
+        <span className="font-display text-xl font-extrabold tracking-wide">SEVENT X</span>
       </div>
 
-      <div
-        ref={staticCircleRef}
-        className="hidden lg:flex w-1/2 h-full items-center justify-start relative z-0"
-      >
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden shadow-2xl translate-x-[-28%] shrink-0">
-          <img
-            src="/images/auth-collage.jpg"
-            className="w-full h-full object-cover"
-            alt="Collage"
-          />
-        </div>
-      </div>
-
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative py-10 overflow-y-auto">
-        <div ref={formRef} className="max-w-md w-full mx-auto space-y-6">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-6">
-            Create Your <span className="text-[#00E5FF]">Account</span>
+      {/* form card */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-lg rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-8 sm:p-10 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
+          <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
+            CREATE YOUR ACCOUNT
           </h1>
+          <p className="text-center text-sm text-white/60 mt-2 mb-8">
+            Create your Account and start your journey here!
+          </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {[
-              { id: "fullName", placeholder: "name" },
-              { id: "email", type: "email", placeholder: "email" },
-              { id: "username", placeholder: "username" },
-              { id: "password", type: "password", placeholder: "password" },
-              {
-                id: "confirmPassword",
-                type: "password",
-                placeholder: "comfirm password",
-              },
-              { id: "institution", placeholder: "from institute" },
-            ].map((field) => (
-              <div key={field.id} className="w-full">
-                <Input
-                  id={field.id}
-                  type={field.type || "text"}
-                  placeholder={field.placeholder}
-                  className="bg-transparent border border-white/20 text-white placeholder:text-white/40 h-12 rounded-md focus:border-[#00E5FF] transition-colors"
-                  {...register(field.id as keyof RegisterFormValues)}
+              { id: "fullName", label: "Name", type: "text" },
+              { id: "email", label: "Email", type: "email" },
+            ].map((f) => (
+              <div key={f.id}>
+                <label htmlFor={f.id} className="text-sm text-white/70">{f.label}</label>
+                <input
+                  id={f.id}
+                  type={f.type}
+                  placeholder={f.label}
+                  {...register(f.id as keyof RegisterFormValues)}
+                  className="mt-2 w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
                 />
-                {errors[field.id as keyof RegisterFormValues] && (
-                  <p className="text-[10px] text-red-400 mt-1">
-                    {errors[field.id as keyof RegisterFormValues]?.message}
-                  </p>
+                {errors[f.id as keyof RegisterFormValues] && (
+                  <p className="text-xs text-red-400 mt-1">{errors[f.id as keyof RegisterFormValues]?.message}</p>
                 )}
               </div>
             ))}
 
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="relative border border-white/20 rounded-md p-3 text-center hover:border-[#00E5FF] transition-colors cursor-pointer">
+            <div>
+              <label htmlFor="password" className="text-sm text-white/70">Password</label>
+              <div className="relative mt-2">
                 <input
-                  type="file"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  {...register("password")}
+                  className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
                 />
-                <span className="text-xs text-white/50">
-                  upload ktm/student card
-                </span>
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white" aria-label="Toggle password">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-              <div className="relative border border-white/20 rounded-md p-3 text-center hover:border-[#00E5FF] transition-colors cursor-pointer">
-                <input
-                  type="file"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-                <span className="text-xs text-white/50">upload id card</span>
-              </div>
+              {errors.password && <p className="text-xs text-red-400 mt-1">{errors.password.message}</p>}
             </div>
 
-            <Button
+            <div>
+              <label htmlFor="confirmPassword" className="text-sm text-white/70">Confirm Password</label>
+              <div className="relative mt-2">
+                <input
+                  id="confirmPassword"
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  {...register("confirmPassword")}
+                  className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
+                />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white" aria-label="Toggle confirm password">
+                  {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="text-xs text-red-400 mt-1">{errors.confirmPassword.message}</p>}
+            </div>
+
+            <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary hover:bg-primary-hover text-white font-medium h-12 rounded-md shadow-lg mt-4 transition-all"
+              className="w-full h-12 rounded-full bg-white text-[#7C83BC] font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all disabled:opacity-60"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating...
-                </>
-              ) : (
-                "Sign up"
-              )}
-            </Button>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Create Account"}
+            </button>
           </form>
 
-          <div className="relative flex items-center justify-center my-5">
+          <div className="relative flex items-center justify-center my-6">
             <div className="border-t border-white/10 w-full" />
-            <span className="bg-background px-4 text-xs text-white/40">or</span>
+            <span className="bg-transparent px-4 text-xs text-white/40">or</span>
             <div className="border-t border-white/10 w-full" />
           </div>
 
-          <div className="space-y-4">
-            <Button
-              type="button"
-              onClick={initiateGoogleLogin}
-              className="w-full bg-white hover:bg-gray-100 text-background font-bold h-12 rounded-md flex items-center justify-center gap-2 transition-colors"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path
-                  fill="#EA4335"
-                  d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-                />
-                <path
-                  fill="#4285F4"
-                  d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-                />
-              </svg>
-              <span>Continue with Google</span>
-            </Button>
-            <div className="text-center">
-              <p className="text-sm text-white/50">
-                Already have an account?{" "}
-                <button
-                  onClick={navigateToLogin}
-                  className="font-semibold text-[#00E5FF] hover:text-white transition-colors underline underline-offset-2"
-                >
-                  Login
-                </button>
-              </p>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={initiateGoogleLogin}
+            className="w-full h-12 rounded-full bg-[#2E5CFF] hover:bg-[#2448D9] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z" />
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
+              <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z" />
+              <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z" />
+            </svg>
+            Continue with Google
+          </button>
+
+          <p className="text-center text-sm text-white/50 mt-6">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-white underline underline-offset-4 hover:text-white/80">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* footer */}
+      <div className="relative z-10 flex items-center justify-between px-8 pb-6 text-xs text-white/50">
+        <span>©2026 SEVENT. All Rights Reserved</span>
+        <div className="flex items-center gap-3">
+          {[Globe, Share2, MessageCircle].map((Icon, i) => (
+            <a key={i} href="#" aria-label="social" className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-white/80 transition-colors">
+              <Icon className="w-4 h-4" />
+            </a>
+          ))}
         </div>
       </div>
     </div>
