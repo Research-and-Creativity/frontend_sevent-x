@@ -22,13 +22,16 @@ export default function AdminAnnouncementPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Announcement List</h2>
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+            <button title="Filter" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
             </button>
             <div className="relative">
               <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
               <input type="text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="w-72 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50" />
             </div>
+            <a href="/admin/announcement/create" className="flex items-center gap-2 bg-white text-[#5B6BBF] font-semibold text-sm px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
+              <span className="text-lg leading-none">+</span> Create
+            </a>
           </div>
         </div>
 
