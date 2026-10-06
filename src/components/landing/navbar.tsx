@@ -70,7 +70,7 @@ export function Navbar() {
                 height={26}
                 className="w-5 h-auto"
               />
-              SEVENT <span className="text-white/70">X</span>
+              SEVENT X
             </span>
           </Link>
         </div>
