@@ -144,20 +144,20 @@ export default function AdminRegisteredTeamDetailPage() {
 
       {/* Revise modal */}
       <Dialog open={reviseOpen} onOpenChange={setReviseOpen}>
-        <DialogContent className="bg-[#15161A] border border-white/10 text-white max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-white">Revise Notes</DialogTitle>
-            <DialogDescription className="text-white/60">Write the revision note for this team.</DialogDescription>
+        <DialogContent className="bg-[#101216] border border-white/10 text-white max-w-md rounded-2xl p-6 shadow-[0_0_60px_rgba(125,140,255,0.15)]">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-white text-lg font-bold tracking-tight">Revise Notes</DialogTitle>
+            <DialogDescription className="text-white/60 text-sm">Write the revision note for this team.</DialogDescription>
           </DialogHeader>
           <textarea
             value={reviseNote}
             onChange={(e) => setReviseNote(e.target.value)}
             placeholder="Catatan revisi..."
-            className="w-full h-28 rounded-lg border border-white/20 bg-transparent p-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60"
+            className="w-full h-32 rounded-xl border border-white/15 bg-[#15161A] p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/60 transition-colors"
           />
-          <DialogFooter className="bg-transparent border-t-0 p-0">
-            <Button variant="outline" className="border-white/20 text-white/70 hover:text-white" onClick={() => setReviseOpen(false)}>Cancel</Button>
-            <Button className="bg-white text-black hover:bg-white/90" onClick={() => { setReviseOpen(false); setSubmitReviseOpen(true); }}>Submit</Button>
+          <DialogFooter className="bg-transparent border-t border-white/10 p-0 mt-5 pt-5">
+            <Button variant="outline" className="border-white/20 text-white/70 hover:text-white rounded-full px-6" onClick={() => setReviseOpen(false)}>Cancel</Button>
+            <Button className="bg-white text-black hover:bg-white/90 rounded-full px-8 shadow-[0_0_20px_rgba(255,255,255,0.2)]" onClick={() => { setReviseOpen(false); setSubmitReviseOpen(true); }}>Submit</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
