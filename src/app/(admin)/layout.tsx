@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
   const webLinks = [
     { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
-    { href: "/admin/timeline", label: "Announcement", icon: Megaphone },
+    { href: "/admin/announcement", label: "Announcement", icon: Megaphone },
   ];
 
   return (
