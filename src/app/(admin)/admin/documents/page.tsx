@@ -7,18 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Users, Search, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Team } from "@/types/api";
+import { DUMMY_TEAMS } from "@/lib/dummy-teams";
 
 export default function AdminDocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
-    queryKey: ["adminTeamsVerified"],
-    queryFn: async () => {
-      const res = await apiClient.get("/api/teams");
-      const list = res.data?.data || res.data;
-      return Array.isArray(list) ? list : [];
-    },
-  });
+  // TEMPORARY: use dummy data until API integration is finalized
+  const teams = DUMMY_TEAMS as any as Team[];
+  const isLoading = false;
+  const isError = false;
+  const refetch = () => Promise.resolve();
+
+  // Original API fetch (kept for later):
+  // const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
+  //   queryKey: ["adminTeamsVerified"],
+  //   queryFn: async () => {
+  //     const res = await apiClient.get("/api/teams");
+  //     const list = res.data?.data || res.data;
+  //     return Array.isArray(list) ? list : [];
+  //   },
+  // });
 
   const verifiedTeams = teams.filter((t) => {
     const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
