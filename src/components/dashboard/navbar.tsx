@@ -34,6 +34,7 @@ import {
   Newspaper,
   LogOut,
   UserCheck,
+  ListChecks, // Menambahkan ListChecks
 } from "lucide-react";
 
 type Role = "juri" | "admin" | "peserta";
@@ -45,7 +46,7 @@ type NavbarType = {
 
 const NAV_ITEMS: Record<
   Role,
-  { url: string; name: string; icon: React.ReactElement }[]
+  { url: string; name: string; icon: React.ReactElement; category?: string }[]
 > = {
   peserta: [
     {
@@ -76,9 +77,28 @@ const NAV_ITEMS: Record<
       icon: <LayoutPanelLeft className="w-5 h-5" />,
     },
     {
+      url: "/juri/already-submitted",
+      name: "Already Submitted",
+      icon: <FileUp className="w-5 h-5" />, // Menggunakan FileUp untuk Already Submitted
+      category: "PRELIMINARY ROUND",
+    },
+    {
+      url: "/juri/judged",
+      name: "Judged",
+      icon: <Trophy className="w-5 h-5" />, // Mengganti ikon ke Trophy untuk Judged
+      category: "PRELIMINARY ROUND",
+    },
+    {
       url: "/juri/team",
-      name: "Team",
+      name: "List Participant",
       icon: <Users className="w-5 h-5" />,
+      category: "FINAL ROUND",
+    },
+    {
+      url: "/juri/winner",
+      name: "Winner",
+      icon: <Trophy className="w-5 h-5" />,
+      category: "FINAL ROUND",
     },
     {
       url: "/juri/announcements",
@@ -224,28 +244,98 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
 
           {/* Main Nav Items */}
           <nav className="space-y-1">
-            {currentLinks.map((item) => {
-              const isActive =
-                pathname === item.url ||
-                (item.url !== "/peserta/dashboard" &&
-                  item.url !== "/juri/dashboard" &&
-                  item.url !== "/admin/dashboard" &&
-                  pathname.startsWith(item.url));
-              return (
-                <Link
-                  key={item.url}
-                  href={item.url}
-                  className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-primary/25 text-accent font-semibold shadow-sm"
-                      : "text-text-secondary hover:text-white hover:bg-card-hover"
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+            {/* Overview - Render always at the top */}
+            {currentLinks
+              .filter((item) => item.url === "/juri/dashboard")
+              .map((item) => {
+                const isActive = pathname === item.url;
+                return (
+                  <Link
+                    key={item.url}
+                    href={item.url}
+                    className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary/25 text-accent font-semibold shadow-sm"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+
+            {/* Preliminary Round */}
+            <div className="pt-4 pb-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              PRELIMINARY ROUND
+            </div>
+            {currentLinks
+              .filter((item) => item.category === "PRELIMINARY ROUND")
+              .map((item) => {
+                const isActive =
+                  pathname === item.url || pathname.startsWith(item.url);
+                return (
+                  <Link
+                    key={item.url}
+                    href={item.url}
+                    className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary/25 text-accent font-semibold shadow-sm"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+
+            {/* Final Round */}
+            <div className="pt-4 pb-1 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              FINAL ROUND
+            </div>
+            {currentLinks
+              .filter((item) => item.category === "FINAL ROUND")
+              .map((item) => {
+                const isActive =
+                  pathname === item.url || pathname.startsWith(item.url);
+                return (
+                  <Link
+                    key={item.url}
+                    href={item.url}
+                    className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary/25 text-accent font-semibold shadow-sm"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+
+            {/* Other links without category (e.g., Announcements) */}
+            {currentLinks
+              .filter((item) => !item.category && item.url !== "/juri/dashboard")
+              .map((item) => {
+                const isActive =
+                  pathname === item.url || pathname.startsWith(item.url);
+                return (
+                  <Link
+                    key={item.url}
+                    href={item.url}
+                    className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary/25 text-accent font-semibold shadow-sm"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
           </nav>
         </div>
 
