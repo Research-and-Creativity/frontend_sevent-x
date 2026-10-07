@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { Team } from "@/types/api";
+import { DUMMY_TEAMS } from "@/lib/dummy-teams";
 import { useCompetitions } from "@/hooks/use-peserta";
 import { useUpdatePaymentProofStatus } from "@/hooks/use-admin";
 
@@ -37,22 +38,23 @@ export default function AdminTeamsPage() {
   const { data: competitions = [] } = useCompetitions();
 
   // 2. Fetch teams list from GET /api/teams
-  const {
-    data: teams = [],
-    isLoading: isTeamsLoading,
-    isFetching: isTeamsFetching,
-    isError: isTeamsError,
-    refetch: refetchTeams,
-  } = useQuery<Team[]>({
-    queryKey: ["adminTeams", selectedCompSlug],
-    queryFn: async () => {
-      const res = await apiClient.get("/api/teams", {
-        params: selectedCompSlug ? { competitionSlug: selectedCompSlug } : undefined,
-      });
-      const list = res.data?.data || res.data;
-      return Array.isArray(list) ? list : [];
-    },
-  });
+  // TEMPORARY: use dummy data until API integration is finalized
+  const USE_DUMMY = true;
+  const teams = USE_DUMMY ? (DUMMY_TEAMS as any as Team[]) : [];
+  const isTeamsLoading = false;
+  const isTeamsFetching = false;
+  const isTeamsError = false;
+  const refetchTeams = () => Promise.resolve();
+
+  // Original API fetch (kept for later):
+  // const { data: teams = [], isLoading: isTeamsLoading, isFetching: isTeamsFetching, isError: isTeamsError, refetch: refetchTeams } = useQuery<Team[]>({
+  //   queryKey: ["adminTeams", selectedCompSlug],
+  //   queryFn: async () => {
+  //     const res = await apiClient.get("/api/teams", { params: selectedCompSlug ? { competitionSlug: selectedCompSlug } : undefined });
+  //     const list = res.data?.data || res.data;
+  //     return Array.isArray(list) ? list : [];
+  //   },
+  // });
 
   const updatePaymentStatusMutation = useUpdatePaymentProofStatus();
 
