@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 const rows = [
@@ -80,7 +81,7 @@ export default function AdminOverviewDashboardPage() {
                 <td className="py-4">{r.time}</td>
                 <td className="py-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${r.doc.cls}`}>{r.doc.label}</span></td>
                 <td className="py-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${r.pay.cls}`}>{r.pay.label}</span></td>
-                <td className="py-4"><button className="text-white/60 hover:text-white"><Eye className="w-5 h-5" /></button></td>
+                <td className="py-4"><Link href="/admin/teams" className="text-white/60 hover:text-white"><Eye className="w-5 h-5" /></Link></td>
               </tr>
             ))}
           </tbody>
