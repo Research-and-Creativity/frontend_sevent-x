@@ -7,6 +7,7 @@ import { UploadCloud } from "lucide-react";
 export default function AdminGalleryAddPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const allowed = ["image/jpeg", "image/png", "image/jpg"];
@@ -25,6 +26,8 @@ export default function AdminGalleryAddPage() {
     }
     setError("");
     setFileName(file.name);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -57,14 +60,30 @@ export default function AdminGalleryAddPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={onDrop}
               onClick={() => inputRef.current?.click()}
-              className="mt-2 border border-dashed border-white/30 rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors"
+              className="mt-2 border border-dashed border-white/30 rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors overflow-hidden"
             >
-              <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#5B6BBF] mb-4">
-                <UploadCloud className="w-7 h-7" />
-              </span>
-              <p className="font-medium">Drag or Upload your files here</p>
-              <p className="text-xs text-white/50 mt-1">Upload your image.<br />(JPG, JPEG, PNG. Max 1 File and 5MB)</p>
-              {fileName && <p className="text-xs text-[#7FA7F5] mt-3">Selected: {fileName}</p>}
+              {previewUrl ? (
+                <div className="relative w-full h-[260px]">
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); setFileName(null); }}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                    aria-label="Remove image"
+                  >
+                    ✕
+                  </button>
+                  <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white/80 bg-black/50 rounded-full px-3 py-1">{fileName}</p>
+                </div>
+              ) : (
+                <>
+                  <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#5B6BBF] mb-4">
+                    <UploadCloud className="w-7 h-7" />
+                  </span>
+                  <p className="font-medium">Drag or Upload your files here</p>
+                  <p className="text-xs text-white/50 mt-1">Upload your image.<br />(JPG, JPEG, PNG. Max 1 File and 5MB)</p>
+                </>
+              )}
               {error && <p className="text-xs text-red-400 mt-3">{error}</p>}
               <input ref={inputRef} type="file" accept="image/jpeg,image/png" className="hidden" onChange={onChange} />
             </div>
