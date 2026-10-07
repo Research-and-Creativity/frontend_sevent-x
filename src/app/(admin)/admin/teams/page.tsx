@@ -34,6 +34,11 @@ export default function AdminTeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompSlug, setSelectedCompSlug] = useState<string>("");
   const [isManualReloading, setIsManualReloading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [docFilter, setDocFilter] = useState("all");
+  const [payFilter, setPayFilter] = useState("all");
+  const [timeSort, setTimeSort] = useState("newest");
+  const [nameSort, setNameSort] = useState("az");
 
   // 1. Fetch competitions list for filter dropdown
   const { data: competitions = [] } = useCompetitions();
@@ -123,24 +128,6 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const filteredTeams = teams.filter((t) => {
-    const name = t.teamName || (t as any).name || "";
-    const id = t.id || "";
-    const leader =
-      t.members?.find((m) => m.role === "LEADER")?.user?.fullName ||
-      (t as any).leader ||
-      "";
-    const compSlug =
-      t.competition?.slug || (t as any).competitionSlug || (t as any).slug || "";
-
-    const matchSearch =
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchComp = !selectedCompSlug || compSlug === selectedCompSlug;
-    return matchSearch && matchComp;
-  });
-
   const paymentStatusLabel = (t: Team) => {
     const created = (t as any).createdAt || (t as any).registrationDate;
     if (!created) return "-";
@@ -162,6 +149,54 @@ export default function AdminTeamsPage() {
     return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
   };
 
+  const filteredTeams = teams.filter((t) => {
+    const name = t.teamName || (t as any).name || "";
+    const id = t.id || "";
+    const leader =
+      t.members?.find((m) => m.role === "LEADER")?.user?.fullName ||
+      (t as any).leader ||
+      "";
+    const compSlug =
+      t.competition?.slug || (t as any).competitionSlug || (t as any).slug || "";
+
+    const matchSearch =
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchComp = !selectedCompSlug || compSlug === selectedCompSlug;
+    return matchSearch && matchComp;
+  })
+  .filter((t) => {
+    if (docFilter === "all") return true;
+    const d = docStatusInfo(t);
+    const s = d.label.toLowerCase();
+    if (docFilter === "approved") return s === "approved";
+    if (docFilter === "revise") return s === "revise";
+    if (docFilter === "review") return s === "need review";
+    return true;
+  })
+  .filter((t) => {
+    if (payFilter === "all") return true;
+    const p = payStatusInfo(t);
+    const s = p.label.toLowerCase();
+    if (payFilter === "paid") return s === "paid";
+    if (payFilter === "not_paid") return s === "not paid";
+    if (payFilter === "review") return s === "need review";
+    return true;
+  })
+  .sort((a, b) => {
+    if (nameSort === "az") return (a.teamName || (a as any).name || "").localeCompare(b.teamName || (b as any).name || "");
+    if (nameSort === "za") return (b.teamName || (b as any).name || "").localeCompare(a.teamName || (a as any).name || "");
+    return 0;
+  })
+  .sort((a, b) => {
+    const da = new Date((a as any).createdAt || (a as any).registrationDate || 0).getTime();
+    const db = new Date((b as any).createdAt || (b as any).registrationDate || 0).getTime();
+    if (timeSort === "newest") return db - da;
+    if (timeSort === "oldest") return da - db;
+    return 0;
+  });
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
@@ -172,7 +207,7 @@ export default function AdminTeamsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Registered Team</h2>
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+            <button onClick={() => setShowFilters(!showFilters)} className="cursor-pointer w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
             </button>
             <div className="relative">
@@ -185,6 +220,31 @@ export default function AdminTeamsPage() {
                 className="w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
             </div>
+          </div>
+        </div>
+
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? "max-h-96 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
+            <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="all" className="bg-[#15161A]">Status Document: All</option>
+              <option value="review" className="bg-[#15161A]">Need Review</option>
+              <option value="revise" className="bg-[#15161A]">Revise</option>
+              <option value="approved" className="bg-[#15161A]">Approved</option>
+            </select>
+            <select value={payFilter} onChange={(e) => setPayFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="all" className="bg-[#15161A]">Status Payment: All</option>
+              <option value="review" className="bg-[#15161A]">Need Review</option>
+              <option value="not_paid" className="bg-[#15161A]">Not Paid</option>
+              <option value="paid" className="bg-[#15161A]">Paid</option>
+            </select>
+            <select value={timeSort} onChange={(e) => setTimeSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="newest" className="bg-[#15161A]">Time Regist: Newest</option>
+              <option value="oldest" className="bg-[#15161A]">Time Regist: Oldest</option>
+            </select>
+            <select value={nameSort} onChange={(e) => setNameSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="az" className="bg-[#15161A]">Team Name: A-Z</option>
+              <option value="za" className="bg-[#15161A]">Team Name: Z-A</option>
+            </select>
           </div>
         </div>
 

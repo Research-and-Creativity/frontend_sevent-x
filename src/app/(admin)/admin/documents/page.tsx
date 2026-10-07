@@ -95,7 +95,7 @@ export default function AdminDocumentsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Registered Team</h2>
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+            <button onClick={() => setShowFilters(!showFilters)} className="cursor-pointer w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
             </button>
             <div className="relative">
