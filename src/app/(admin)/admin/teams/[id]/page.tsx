@@ -78,8 +78,8 @@ export default function AdminRegisteredTeamDetailPage() {
                 {m.name}
                 <svg className={`w-4 h-4 transition-transform duration-300 ${open === i ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </button>
-              <div className={`grid transition-all duration-300 ease-in-out ${open === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                <div className={`overflow-hidden px-5 space-y-5 transition-[padding] duration-300 ${open === i ? "pb-5" : "pb-0"}`}>
+              <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${open === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                <div className="overflow-hidden min-h-0 px-5 pb-5 space-y-5">
                   <h3 className="font-display text-lg font-bold">General Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
