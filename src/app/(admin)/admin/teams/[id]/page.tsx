@@ -144,21 +144,25 @@ export default function AdminRegisteredTeamDetailPage() {
 
       {/* Revise modal */}
       <Dialog open={reviseOpen} onOpenChange={setReviseOpen}>
-        <DialogContent className="bg-[#101216] border border-white/10 text-white max-w-md rounded-2xl p-6 shadow-[0_0_60px_rgba(125,140,255,0.15)]">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-white text-lg font-bold tracking-tight">Revise Notes</DialogTitle>
-            <DialogDescription className="text-white/60 text-sm">Write the revision note for this team.</DialogDescription>
-          </DialogHeader>
+        <DialogContent className="bg-[#1A1D24]/80 backdrop-blur-xl border border-white/20 text-white max-w-lg rounded-2xl p-8 shadow-[0_0_60px_rgba(125,140,255,0.15)]" showCloseButton={false}>
+          <div className="flex items-start justify-between">
+            <DialogTitle className="text-white text-2xl font-extrabold tracking-tight">Revise Notes</DialogTitle>
+            <button onClick={() => setReviseOpen(false)} className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/60 hover:text-white" aria-label="Close">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <DialogDescription className="text-white/60 text-sm -mt-2">Write the revision note for this team.</DialogDescription>
+          <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
           <textarea
             value={reviseNote}
             onChange={(e) => setReviseNote(e.target.value)}
             placeholder="Catatan revisi..."
-            className="w-full h-32 rounded-xl border border-white/15 bg-[#15161A] p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/60 transition-colors"
+            className="w-full h-32 rounded-2xl border border-white/30 bg-transparent p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 transition-colors"
           />
-          <DialogFooter className="bg-transparent border-t border-white/10 p-0 mt-5 pt-5">
-            <Button variant="outline" className="border-white/20 text-white/70 hover:text-white rounded-full px-6" onClick={() => setReviseOpen(false)}>Cancel</Button>
-            <Button className="bg-white text-black hover:bg-white/90 rounded-full px-8 shadow-[0_0_20px_rgba(255,255,255,0.2)]" onClick={() => { setReviseOpen(false); setSubmitReviseOpen(true); }}>Submit</Button>
-          </DialogFooter>
+          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/10">
+            <button className="px-8 py-3 rounded-full border border-white/20 text-white/70 text-sm font-semibold hover:text-white transition-colors" onClick={() => setReviseOpen(false)}>Cancel</button>
+            <button className="px-10 py-3 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_30px_rgba(59,91,255,0.35)] hover:bg-white/90 transition-colors" onClick={() => { setReviseOpen(false); setSubmitReviseOpen(true); }}>Submit</button>
+          </div>
         </DialogContent>
       </Dialog>
 
