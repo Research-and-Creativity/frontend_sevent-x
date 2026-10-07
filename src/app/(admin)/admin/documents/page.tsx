@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ export default function AdminDocumentsPage() {
                     <td className="py-5 pr-4">{timeLabel(t)}</td>
                     <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Verified</span></td>
                     <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Paid</span></td>
-                    <td className="py-5"><button className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+                    <td className="py-5"><Link href={`/admin/documents/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link></td>
                   </tr>
                 );
               })}
