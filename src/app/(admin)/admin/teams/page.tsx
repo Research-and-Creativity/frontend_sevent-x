@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -231,7 +232,7 @@ export default function AdminTeamsPage() {
                       <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span></td>
                       <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span></td>
                       <td className="py-5">
-                        <button onClick={() => handleOpenApproveModal(t)} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                        <Link href={`/admin/teams/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link>
                       </td>
                     </tr>
                   );
