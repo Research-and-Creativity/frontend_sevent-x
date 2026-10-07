@@ -81,7 +81,7 @@ export default function AdminGalleryAddPage() {
           </div>
 
           <div className="flex justify-end">
-            <button type="submit" className="bg-white text-[#5B6BBF] font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
+            <button type="submit" className="cursor-pointer bg-white text-[#5B6BBF] font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
               Save
             </button>
           </div>

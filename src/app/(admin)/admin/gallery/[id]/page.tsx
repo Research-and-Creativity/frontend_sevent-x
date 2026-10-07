@@ -84,11 +84,11 @@ export default function AdminGalleryDetailPage() {
             <button
               type="button"
               onClick={() => { if (confirm("Delete this image?")) router.push("/admin/gallery"); }}
-              className="bg-[#3B5BFF] text-white font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(59,91,255,0.4)] hover:bg-[#2f4bd6] transition-colors"
+              className="cursor-pointer bg-[#3B5BFF] text-white font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(59,91,255,0.4)] hover:bg-[#2f4bd6] transition-colors"
             >
               Delete
             </button>
-            <button type="submit" className="bg-white text-[#5B6BBF] font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
+            <button type="submit" className="cursor-pointer bg-white text-[#5B6BBF] font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
               Save
             </button>
           </div>
