@@ -1,24 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Users, Search, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Team } from "@/types/api";
+import { DUMMY_TEAMS } from "@/lib/dummy-teams";
 
 export default function AdminDocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [docFilter, setDocFilter] = useState("all");
+  const [payFilter, setPayFilter] = useState("all");
+  const [timeSort, setTimeSort] = useState("newest");
+  const [nameSort, setNameSort] = useState("az");
 
-  const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
-    queryKey: ["adminTeamsVerified"],
-    queryFn: async () => {
-      const res = await apiClient.get("/api/teams");
-      const list = res.data?.data || res.data;
-      return Array.isArray(list) ? list : [];
-    },
-  });
+  // TEMPORARY: use dummy data until API integration is finalized
+  const teams = DUMMY_TEAMS as any as Team[];
+  const isLoading = false;
+  const isError = false;
+  const refetch = () => Promise.resolve();
+
+  // Original API fetch (kept for later):
+  // const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
+  //   queryKey: ["adminTeamsVerified"],
+  //   queryFn: async () => {
+  //     const res = await apiClient.get("/api/teams");
+  //     const list = res.data?.data || res.data;
+  //     return Array.isArray(list) ? list : [];
+  //   },
+  // });
 
   const verifiedTeams = teams.filter((t) => {
     const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
@@ -26,11 +40,44 @@ export default function AdminDocumentsPage() {
     return s.includes("APPROVE") || s.includes("VERIF") || s.includes("PAID");
   });
 
-  const filtered = verifiedTeams.filter((t) => {
-    const name = t.teamName || (t as any).name || "";
-    const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "";
-    return name.toLowerCase().includes(searchQuery.toLowerCase()) || leader.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filtered = verifiedTeams
+    .filter((t) => {
+      const name = t.teamName || (t as any).name || "";
+      const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "";
+      return name.toLowerCase().includes(searchQuery.toLowerCase()) || leader.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .filter((t) => {
+      if (docFilter === "all") return true;
+      const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
+      const s = (pObj?.status || (t as any).status || "").toString().toUpperCase();
+      if (docFilter === "approved") return s.includes("APPROVE") || s.includes("VERIF");
+      if (docFilter === "revise") return s.includes("REJECT") || s.includes("REVISE");
+      if (docFilter === "review") return !s.includes("APPROVE") && !s.includes("VERIF") && !s.includes("REJECT") && !s.includes("REVISE");
+      return true;
+    })
+    .filter((t) => {
+      if (payFilter === "all") return true;
+      const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
+      const s = (pObj?.status || (t as any).paymentStatus || "").toString().toUpperCase();
+      if (payFilter === "paid") return s.includes("APPROVE") || s.includes("PAID");
+      if (payFilter === "not_paid") return s.includes("REJECT") || s.includes("UNPAID") || s === "NOT PAID" || s.includes("NOT_PAID");
+      if (payFilter === "review") return !s.includes("APPROVE") && !s.includes("PAID") && !s.includes("REJECT") && !s.includes("UNPAID") && !s.includes("NOT_PAID");
+      return true;
+    })
+    .sort((a, b) => {
+      const na = a.teamName || (a as any).name || "";
+      const nb = b.teamName || (b as any).name || "";
+      if (nameSort === "az") return na.localeCompare(nb);
+      if (nameSort === "za") return nb.localeCompare(na);
+      return 0;
+    })
+    .sort((a, b) => {
+      const da = new Date((a as any).createdAt || (a as any).registrationDate || 0).getTime();
+      const db = new Date((b as any).createdAt || (b as any).registrationDate || 0).getTime();
+      if (timeSort === "newest") return db - da;
+      if (timeSort === "oldest") return da - db;
+      return 0;
+    });
 
   const timeLabel = (t: Team) => {
     const created = (t as any).createdAt || (t as any).registrationDate;
@@ -48,7 +95,7 @@ export default function AdminDocumentsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Registered Team</h2>
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
+            <button onClick={() => setShowFilters(!showFilters)} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
             </button>
             <div className="relative">
@@ -57,6 +104,31 @@ export default function AdminDocumentsPage() {
             </div>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
+            <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="all" className="bg-[#15161A]">Status Document: All</option>
+              <option value="review" className="bg-[#15161A]">Need Review</option>
+              <option value="revise" className="bg-[#15161A]">Revise</option>
+              <option value="approved" className="bg-[#15161A]">Approved</option>
+            </select>
+            <select value={payFilter} onChange={(e) => setPayFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="all" className="bg-[#15161A]">Status Payment: All</option>
+              <option value="review" className="bg-[#15161A]">Need Review</option>
+              <option value="not_paid" className="bg-[#15161A]">Not Paid</option>
+              <option value="paid" className="bg-[#15161A]">Paid</option>
+            </select>
+            <select value={timeSort} onChange={(e) => setTimeSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="newest" className="bg-[#15161A]">Time Regist: Newest</option>
+              <option value="oldest" className="bg-[#15161A]">Time Regist: Oldest</option>
+            </select>
+            <select value={nameSort} onChange={(e) => setNameSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+              <option value="az" className="bg-[#15161A]">Team Name: A-Z</option>
+              <option value="za" className="bg-[#15161A]">Team Name: Z-A</option>
+            </select>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-3"><Skeleton className="h-12 w-full rounded-xl bg-white/5" /><Skeleton className="h-16 w-full rounded-xl bg-white/5" /></div>
@@ -94,7 +166,7 @@ export default function AdminDocumentsPage() {
                     <td className="py-5 pr-4">{timeLabel(t)}</td>
                     <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Verified</span></td>
                     <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Paid</span></td>
-                    <td className="py-5"><button className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+                    <td className="py-5"><Link href={`/admin/documents/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link></td>
                   </tr>
                 );
               })}
