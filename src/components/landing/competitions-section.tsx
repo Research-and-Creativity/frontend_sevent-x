@@ -1,198 +1,102 @@
 "use client";
 
 import { useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-import { Competition } from "@/types/api";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Code, Palette, Terminal, Cpu } from "lucide-react";
-import { motion } from "motion/react";
 import { useGSAP } from "@gsap/react";
+import { PatternLanding1 } from "./pattern-landing1";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, RefreshCw } from "lucide-react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  WEB_DEV: <Cpu className="w-5 h-5 text-white" />,
-  UI_UX: <Palette className="w-5 h-5 text-white" />,
-  CP: <Terminal className="w-5 h-5 text-white" />,
-  AI: <Code className="w-5 h-5 text-white" />,
-};
+const competitions = [
+  {
+    title: "SOFTDEV",
+    image: "/assets/image/logo_softdev.svg",
+    description:
+      "Software Development challenges, participants to develop their own ideas and turn them into technical applications.",
+  },
+  {
+    title: "UI/UX DESIGN",
+    image: "/assets/image/logo_uiux.svg",
+    description:
+      "UI/UX Design challenges participants to create interface that not only aesthetics and functionality, but also benefiting the user experience.",
+  },
+];
 
 export function CompetitionsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement>(null);
 
-  const {
-    data: competitions = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery<Competition[]>({
-    queryKey: ["competitionsPublic"],
-    queryFn: async () => {
-      const res = await apiClient.get("/api/competitions");
-      const list = res.data?.data || res.data;
-      return Array.isArray(list) ? list : [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // 1. Animate Header Independently (once: true, fromTo for reliability)
   useGSAP(
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
-
-      if (headerRef.current) {
-        gsap.fromTo(
-          headerRef.current,
-          { opacity: 0, y: 25 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: "top 85%",
-              once: true,
-            },
-          }
-        );
-      }
+      gsap.from(".comp-header", {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        scrollTrigger: { trigger: ".comp-header", start: "top 85%" },
+      });
+      gsap.from(".comp-card", {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: "power3.out",
+        scrollTrigger: { trigger: ".comp-grid", start: "top 80%" },
+      });
     },
-    { scope: containerRef }
-  );
-
-  // 2. Animate Cards when data arrives
-  useGSAP(
-    () => {
-      if (prefersReducedMotion() || typeof window === "undefined") return;
-
-      if (
-        cardsRef.current &&
-        cardsRef.current.children &&
-        cardsRef.current.children.length > 0
-      ) {
-        gsap.fromTo(
-          cardsRef.current.children,
-          { opacity: 0, y: 35 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.7,
-            stagger: 0.15,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: cardsRef.current,
-              start: "top 85%",
-              once: true,
-            },
-          }
-        );
-      }
-    },
-    { scope: containerRef, dependencies: [competitions, isLoading] }
+    { scope: containerRef },
   );
 
   return (
     <section
       id="competitions"
       ref={containerRef}
-      className="pb-24 px-6 md:px-16 bg-transparent relative"
+      className="relative py-24 px-4 md:px-8 overflow-visible"
     >
-      <div className="max-w-6xl mx-auto">
-        {/* Section Header */}
-        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-4">
-            Competition{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-white via-indigo-200 to-indigo-300">
-              In Year
-            </span>
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="pattern-sway">
+          <PatternLanding1 />
+        </div>
+      </div>
+      <div className="max-w-5xl mx-auto relative z-10">
+        <div className="comp-header text-center max-w-7xl mx-auto mb-14">
+          <h2 className="font-display text-4xl sm:text-5xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
+            COMPETITION
           </h2>
-          <p className="text-white/70 text-sm sm:text-base max-w-2xl mx-auto">
-            Jelajahi berbagai cabang kompetisi nasional dan kembangkan inovasi teknologi terbaikmu di SEVENT X 2026.
+          <p className="text-sm text-white/50 leading-relaxed">
+            SEVENT X 2026 features two competition categories open to teams:
+            UI/UX Design and Software Development. Each category includes
+            sub-themes derived from the Sustainable Development Goals (SDGs).
+            Choose your competition track and design your best innovation!
           </p>
         </div>
 
-        {/* Competition Cards Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Skeleton className="h-64 rounded-2xl bg-[#242C54]/60 border border-white/10" />
-            <Skeleton className="h-64 rounded-2xl bg-[#242C54]/60 border border-white/10" />
-          </div>
-        ) : isError ? (
-          <div className="bg-[#242C54]/60 border border-rose-500/30 rounded-2xl p-8 text-center space-y-4 max-w-md mx-auto">
-            <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-xs text-rose-300">Gagal memuat daftar kompetisi dari server.</p>
-            <button
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-surface hover:bg-card-hover border border-border text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 cursor-pointer"
+        <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
+          {competitions.map((c) => (
+            <div
+              key={c.title}
+              className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Coba Lagi</span>
-            </button>
-          </div>
-        ) : competitions.length === 0 ? (
-          <div className="bg-[#242C54]/60 border border-white/10 rounded-2xl p-8 text-center text-xs text-white/60">
-            Belum ada kompetisi yang dibuka saat ini.
-          </div>
-        ) : (
-          <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {competitions.map((comp) => {
-              const prize = comp.prizePool;
-              const iconKey =
-                comp.name?.toUpperCase().includes("WEB") || comp.slug?.includes("web")
-                  ? "WEB_DEV"
-                  : comp.name?.toUpperCase().includes("UI") || comp.slug?.includes("ui")
-                  ? "UI_UX"
-                  : comp.name?.toUpperCase().includes("CP") || comp.slug?.includes("competitive")
-                  ? "CP"
-                  : "AI";
-
-              return (
-                <motion.div
-                  key={comp.id}
-                  whileHover={prefersReducedMotion() ? {} : { scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card className="bg-[#242C54]/60 backdrop-blur-md border border-white/15 rounded-2xl p-8 shadow-2xl transition-colors h-full flex flex-col justify-between">
-                    <CardHeader className="p-0 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-[#3B467A] flex items-center justify-center mb-6 border border-white/10 shadow-md">
-                        {categoryIcons[iconKey] || <Code className="w-5 h-5 text-white" />}
-                      </div>
-                      <CardTitle className="font-display text-2xl font-bold text-white mb-3">
-                        {comp.name}
-                      </CardTitle>
-                      <CardDescription className="text-white/70 text-sm leading-relaxed">
-                        {comp.description}
-                      </CardDescription>
-                    </CardHeader>
-
-                    {/* Tampilkan PRIZE POOL hanya jika comp.prizePool ada isinya */}
-                    {prize && (
-                      <CardContent className="p-0 pt-6 border-t border-white/10">
-                        <p className="font-mono text-xs uppercase tracking-wider text-accent font-semibold mb-1">
-                          PRIZE POOL
-                        </p>
-                        <p className="font-display text-3xl font-extrabold text-white">
-                          {prize}
-                        </p>
-                      </CardContent>
-                    )}
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+              <div className="flex gap-5 items-stretch">
+                <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
+                <div className="flex flex-col justify-center flex-1">
+                  <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                    {c.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-white/50 leading-relaxed mb-4">
+                    {c.description}
+                  </p>
+                  <button className="cursor-pointer w-full bg-white text-[#7C83BC] text-xs font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
+                    Register Now!
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
