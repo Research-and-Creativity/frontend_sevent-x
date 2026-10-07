@@ -105,8 +105,8 @@ export default function AdminDocumentsPage() {
           </div>
         </div>
 
-        {showFilters && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? "max-h-96 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
             <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="all" className="bg-[#15161A]">Status Document: All</option>
               <option value="review" className="bg-[#15161A]">Need Review</option>
@@ -128,7 +128,7 @@ export default function AdminDocumentsPage() {
               <option value="za" className="bg-[#15161A]">Team Name: Z-A</option>
             </select>
           </div>
-        )}
+        </div>
 
         {isLoading ? (
           <div className="space-y-3"><Skeleton className="h-12 w-full rounded-xl bg-white/5" /><Skeleton className="h-16 w-full rounded-xl bg-white/5" /></div>
