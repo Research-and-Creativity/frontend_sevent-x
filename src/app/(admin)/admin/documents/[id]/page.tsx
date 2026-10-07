@@ -4,9 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Users, CheckCircle2 } from "lucide-react";
 import { FaFilePdf } from "react-icons/fa6";
-import { ConfirmModal } from "@/components/confirm-modal";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 const members = [
   { name: "Haryanto", institution: "Productnya adalah pokoknya", phone: "Productnya adalah pokoknya", discord: "Productnya adalah pokoknya" },
@@ -23,14 +20,9 @@ const docs = [
   { label: "Follow Instagram", file: "Proposal", size: "10.MB" },
 ];
 
-export default function AdminRegisteredTeamDetailPage() {
+export default function AdminVerifiedTeamDetailPage() {
   const params = useParams();
   const [open, setOpen] = useState<number>(0);
-  const [reviseOpen, setReviseOpen] = useState(false);
-  const [reviseNote, setReviseNote] = useState("");
-  const [submitReviseOpen, setSubmitReviseOpen] = useState(false);
-  const [verifyDocOpen, setVerifyDocOpen] = useState(false);
-  const [verifyPayOpen, setVerifyPayOpen] = useState(false);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -54,14 +46,14 @@ export default function AdminRegisteredTeamDetailPage() {
             <span className="text-xs tracking-widest text-white/60">DOCUMENT STATUS</span>
             <CheckCircle2 className="w-5 h-5 text-white/70" />
           </div>
-          <p className="font-display text-5xl font-bold text-[#7D8CFF]">On Review</p>
+          <p className="font-display text-5xl font-bold text-[#7D8CFF]">Verified</p>
         </div>
         <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs tracking-widest text-white/60">PAYMENT STATUS</span>
             <CheckCircle2 className="w-5 h-5 text-white/70" />
           </div>
-          <p className="font-display text-5xl font-bold text-[#7D8CFF]">On Review</p>
+          <p className="font-display text-5xl font-bold text-[#7D8CFF]">Verified</p>
         </div>
       </div>
 
@@ -74,7 +66,7 @@ export default function AdminRegisteredTeamDetailPage() {
         <div className="space-y-3">
           {members.map((m, i) => (
             <div key={i} className="border border-white/15 rounded-xl overflow-hidden">
-              <button onClick={() => setOpen(open === i ? -1 : i)} className="cursor-pointer w-full flex items-center justify-between px-5 py-4 text-left text-sm font-semibold">
+              <button onClick={() => setOpen(open === i ? -1 : i)} className="w-full flex items-center justify-between px-5 py-4 text-left text-sm font-semibold">
                 {m.name}
                 <svg className={`w-4 h-4 transition-transform duration-300 ${open === i ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
               </button>
@@ -109,15 +101,6 @@ export default function AdminRegisteredTeamDetailPage() {
                       </div>
                     ))}
                   </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button onClick={() => setReviseOpen(true)} className="cursor-pointer px-8 py-2.5 rounded-full border border-[#3B5BFF] text-[#7D8CFF] text-sm font-semibold hover:bg-[#3B5BFF]/10 transition-colors">
-                      Revise
-                    </button>
-                    <button onClick={() => setVerifyDocOpen(true)} className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors">
-                      Verification
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -135,41 +118,7 @@ export default function AdminRegisteredTeamDetailPage() {
             <p className="text-[10px] text-white/40">10.MB</p>
           </span>
         </a>
-        <div className="flex justify-end mt-6">
-          <button onClick={() => setVerifyPayOpen(true)} className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors">
-            Verification
-          </button>
-        </div>
       </div>
-
-      {/* Revise modal */}
-      <Dialog open={reviseOpen} onOpenChange={setReviseOpen}>
-        <DialogContent className="bg-[#1A1D24]/80 backdrop-blur-xl border border-white/20 text-white max-w-lg rounded-2xl p-8 shadow-[0_0_60px_rgba(125,140,255,0.15)]" showCloseButton={false}>
-          <div className="flex items-start justify-between">
-            <DialogTitle className="text-white text-2xl font-extrabold tracking-tight">Revise Notes</DialogTitle>
-            <button onClick={() => setReviseOpen(false)} className="cursor-pointer w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/60 hover:text-white" aria-label="Close">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <DialogDescription className="text-white/60 text-sm -mt-2">Write the revision note for this team.</DialogDescription>
-          <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
-          <textarea
-            value={reviseNote}
-            onChange={(e) => setReviseNote(e.target.value)}
-            placeholder="Catatan revisi..."
-            className="w-full h-32 rounded-2xl border border-white/30 bg-transparent p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 transition-colors"
-          />
-          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/10">
-            <button className="cursor-pointer px-8 py-3 rounded-full border border-white/20 text-white/70 text-sm font-semibold hover:text-white transition-colors" onClick={() => setReviseOpen(false)}>Cancel</button>
-            <button className="cursor-pointer px-10 py-3 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_30px_rgba(59,91,255,0.35)] hover:bg-white/90 transition-colors" onClick={() => { setReviseOpen(false); setSubmitReviseOpen(true); }}>Submit</button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirmation modals */}
-      <ConfirmModal open={submitReviseOpen} onOpenChange={setSubmitReviseOpen} title="Submit revision note?" description="The team will receive this revision note." confirmText="Submit" cancelText="Cancel" onConfirm={() => setReviseNote("")} />
-      <ConfirmModal open={verifyDocOpen} onOpenChange={setVerifyDocOpen} title="Verify document?" description="This will mark the team document as verified." confirmText="Verify" cancelText="Cancel" onConfirm={() => {}} />
-      <ConfirmModal open={verifyPayOpen} onOpenChange={setVerifyPayOpen} title="Verify payment?" description="This will mark the payment as verified." confirmText="Verify" cancelText="Cancel" onConfirm={() => {}} />
     </div>
   );
 }
