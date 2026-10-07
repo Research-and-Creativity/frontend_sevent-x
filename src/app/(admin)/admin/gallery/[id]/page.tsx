@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import Link from "next/link";
+import { useRouter, useParams } from "next/navigation";
 import { UploadCloud } from "lucide-react";
 
-export default function AdminGalleryAddPage() {
+export default function AdminGalleryDetailPage() {
+  const router = useRouter();
+  const params = useParams();
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -16,12 +18,10 @@ export default function AdminGalleryAddPage() {
   const handleFile = (file: File) => {
     if (!allowed.includes(file.type)) {
       setError("File must be JPG, JPEG, or PNG.");
-      setFileName(null);
       return;
     }
     if (file.size > maxSize) {
       setError("File must be less than 5MB.");
-      setFileName(null);
       return;
     }
     setError("");
@@ -44,7 +44,7 @@ export default function AdminGalleryAddPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
-        <h1 className="font-display text-3xl font-bold">Add Image</h1>
+        <h1 className="font-display text-3xl font-bold">Detail Image</h1>
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-8">
@@ -80,7 +80,14 @@ export default function AdminGalleryAddPage() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => { if (confirm("Delete this image?")) router.push("/admin/gallery"); }}
+              className="bg-[#3B5BFF] text-white font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(59,91,255,0.4)] hover:bg-[#2f4bd6] transition-colors"
+            >
+              Delete
+            </button>
             <button type="submit" className="bg-white text-[#5B6BBF] font-semibold text-sm px-10 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors">
               Save
             </button>

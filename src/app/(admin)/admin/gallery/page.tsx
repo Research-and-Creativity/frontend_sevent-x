@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 
 export default function AdminGalleryPage() {
@@ -35,7 +36,7 @@ export default function AdminGalleryPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((_, i) => (
-            <div key={i} className="aspect-[16/10] bg-neutral-200/90 rounded-lg" />
+            <Link key={i} href={`/admin/gallery/${i + 1}`} className="block aspect-[16/10] bg-neutral-200/90 rounded-lg hover:opacity-90 transition-opacity" />
           ))}
         </div>
 
