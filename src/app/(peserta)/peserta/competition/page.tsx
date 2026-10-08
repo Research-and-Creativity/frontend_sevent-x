@@ -17,12 +17,12 @@ const glass =
 // Tombol pill (list)
 const pillButton = "rounded-full px-5 h-10 text-xs font-semibold shadow-sm";
 
-// Input pill pada modal light
+// Input pill pada modal dark glass
 const modalInput =
-  "h-14 w-full rounded-full border border-neutral-400/60 bg-white/50 px-6 text-sm text-neutral-800 " +
-  "placeholder:text-neutral-400 focus:outline-none focus:border-[#2E5CFF]/70 transition-colors";
+  "h-14 w-full rounded-full border border-white/30 bg-white/[0.03] px-6 text-sm text-white " +
+  "placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/70 transition-colors";
 
-// Tombol submit pada modal light (putih, glow biru)
+// Tombol submit pada modal dark glass (putih, glow biru)
 const modalSubmit =
   "rounded-full bg-white px-8 h-11 text-sm font-bold text-[#2E5CFF] " +
   "shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90";
@@ -219,27 +219,24 @@ export default function PesertaCompetitionPage() {
       >
         <DialogContent
           showCloseButton={false}
-          className="max-w-lg rounded-3xl border border-white/50 bg-neutral-200/95 p-8 text-neutral-800 shadow-[0_0_60px_rgba(125,140,255,0.25)] backdrop-blur-xl"
+          className="max-w-lg rounded-3xl border border-white/20 bg-[#1A1D24]/90 p-8 text-white shadow-[0_0_60px_rgba(125,140,255,0.25)] backdrop-blur-xl"
         >
           <div className="flex items-start justify-between">
-            <DialogTitle className="font-display text-2xl font-extrabold tracking-tight text-neutral-800">
+            <DialogTitle className="font-display text-2xl font-extrabold tracking-tight text-white">
               Create new Team
             </DialogTitle>
             <button
               type="button"
               onClick={closeModal}
               aria-label="Close"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-400/60 text-neutral-500 transition-colors hover:text-neutral-800"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 text-white/60 transition-colors hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <form onSubmit={handleCreateSubmit} className="space-y-2">
-            <label
-              htmlFor="team-name"
-              className="block text-sm text-neutral-500"
-            >
+            <label htmlFor="team-name" className="block text-sm text-white/60">
               Team Name
             </label>
             <input
@@ -253,7 +250,7 @@ export default function PesertaCompetitionPage() {
               }}
               className={modalInput}
             />
-            {error && <p className="text-xs text-rose-500">{error}</p>}
+            {error && <p className="text-xs text-rose-400">{error}</p>}
 
             <div className="flex justify-end pt-4">
               <Button type="submit" className={modalSubmit}>
@@ -271,17 +268,17 @@ export default function PesertaCompetitionPage() {
       >
         <DialogContent
           showCloseButton={false}
-          className="max-w-lg rounded-3xl border border-white/50 bg-neutral-200/95 p-8 text-neutral-800 shadow-[0_0_60px_rgba(125,140,255,0.25)] backdrop-blur-xl"
+          className="max-w-lg rounded-3xl border border-white/20 bg-[#1A1D24]/90 p-8 text-white shadow-[0_0_60px_rgba(125,140,255,0.25)] backdrop-blur-xl"
         >
           <div className="flex items-start justify-between">
-            <DialogTitle className="font-display text-2xl font-extrabold tracking-tight text-neutral-800">
+            <DialogTitle className="font-display text-2xl font-extrabold tracking-tight text-white">
               Join Team
             </DialogTitle>
             <button
               type="button"
               onClick={closeModal}
               aria-label="Close"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-400/60 text-neutral-500 transition-colors hover:text-neutral-800"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 text-white/60 transition-colors hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
@@ -289,10 +286,7 @@ export default function PesertaCompetitionPage() {
 
           {joinStage === "input" ? (
             <form onSubmit={handleJoinSubmit} className="space-y-2">
-              <label
-                htmlFor="team-code"
-                className="block text-sm text-neutral-500"
-              >
+              <label htmlFor="team-code" className="block text-sm text-white/60">
                 Team Code
               </label>
               <input
@@ -306,7 +300,7 @@ export default function PesertaCompetitionPage() {
                 }}
                 className={modalInput}
               />
-              {error && <p className="text-xs text-rose-500">{error}</p>}
+              {error && <p className="text-xs text-rose-400">{error}</p>}
 
               <div className="flex justify-end pt-4">
                 <Button type="submit" className={modalSubmit}>
@@ -317,8 +311,8 @@ export default function PesertaCompetitionPage() {
           ) : (
             <div className="space-y-6">
               <div className="py-6 text-center">
-                <p className="text-sm text-neutral-500">Team founded!</p>
-                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-neutral-800">
+                <p className="text-sm text-white/60">Team founded!</p>
+                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-white">
                   {foundTeam}
                 </p>
               </div>
