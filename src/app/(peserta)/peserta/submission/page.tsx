@@ -443,7 +443,7 @@ export default function PesertaSubmissionPage() {
               </Button>
             </Link>
 
-            <Link href="/peserta/settings">
+            <Link href="/peserta/profile">
               <Button
                 variant="ghost"
                 className="text-text-secondary hover:text-white text-xs font-semibold px-4 h-9 rounded-xl inline-flex items-center gap-2 cursor-pointer transition-colors"
