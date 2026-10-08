@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Users, RotateCcw, Clock } from "lucide-react";
+import { Users, RotateCcw, Clock, Check } from "lucide-react";
 
 // Style glass yang sama dengan halaman peserta lainnya
 const glass =
@@ -48,7 +48,7 @@ const announcements = [
 export default function PesertaDashboardPage() {
   const memberProgress = Math.min(
     100,
-    Math.round((stats.memberCount / stats.maxMembers) * 100)
+    Math.round((stats.memberCount / stats.maxMembers) * 100),
   );
 
   return (
@@ -82,7 +82,7 @@ export default function PesertaDashboardPage() {
             <span className="text-white">•</span>
             <span>
               {hasJoined
-                ? "Your profile has been verified ✅"
+                ? `Your profile has been verified ${(<Check className="h-4 w-4 text-white" />)}`
                 : "Please complete your identity"}
             </span>
           </li>
@@ -106,7 +106,7 @@ export default function PesertaDashboardPage() {
           {/* Competition metrics */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {/* Team Members */}
-            <div className={statCard}>
+            <div className={`${glass} ${statCard}`}>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
                   Team Members
@@ -128,7 +128,7 @@ export default function PesertaDashboardPage() {
             </div>
 
             {/* Submission Status */}
-            <div className={statCard}>
+            <div className={`${glass} ${statCard}`}>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
                   Submission Status
@@ -141,7 +141,7 @@ export default function PesertaDashboardPage() {
             </div>
 
             {/* Time Remaining */}
-            <div className={statCard}>
+            <div className={`${glass} ${statCard}`}>
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
                   Time Remaining
