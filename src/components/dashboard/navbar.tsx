@@ -33,6 +33,7 @@ import {
   Calendar,
   Newspaper,
   LogOut,
+  User,
   UserCheck,
   ListChecks, // Menambahkan ListChecks
 } from "lucide-react";
@@ -55,19 +56,14 @@ const NAV_ITEMS: Record<
       icon: <LayoutPanelLeft className="w-5 h-5" />,
     },
     {
+      url: "/peserta/settings",
+      name: "Profile",
+      icon: <User className="w-5 h-5" />,
+    },
+    {
       url: "/peserta/team",
-      name: "Team",
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      url: "/peserta/submission",
-      name: "Submission",
-      icon: <FileUp className="w-5 h-5" />,
-    },
-    {
-      url: "/peserta/announcements",
-      name: "Announcements",
-      icon: <Megaphone className="w-5 h-5" />,
+      name: "Competition",
+      icon: <Trophy className="w-5 h-5" />,
     },
   ],
   juri: [
@@ -341,115 +337,125 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
 
         {/* Bottom Section: View Rules Button, Settings/FAQ & User Card */}
         <div className="space-y-4 pt-4 border-t border-border/60">
-          {/* View Rules Button */}
-          {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
-            <Link
-              href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
+          {/* Peserta bottom: Log out only (per design) */}
+          {role === "peserta" ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex w-full items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-white hover:bg-card-hover transition-all cursor-pointer"
             >
-              <Button
-                variant="outline"
-                className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border text-white text-xs font-semibold h-10 rounded-xl transition-all"
-              >
-                View Rules
-              </Button>
-            </Link>
+              <LogOut className="w-5 h-5" />
+              <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+            </button>
           ) : (
-            <Button
-              variant="outline"
-              disabled
-              title="Guidebook belum tersedia"
-              className="w-full bg-[#040E21] border border-border/40 text-text-secondary text-xs font-semibold h-10 rounded-xl cursor-not-allowed opacity-50"
-            >
-              View Rules
-            </Button>
+            <>
+              {/* View Rules Button */}
+              {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+                <Link
+                  href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer w-full bg-[#040E21] hover:bg-[#1B235E] border border-border text-white text-xs font-semibold h-10 rounded-xl transition-all"
+                  >
+                    View Rules
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  variant="outline"
+                  disabled
+                  title="Guidebook belum tersedia"
+                  className="w-full bg-[#040E21] border border-border/40 text-text-secondary text-xs font-semibold h-10 rounded-xl cursor-not-allowed opacity-50"
+                >
+                  View Rules
+                </Button>
+              )}
+
+              {/* Secondary Links: Settings & FAQ (Hidden for Admin) */}
+              {role !== "admin" && (
+                <nav className="space-y-1 pt-1 border-t border-border/40">
+                  <Link
+                    href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
+                    className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                      pathname.endsWith("/settings")
+                        ? "text-accent bg-card font-semibold"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Settings</span>
+                  </Link>
+                  <Link
+                    href={role === "juri" ? "/juri/help" : "/peserta/help"}
+                    className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                      pathname.endsWith("/help")
+                        ? "text-accent bg-card font-semibold"
+                        : "text-text-secondary hover:text-white hover:bg-card-hover"
+                    }`}
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                    <span>FAQ</span>
+                  </Link>
+                </nav>
+              )}
+
+              {/* User Profile Card with Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full bg-[#040E21] hover:bg-[#101838] border border-border/80 hover:border-white/20 p-2.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer text-left outline-none group"
+                  >
+                    <Avatar className="w-8 h-8 rounded-lg border border-border shrink-0">
+                      <AvatarImage
+                        src={currentUser?.avatar || undefined}
+                        alt={userName}
+                      />
+                      <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
+                        {userName.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="overflow-hidden text-left flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate group-hover:text-accent transition-colors">
+                        {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
+                      </p>
+                      {role === "juri" && (
+                        <span className="text-[10px] font-mono font-bold text-accent block">
+                          SENIOR JUDGE
+                        </span>
+                      )}
+                      {role === "admin" && (
+                        <span className="text-[10px] font-mono font-bold text-rose-400 block">
+                          SYSTEM ADMIN
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  side="top"
+                  align="start"
+                  sideOffset={8}
+                  className="w-56 bg-[#040E21] border border-border/80 text-white rounded-xl p-1.5 shadow-2xl backdrop-blur-xl"
+                >
+                  <DropdownMenuItem
+                    disabled={isLoggingOut}
+                    onClick={handleLogout}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-400" />
+                    <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           )}
-
-          {/* Secondary Links: Settings & FAQ (Hidden for Admin) */}
-          {role !== "admin" && (
-            <nav className="space-y-1 pt-1 border-t border-border/40">
-              <Link
-                href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
-                className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                  pathname.endsWith("/settings")
-                    ? "text-accent bg-card font-semibold"
-                    : "text-text-secondary hover:text-white hover:bg-card-hover"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span>Settings</span>
-              </Link>
-              <Link
-                href={role === "juri" ? "/juri/help" : "/peserta/help"}
-                className={`flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                  pathname.endsWith("/help")
-                    ? "text-accent bg-card font-semibold"
-                    : "text-text-secondary hover:text-white hover:bg-card-hover"
-                }`}
-              >
-                <HelpCircle className="w-5 h-5" />
-                <span>FAQ</span>
-              </Link>
-            </nav>
-          )}
-
-          {/* User Profile Card with Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="w-full bg-[#040E21] hover:bg-[#101838] border border-border/80 hover:border-white/20 p-2.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer text-left outline-none group"
-              >
-                <Avatar className="w-8 h-8 rounded-lg border border-border shrink-0">
-                  <AvatarImage
-                    src={currentUser?.avatar || undefined}
-                    alt={userName}
-                  />
-                  <AvatarFallback className="bg-primary/30 text-accent font-bold text-xs">
-                    {userName.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="overflow-hidden text-left flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate group-hover:text-accent transition-colors">
-                    {role === "juri" && !userName.startsWith("Dr.") ? `Dr. ${userName}` : userName}
-                  </p>
-                  {role === "juri" && (
-                    <span className="text-[10px] font-mono font-bold text-accent block">
-                      SENIOR JUDGE
-                    </span>
-                  )}
-                  {role === "admin" && (
-                    <span className="text-[10px] font-mono font-bold text-rose-400 block">
-                      SYSTEM ADMIN
-                    </span>
-                  )}
-                  {role === "peserta" && (
-                    <span className="text-[10px] font-mono text-text-secondary block">
-                      PARTICIPANT
-                    </span>
-                  )}
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              side="top"
-              align="start"
-              sideOffset={8}
-              className="w-56 bg-[#040E21] border border-border/80 text-white rounded-xl p-1.5 shadow-2xl backdrop-blur-xl"
-            >
-              <DropdownMenuItem
-                disabled={isLoggingOut}
-                onClick={handleLogout}
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer transition-colors"
-              >
-                <LogOut className="w-4 h-4 text-rose-400" />
-                <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </aside>
 
@@ -478,7 +484,8 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
       {isMobileMenuOpen && (
         <nav className="lg:hidden fixed inset-0 z-30 h-screen w-full bg-surface/95 backdrop-blur-xl pt-20 px-6 pb-8 flex flex-col justify-between overflow-y-auto">
           <div className="space-y-6">
-            {/* Mobile User Profile Card with Dropdown */}
+            {/* Mobile User Profile Card with Dropdown (hidden for peserta) */}
+            {role !== "peserta" && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -518,6 +525,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
 
             <ul className="flex flex-col gap-1.5 w-full">
               {currentLinks.map((link) => {
@@ -541,7 +549,7 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
               })}
             </ul>
 
-            {role !== "admin" && (
+            {role !== "admin" && role !== "peserta" && (
               <div className="space-y-2 pt-4 border-t border-border">
                 <Link
                   href={role === "juri" ? "/juri/settings" : "/peserta/settings"}
@@ -564,7 +572,17 @@ export default function NavbarDashboard({ role, children }: NavbarType) {
           </div>
 
           <div className="pt-4 border-t border-border">
-            {process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
+            {role === "peserta" ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-text-secondary hover:text-white hover:bg-card-hover"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+              </button>
+            ) : process.env.NEXT_PUBLIC_GUIDEBOOK_URL ? (
               <Link
                 href={process.env.NEXT_PUBLIC_GUIDEBOOK_URL}
                 target="_blank"
