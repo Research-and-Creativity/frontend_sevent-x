@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,12 +17,14 @@ const competitions = [
   {
     id: "softdev",
     name: "SOFTDEV COMPETITION",
+    logo: "/assets/image/logo_softdev.svg",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a.",
   },
   {
     id: "uiux",
     name: "UI/UX DESIGN COMPETITION",
+    logo: "/assets/image/logo_uiux.svg",
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a.",
   },
@@ -60,8 +63,16 @@ export default function PesertaCompetitionPage() {
         {competitions.map((competition) => (
           <div key={competition.id} className={`${glass} p-6 lg:p-8`}>
             <div className="relative flex flex-col gap-6 sm:flex-row">
-              {/* Image placeholder */}
-              <div className="h-40 w-full shrink-0 rounded-xl bg-neutral-300 sm:w-40" />
+              {/* Competition logo */}
+              <div className="flex h-40 w-full shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:w-40">
+                <Image
+                  src={competition.logo}
+                  alt={competition.name}
+                  width={200}
+                  height={200}
+                  className="h-full w-full object-contain"
+                />
+              </div>
 
               {/* Content */}
               <div className="flex-1">
@@ -73,13 +84,13 @@ export default function PesertaCompetitionPage() {
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link href="/peserta/team">
+                  <Link href={`/peserta/competition/${competition.id}`}>
                     <Button className="rounded-full bg-white px-5 h-10 text-xs font-semibold text-[#1B235E] shadow-sm hover:bg-white/90">
                       <Plus className="mr-1.5 h-4 w-4" />
                       Create new Team
                     </Button>
                   </Link>
-                  <Link href="/peserta/team">
+                  <Link href={`/peserta/competition/${competition.id}`}>
                     <Button className="rounded-full bg-primary px-5 h-10 text-xs font-semibold text-white shadow-sm hover:bg-primary-hover">
                       Join Team
                       <ArrowRight className="ml-1.5 h-4 w-4" />
