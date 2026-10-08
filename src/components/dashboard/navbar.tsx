@@ -90,7 +90,7 @@ const NAV_ITEMS: Record<
     },
     {
       url: "/juri/team",
-      name: "List Participant",
+      name: "List Finalists",
       icon: <Users className="w-5 h-5" />,
       category: "FINAL ROUND",
     },

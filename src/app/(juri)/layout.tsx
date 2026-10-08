@@ -48,7 +48,7 @@ export default function JuriLayout({
   ];
 
   const finalRoundLinks = [
-    { href: "/juri/list-participant", label: "List Partisipant", icon: SquarePen },
+    { href: "/juri/team", label: "List Finalists", icon: SquarePen },
     { href: "/juri/winner", label: "Winner", icon: Medal },
   ];
 
