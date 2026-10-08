@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Users, RotateCcw, Clock } from "lucide-react";
 
-// Style glass yang sama dengan halaman lainnya
+// Style glass yang sama dengan halaman peserta lainnya
 const glass =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] " +
   "backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] " +
@@ -15,7 +15,21 @@ const glass =
 const pillButton =
   "bg-white text-[#1B235E] hover:bg-white/90 rounded-full px-5 h-9 text-xs font-semibold shadow-sm";
 
-// Dummy data pengumuman (akan diganti dengan data API di kemudian hari)
+const statCard =
+  "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5";
+
+// Flag mock: true = sudah join kompetisi, false = belum join.
+// Nanti diganti dengan data API.
+const hasJoined = true;
+
+// Dummy data (mock statis, akan diganti dengan data API di kemudian hari)
+const stats = {
+  memberCount: 4,
+  maxMembers: 5,
+  submissionStatus: "Not Submitted",
+  timeRemaining: "02d : 14h : 45m",
+};
+
 const announcements = [
   {
     title: "Final Submission Guidelines Updated",
@@ -32,13 +46,30 @@ const announcements = [
 ];
 
 export default function PesertaDashboardPage() {
+  const memberProgress = Math.min(
+    100,
+    Math.round((stats.memberCount / stats.maxMembers) * 100)
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="relative isolate space-y-6">
+      {/* Blob warna redup di belakang supaya efek blur kaca kelihatan */}
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="absolute -top-10 left-[5%] h-72 w-72 rounded-full bg-[#7D8CFF]/15 blur-[110px]" />
+        <div className="absolute top-1/3 right-[0%] h-80 w-80 rounded-full bg-[#8B5CF6]/12 blur-[120px]" />
+        <div className="absolute bottom-0 left-[30%] h-72 w-72 rounded-full bg-[#2A3568]/35 blur-[110px]" />
+      </div>
+
       {/* Welcome Banner */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
           Welcome back, Haryanto
         </h1>
+        {hasJoined && (
+          <p className="relative mt-1.5 text-sm text-text-secondary">
+            You have 3 days left to submit your final project.
+          </p>
+        )}
       </div>
 
       {/* Profile */}
@@ -49,26 +80,97 @@ export default function PesertaDashboardPage() {
         <ul className="relative space-y-1.5 mb-6">
           <li className="flex items-start gap-2 text-sm text-text-secondary">
             <span className="text-white">•</span>
-            <span>Please complete your identity</span>
+            <span>
+              {hasJoined
+                ? "Your profile has been verified ✅"
+                : "Please complete your identity"}
+            </span>
           </li>
         </ul>
-        <Link href="/peserta/settings">
-          <Button className={pillButton}>Complete Now!</Button>
-        </Link>
+        {!hasJoined && (
+          <Link href="/peserta/profile">
+            <Button className={pillButton}>Complete Now!</Button>
+          </Link>
+        )}
       </div>
 
-      {/* Competition */}
-      <div className={`${glass} p-6 lg:p-8`}>
-        <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
-          Competition
-        </h2>
-        <p className="relative text-sm text-text-secondary mb-6">
-          You haven&apos;t registered in any competition or any team.
-        </p>
-        <Link href="/peserta/team">
-          <Button className={pillButton}>Join Now!</Button>
-        </Link>
-      </div>
+      {hasJoined ? (
+        <>
+          {/* Competition (title) */}
+          <div className={`${glass} px-6 py-5 lg:px-8`}>
+            <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
+              Competition
+            </h2>
+          </div>
+
+          {/* Competition metrics */}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {/* Team Members */}
+            <div className={statCard}>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                  Team Members
+                </span>
+                <Users className="h-4 w-4 text-text-secondary" />
+              </div>
+              <div className="font-display text-3xl font-bold leading-none text-white">
+                {stats.memberCount}{" "}
+                <span className="text-base font-normal text-text-secondary">
+                  / {stats.maxMembers}
+                </span>
+              </div>
+              <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#7D8CFF]"
+                  style={{ width: `${memberProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Submission Status */}
+            <div className={statCard}>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                  Submission Status
+                </span>
+                <RotateCcw className="h-4 w-4 text-text-secondary" />
+              </div>
+              <div className="font-display text-2xl font-bold text-rose-500">
+                {stats.submissionStatus}
+              </div>
+            </div>
+
+            {/* Time Remaining */}
+            <div className={statCard}>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                  Time Remaining
+                </span>
+                <Clock className="h-4 w-4 text-text-secondary" />
+              </div>
+              <div className="font-display text-2xl font-bold tracking-wide text-white">
+                {stats.timeRemaining}
+              </div>
+              <p className="relative mt-2 text-[11px] text-text-secondary">
+                Until submission deadline
+              </p>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Competition (belum join) */
+        <div className={`${glass} p-6 lg:p-8`}>
+          <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
+            Competition
+          </h2>
+          <p className="relative text-sm text-text-secondary mb-6">
+            You haven&apos;t registered in any competition or any team.
+          </p>
+          <Link href="/peserta/team">
+            <Button className={pillButton}>Join Now!</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Recent Announcement */}
       <div className={`${glass} p-6 lg:p-8`}>
@@ -85,24 +187,19 @@ export default function PesertaDashboardPage() {
           {announcements.map((item) => (
             <div
               key={item.title}
-              className="flex items-start gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]"
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#7D8CFF]/15 text-[#7D8CFF]">
-                <Megaphone className="w-4 h-4" />
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="font-display text-sm font-bold text-white">
+                  {item.title}
+                </h3>
+                <span className="shrink-0 text-xs text-text-secondary">
+                  {item.date}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="font-display text-sm font-bold text-white">
-                    {item.title}
-                  </h3>
-                  <span className="shrink-0 text-xs text-text-secondary">
-                    {item.date}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
+              <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">
+                {item.description}
+              </p>
             </div>
           ))}
         </div>
