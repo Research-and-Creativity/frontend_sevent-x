@@ -48,7 +48,7 @@ export function SubmissionAccordion({
         aria-expanded={isOpen}
       >
         <span className="relative font-display text-2xl font-bold tracking-tight text-white">
-          Submission
+          Submission - {team.name}
         </span>
         <ChevronUp
           className={`relative w-5 h-5 fill-white text-white transition-transform duration-200 ${
