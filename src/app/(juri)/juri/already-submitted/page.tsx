@@ -130,13 +130,12 @@ export default function AlreadySubmittedPage() {
         <div className="absolute bottom-0 left-[30%] h-72 w-72 rounded-full bg-[#2A3568]/35 blur-[110px]" />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-4xl font-bold tracking-tight text-white">
+      <div className={`${glass} p-6 lg:p-8 flex flex-col justify-center`}>
+        <h1 className="font-display text-4xl font-bold tracking-tight text-white mb-2">
           Already Submitted
         </h1>
-        <p className="text-text-secondary">
-          This is all participant that already submitted and judge can start for
-          judgement.
+        <p className="text-text-secondary text-sm">
+          This is all participant that already submitted and judge can start for judgement.
         </p>
       </div>
 
@@ -147,26 +146,24 @@ export default function AlreadySubmittedPage() {
           </h2>
 
           {/* Search and Filter Section */}
-          <div className="relative flex items-center gap-4">
-            <Button
-              variant="outline"
+          <div className="relative flex items-center gap-3">
+            <button
               onClick={() => setShowFilters((prev) => !prev)}
-              className={`flex items-center gap-2 ${glassControl} ${
-                showFilters ? "bg-white/10 text-white" : ""
+              className={`p-2.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors ${
+                showFilters ? "bg-white/10 text-white" : "text-text-secondary"
               }`}
             >
               <Filter className="w-4 h-4" />
-              <span>Filter</span>
-            </Button>
-            <div className="relative w-72 sm:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
+            </button>
+            <div className="relative w-64 sm:w-72">
               <Input
                 type="text"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full text-sm bg-white/[0.03] border-white/15 backdrop-blur-md focus:border-[#7D8CFF]/60"
+                className="pl-4 pr-10 py-2 w-full text-sm rounded-full bg-transparent border-white/20 focus:border-[#7D8CFF]/60 text-white placeholder:text-white/40"
               />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
             </div>
           </div>
         </div>
@@ -258,10 +255,10 @@ export default function AlreadySubmittedPage() {
                     <td className="px-6 py-4">{participant.submittedDate}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md ${
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md bg-transparent border ${
                           participant.status === "In Review"
-                            ? "bg-yellow-500/15 text-yellow-300 border border-yellow-500/20"
-                            : "bg-blue-500/15 text-blue-300 border border-blue-500/20"
+                            ? "text-[#EAB308] border-[#EAB308]/60"
+                            : "text-[#3B5BFF] border-[#3B5BFF]/60"
                         }`}
                       >
                         {participant.status}
