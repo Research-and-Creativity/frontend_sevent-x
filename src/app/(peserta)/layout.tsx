@@ -7,12 +7,7 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { toast } from "sonner";
-import {
-  LayoutGrid,
-  LogOut,
-  Medal,
-  User,
-} from "lucide-react";
+import { LayoutGrid, LogOut, Medal, User } from "lucide-react";
 
 export default function PesertaLayout({
   children,
@@ -64,27 +59,28 @@ export default function PesertaLayout({
               SEVENT X
             </span>
           </Link>
+          <div className="flex flex-col justify-between h-full">
+            <nav className="space-y-1">
+              {mainLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+                >
+                  <l.icon className="w-5 h-5" />
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
 
-          <nav className="space-y-1">
-            {mainLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-              >
-                <l.icon className="w-5 h-5" />
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-auto flex items-center gap-3 px-4 py-3 text-sm text-white/60 hover:text-white transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Log out
-          </button>
+            <button
+              onClick={() => router.push("/login")}
+              className="cursor-pointer flex items-center gap-3 px-4 py-3 text-sm text-white/60 hover:text-white transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              Log out
+            </button>
+          </div>
         </div>
       </aside>
 
