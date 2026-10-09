@@ -170,9 +170,9 @@ export function useUserDocuments() {
 // Hook 8: Create Team POST /api/teams
 export function useCreateTeam() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutation<Team, unknown, { name: string; competitionSlug: string }>({
     // Backend mencari Competition berdasarkan slug, bukan id.
-    mutationFn: async (data: { name: string; competitionSlug: string }) => {
+    mutationFn: async (data) => {
       const res = await apiClient.post("/api/teams", {
         teamName: data.name,
         competitionSlug: data.competitionSlug,
@@ -188,8 +188,8 @@ export function useCreateTeam() {
 // Hook 9: Join Team POST /api/teams/join
 export function useJoinTeam() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (data: { teamCode: string }) => {
+  return useMutation<Team, unknown, { teamCode: string }>({
+    mutationFn: async (data) => {
       const res = await apiClient.post("/api/teams/join", {
         teamCode: data.teamCode,
       });

@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useCompetitions, useCreateTeam, useJoinTeam, useUserTeam } from "@/hooks/use-peserta";
+import type { Competition } from "@/types/api";
 
 // Style glass yang sama dengan halaman peserta lainnya
 const glass =
@@ -27,46 +30,40 @@ const modalSubmit =
   "rounded-full bg-white px-8 h-11 text-sm font-bold text-[#2E5CFF] " +
   "shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90";
 
-// Dummy data kompetisi (mock statis, akan diganti dengan data API di kemudian hari)
-const competitions = [
-  {
-    id: "softdev",
-    name: "SOFTDEV COMPETITION",
-    logo: "/assets/image/logo_softdev.svg",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a.",
-  },
-  {
-    id: "uiux",
-    name: "UI/UX DESIGN COMPETITION",
-    logo: "/assets/image/logo_uiux.svg",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis molestie, dictum est a.",
-  },
-];
-
-// Mock data untuk validasi create/join (akan diganti dengan data API)
-const EXISTING_TEAM_NAMES = [
-  "Tim Anomali",
-  "Coba Coba Saja",
-  "Adalah Pokoknya",
-];
-
-const VALID_TEAM_CODES: Record<string, string> = {
-  XYZ092E: "Tim Anomali",
-  ABC1234: "Coba Coba Saja",
+// Backend tidak menyimpan logo kompetisi, jadi dipetakan dari slug.
+// Slug yang tidak dikenali memakai logo generik.
+const COMPETITION_LOGOS: Record<string, string> = {
+  softdev: "/assets/image/logo_softdev.svg",
+  uiux: "/assets/image/logo_uiux.svg",
 };
+const FALLBACK_LOGO = "/assets/image/logo_biru.svg";
+
+function getCompetitionLogo(slug: string) {
+  return COMPETITION_LOGOS[slug] ?? FALLBACK_LOGO;
+}
+
+// Ambil pesan error dari respons axios supaya pesan backend tampil apa adanya.
+function getErrorMessage(err: unknown, fallback: string) {
+  if (err && typeof err === "object" && "response" in err) {
+    const response = (err as { response?: { data?: { message?: string } } }).response;
+    if (response?.data?.message) return response.data.message;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
 
 export default function PesertaCompetitionPage() {
   const router = useRouter();
+
+  const { data: competitions = [], isLoading, isError } = useCompetitions();
+  const { data: userTeam } = useUserTeam();
+  const createTeamMutation = useCreateTeam();
+  const joinTeamMutation = useJoinTeam();
 
   const [modalType, setModalType] = useState<"create" | "join" | null>(null);
   const [activeSlug, setActiveSlug] = useState("");
   const [teamName, setTeamName] = useState("");
   const [teamCode, setTeamCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [joinStage, setJoinStage] = useState<"input" | "confirm">("input");
-  const [foundTeam, setFoundTeam] = useState("");
 
   const openCreate = (slug: string) => {
     setActiveSlug(slug);
@@ -79,8 +76,6 @@ export default function PesertaCompetitionPage() {
     setActiveSlug(slug);
     setTeamCode("");
     setError(null);
-    setJoinStage("input");
-    setFoundTeam("");
     setModalType("join");
   };
 
@@ -89,7 +84,7 @@ export default function PesertaCompetitionPage() {
     setError(null);
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = teamName.trim();
 
@@ -97,20 +92,21 @@ export default function PesertaCompetitionPage() {
       setError("Nama tim tidak boleh kosong.");
       return;
     }
-    if (
-      EXISTING_TEAM_NAMES.some((n) => n.toLowerCase() === name.toLowerCase())
-    ) {
-      setError("Nama tim sudah digunakan. Gunakan nama lain.");
-      return;
-    }
 
-    setError(null);
-    const slug = activeSlug;
-    closeModal();
-    router.push(`/peserta/competition/${slug}`);
+    try {
+      const created = await createTeamMutation.mutateAsync({
+        name,
+        competitionSlug: activeSlug,
+      });
+      closeModal();
+      toast.success(`Tim "${created?.teamName ?? name}" berhasil dibuat!`);
+      router.push(`/peserta/competition/${activeSlug}`);
+    } catch (err) {
+      setError(getErrorMessage(err, "Gagal membuat tim."));
+    }
   };
 
-  const handleJoinSubmit = (e: React.FormEvent) => {
+  const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = teamCode.trim().toUpperCase();
 
@@ -119,21 +115,58 @@ export default function PesertaCompetitionPage() {
       return;
     }
 
-    const team = VALID_TEAM_CODES[code];
-    if (!team) {
-      setError("Kode tim tidak sesuai.");
-      return;
+    try {
+      const joined = await joinTeamMutation.mutateAsync({ teamCode: code });
+      closeModal();
+      toast.success(`Berhasil bergabung dengan "${joined?.teamName ?? code}"`);
+      // Tim yang diikuti bisa saja milik kompetisi lain, jadi andalkan slug
+      // dari respons server, bukan competitionslug yang sedang aktif.
+      router.push(`/peserta/competition/${joined?.competition?.slug ?? activeSlug}`);
+    } catch (err) {
+      setError(getErrorMessage(err, "Gagal bergabung dengan tim."));
     }
-
-    setError(null);
-    setFoundTeam(team);
-    setJoinStage("confirm");
   };
 
-  const handleJoinConfirm = () => {
-    const slug = activeSlug;
-    closeModal();
-    router.push(`/peserta/competition/${slug}`);
+  // Tim peserta hanya boleh ada di satu kompetisi.
+  const joinedCompetitionSlug = userTeam?.competition?.slug ?? null;
+
+  const renderActions = (competition: Competition) => {
+    if (joinedCompetitionSlug === competition.slug) {
+      return (
+        <Button
+          type="button"
+          onClick={() => router.push(`/peserta/competition/${competition.slug}`)}
+          className={`${pillButton} bg-white text-[#1B235E] hover:bg-white/90`}
+        >
+          Manage your Team
+          <ArrowRight className="ml-1.5 h-4 w-4" />
+        </Button>
+      );
+    }
+
+    // Backend hanya mengembalikan kompetisi aktif (GET /competitions memfilter
+    // isActive) dan createTeam menolak kompetisi tidak aktif, jadi di sini
+    // selalu ada aksi.
+    return (
+      <>
+        <Button
+          type="button"
+          onClick={() => openCreate(competition.slug)}
+          className={`${pillButton} bg-white text-[#1B235E] hover:bg-white/90`}
+        >
+          <Plus className="mr-1.5 h-4 w-4" />
+          Create new Team
+        </Button>
+        <Button
+          type="button"
+          onClick={() => openJoin(competition.slug)}
+          className={`${pillButton} bg-primary text-white hover:bg-primary-hover`}
+        >
+          Join Team
+          <ArrowRight className="ml-1.5 h-4 w-4" />
+        </Button>
+      </>
+    );
   };
 
   return (
@@ -165,13 +198,43 @@ export default function PesertaCompetitionPage() {
 
       {/* Competition list */}
       <div className="space-y-5">
+        {isLoading &&
+          [0, 1].map((i) => (
+            <div key={i} className={`${glass} p-6 lg:p-8`}>
+              <div className="flex flex-col gap-6 sm:flex-row">
+                <div className="h-40 w-full shrink-0 animate-pulse rounded-xl border border-white/10 bg-white/[0.03] sm:w-40" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-6 w-1/2 animate-pulse rounded bg-white/[0.06]" />
+                  <div className="h-4 w-full animate-pulse rounded bg-white/[0.04]" />
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-white/[0.04]" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+        {isError && (
+          <div className={`${glass} px-6 py-10 text-center lg:px-8`}>
+            <p className="relative text-sm text-text-secondary">
+              Gagal memuat daftar kompetisi. Coba muat ulang halaman.
+            </p>
+          </div>
+        )}
+
+        {!isLoading && !isError && competitions.length === 0 && (
+          <div className={`${glass} px-6 py-10 text-center lg:px-8`}>
+            <p className="relative text-sm text-text-secondary">
+              Belum ada kompetisi yang tersedia.
+            </p>
+          </div>
+        )}
+
         {competitions.map((competition) => (
           <div key={competition.id} className={`${glass} p-6 lg:p-8`}>
             <div className="relative flex flex-col gap-6 sm:flex-row">
               {/* Competition logo */}
               <div className="flex h-40 w-full shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:w-40">
                 <Image
-                  src={competition.logo}
+                  src={getCompetitionLogo(competition.slug)}
                   alt={competition.name}
                   width={200}
                   height={200}
@@ -189,22 +252,7 @@ export default function PesertaCompetitionPage() {
                 </p>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    onClick={() => openCreate(competition.id)}
-                    className={`${pillButton} bg-white text-[#1B235E] hover:bg-white/90`}
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    Create new Team
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => openJoin(competition.id)}
-                    className={`${pillButton} bg-primary text-white hover:bg-primary-hover`}
-                  >
-                    Join Team
-                    <ArrowRight className="ml-1.5 h-4 w-4" />
-                  </Button>
+                  {renderActions(competition)}
                 </div>
               </div>
             </div>
@@ -253,8 +301,12 @@ export default function PesertaCompetitionPage() {
             {error && <p className="text-xs text-rose-400">{error}</p>}
 
             <div className="flex justify-end pt-4">
-              <Button type="submit" className={modalSubmit}>
-                Submit
+              <Button
+                type="submit"
+                disabled={createTeamMutation.isPending}
+                className={modalSubmit}
+              >
+                {createTeamMutation.isPending ? "Submitting..." : "Submit"}
               </Button>
             </div>
           </form>
@@ -284,49 +336,33 @@ export default function PesertaCompetitionPage() {
             </button>
           </div>
 
-          {joinStage === "input" ? (
-            <form onSubmit={handleJoinSubmit} className="space-y-2">
-              <label htmlFor="team-code" className="block text-sm text-white/60">
-                Team Code
-              </label>
-              <input
-                id="team-code"
-                type="text"
-                placeholder="Team Code"
-                value={teamCode}
-                onChange={(e) => {
-                  setTeamCode(e.target.value);
-                  if (error) setError(null);
-                }}
-                className={modalInput}
-              />
-              {error && <p className="text-xs text-rose-400">{error}</p>}
+          <form onSubmit={handleJoinSubmit} className="space-y-2">
+            <label htmlFor="team-code" className="block text-sm text-white/60">
+              Team Code
+            </label>
+            <input
+              id="team-code"
+              type="text"
+              placeholder="Team Code"
+              value={teamCode}
+              onChange={(e) => {
+                setTeamCode(e.target.value.toUpperCase());
+                if (error) setError(null);
+              }}
+              className={modalInput}
+            />
+            {error && <p className="text-xs text-rose-400">{error}</p>}
 
-              <div className="flex justify-end pt-4">
-                <Button type="submit" className={modalSubmit}>
-                  Submit
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-6">
-              <div className="py-6 text-center">
-                <p className="text-sm text-white/60">Team founded!</p>
-                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-white">
-                  {foundTeam}
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  onClick={handleJoinConfirm}
-                  className={modalSubmit}
-                >
-                  Join Team
-                </Button>
-              </div>
+            <div className="flex justify-end pt-4">
+              <Button
+                type="submit"
+                disabled={joinTeamMutation.isPending}
+                className={modalSubmit}
+              >
+                {joinTeamMutation.isPending ? "Joining..." : "Submit"}
+              </Button>
             </div>
-          )}
+          </form>
         </DialogContent>
       </Dialog>
     </div>
