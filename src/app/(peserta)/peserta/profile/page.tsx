@@ -124,10 +124,9 @@ export default function PesertaProfilePage() {
         domicile: form.domicile.trim() || null,
         discordId: form.discordId.trim() || null,
         phone: form.phone.trim() ? `+62${form.phone.trim()}` : null,
-        // Backend menerima ISO string; input tanggal sudah berformat YYYY-MM-DD.
-        birthDate: form.birthDate
-          ? new Date(`${form.birthDate}T00:00:00`).toISOString()
-          : null,
+        // Kirim tanggal mentah. Mengubahnya jadi Date lebih dulu akan menggeser
+        // tanggal satu hari pada zona waktu diahead UTC.
+        birthDate: form.birthDate || null,
       });
       toast.success("Profil berhasil disimpan.");
     } catch (err) {
