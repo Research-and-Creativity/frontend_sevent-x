@@ -22,7 +22,7 @@ export default function PesertaLayout({
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
-      if (currentUser.role?.toUpperCase() !== "ADMIN") {
+      if (currentUser.role?.toUpperCase() !== "PESERTA") {
         toast.error("Access denied.");
         router.push("/login");
       }

@@ -31,7 +31,7 @@ export default function JuriLayout({
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
-      if (currentUser.role?.toUpperCase() !== "ADMIN") {
+      if (currentUser.role?.toUpperCase() !== "JURI") {
         toast.error("Access denied.");
         router.push("/login");
       }
