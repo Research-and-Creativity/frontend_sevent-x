@@ -152,6 +152,31 @@ export function useCompetition(slug?: string) {
   });
 }
 
+export const PROFILE_REQUIRED_FIELDS = [
+  { key: "institution", label: "Institution" },
+  { key: "phone", label: "Phone Number" },
+  { key: "birthDate", label: "Birth Date" },
+  { key: "domicile", label: "Domicile" },
+  { key: "discordId", label: "Discord ID" },
+] as const satisfies ReadonlyArray<{ key: keyof User; label: string }>;
+
+// Kelengkapan profil dipakai sebagai gerbang masuk fitur kompetisi. Dokumen
+// sengaja tidak termasuk: statusnya menunggu review admin, jadi tidak bisa
+// dijadikan syarat yang bisa dipenuhi peserta secara langsung.
+export function useProfileComplete() {
+  const { data: user, isLoading } = useUserMe();
+
+  const missingFields = PROFILE_REQUIRED_FIELDS.filter(
+    (field) => !user?.[field.key],
+  ).map((field) => field.label);
+
+  return {
+    isLoading,
+    isComplete: Boolean(user) && missingFields.length === 0,
+    missingFields,
+  };
+}
+
 export interface UserDocumentItem {
   id: string;
   userId: string;

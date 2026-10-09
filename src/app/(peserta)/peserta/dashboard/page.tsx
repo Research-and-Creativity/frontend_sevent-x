@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { Users, RotateCcw, Clock, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Users, RotateCcw, Clock, Check } from "lucide-react";
+import {
+  useCompetitionTimeline,
+  useNewsFeed,
+  useProfileComplete,
+  useUserMe,
+  useUserSubmission,
+  useUserTeam,
+} from "@/hooks/use-peserta";
 
 // Style glass yang sama dengan halaman peserta lainnya
 const glass =
@@ -18,38 +26,54 @@ const pillButton =
 const statCard =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5";
 
-// Flag mock: true = sudah join kompetisi, false = belum join.
-// Nanti diganti dengan data API.
-const hasJoined = true;
+// Hitung mundur format "02d : 14h : 45m" dari tanggal target.
+function formatCountdown(target: Date) {
+  const diffMs = target.getTime() - Date.now();
+  if (diffMs <= 0) return "Closed";
 
-// Dummy data (mock statis, akan diganti dengan data API di kemudian hari)
-const stats = {
-  memberCount: 4,
-  maxMembers: 5,
-  submissionStatus: "Not Submitted",
-  timeRemaining: "02d : 14h : 45m",
-};
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
 
-const announcements = [
-  {
-    title: "Final Submission Guidelines Updated",
-    date: "Today, 10:00 AM",
-    description:
-      "Please review the updated guidelines for the final project submission. We have clarified the requirements for the video presentation component.",
-  },
-  {
-    title: "Q&A Session with Mentors",
-    date: "Yesterday",
-    description:
-      "Join us tomorrow at 2 PM EST for a live Q&A session with industry mentors. Bring your questions about architecture and deployment.",
-  },
-];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m`;
+}
+
+function formatDate(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function PesertaDashboardPage() {
-  const memberProgress = Math.min(
-    100,
-    Math.round((stats.memberCount / stats.maxMembers) * 100),
-  );
+  const { data: user, isLoading: userLoading } = useUserMe();
+  const { data: team } = useUserTeam();
+  const { data: submission } = useUserSubmission();
+  const { data: news } = useNewsFeed({ limit: 3 });
+  const { data: timeline = [] } = useCompetitionTimeline(team?.competition?.slug);
+  const { isComplete: profileComplete, isLoading: profileLoading } =
+    useProfileComplete();
+
+  const hasJoined = Boolean(team);
+
+  const memberCount = team?.members?.length ?? 0;
+  const maxMembers = team?.competition?.maxMember ?? 0;
+  const memberProgress =
+    maxMembers > 0
+      ? Math.min(100, Math.round((memberCount / maxMembers) * 100))
+      : 0;
+
+  // Batas waktu mengikuti tahap timeline yang sedang berjalan. Tanpa tim,
+  // tahapnya belum diketahui sehingga tidak ditampilkan.
+  const activeStage = timeline.find((stage) => stage.isActive);
+  const deadline = activeStage ? new Date(activeStage.endDate) : null;
+
+  const announcements = news?.news ?? [];
 
   return (
     <div className="relative isolate space-y-6">
@@ -63,14 +87,34 @@ export default function PesertaDashboardPage() {
       {/* Welcome Banner */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
-          Welcome back, Haryanto
+          {userLoading
+            ? "Welcome back"
+            : `Welcome back${user?.fullName ? `, ${user.fullName}` : ""}`}
         </h1>
-        {hasJoined && (
-          <p className="relative mt-1.5 text-sm text-text-secondary">
-            You have 3 days left to submit your final project.
-          </p>
-        )}
       </div>
+
+      {/* Discord */}
+      {!profileLoading && !profileComplete && (
+        <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8`}>
+          <div className="relative flex items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5865F2]/20 text-[#8B93F8]">
+              <MessageCircle className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold tracking-tight text-white">
+                Join the Sevent Discord server
+              </h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                All competition announcements are posted there, including your
+                invitation link.
+              </p>
+            </div>
+          </div>
+          <Link href="/peserta/profile" className="shrink-0">
+            <Button className={pillButton}>Add Discord ID</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Profile */}
       <div className={`${glass} p-6 lg:p-8`}>
@@ -81,7 +125,7 @@ export default function PesertaDashboardPage() {
           <li className="flex items-start gap-2 text-sm text-text-secondary">
             <span className="text-white">•</span>
             <span>
-              {hasJoined ? (
+              {!profileLoading && profileComplete ? (
                 <>
                   Your profile has been verified
                   <Check className="ml-1 inline h-4 w-4 text-white" />
@@ -92,7 +136,7 @@ export default function PesertaDashboardPage() {
             </span>
           </li>
         </ul>
-        {!hasJoined && (
+        {!profileLoading && !profileComplete && (
           <Link href="/peserta/profile">
             <Button className={pillButton}>Complete Now!</Button>
           </Link>
@@ -105,6 +149,11 @@ export default function PesertaDashboardPage() {
           <div className={`${glass} px-6 py-5 lg:px-8`}>
             <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
               Competition
+              {team?.competition?.name && (
+                <span className="ml-3 text-sm font-normal text-text-secondary">
+                  • {team.competition.name}
+                </span>
+              )}
             </h2>
           </div>
 
@@ -119,9 +168,9 @@ export default function PesertaDashboardPage() {
                 <Users className="h-4 w-4 text-text-secondary" />
               </div>
               <div className="font-display text-3xl font-bold leading-none text-white">
-                {stats.memberCount}{" "}
+                {memberCount}{" "}
                 <span className="text-base font-normal text-text-secondary">
-                  / {stats.maxMembers}
+                  / {maxMembers}
                 </span>
               </div>
               <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -140,8 +189,12 @@ export default function PesertaDashboardPage() {
                 </span>
                 <RotateCcw className="h-4 w-4 text-text-secondary" />
               </div>
-              <div className="font-display text-2xl font-bold text-rose-500">
-                {stats.submissionStatus}
+              <div
+                className={`font-display text-2xl font-bold ${
+                  submission ? "text-emerald-400" : "text-rose-500"
+                }`}
+              >
+                {submission ? "Submitted" : "Not Submitted"}
               </div>
             </div>
 
@@ -154,7 +207,7 @@ export default function PesertaDashboardPage() {
                 <Clock className="h-4 w-4 text-text-secondary" />
               </div>
               <div className="font-display text-2xl font-bold tracking-wide text-white">
-                {stats.timeRemaining}
+                {deadline ? formatCountdown(deadline) : "--"}
               </div>
               <p className="relative mt-2 text-[11px] text-text-secondary">
                 Until submission deadline
@@ -171,7 +224,7 @@ export default function PesertaDashboardPage() {
           <p className="relative text-sm text-text-secondary mb-6">
             You haven&apos;t registered in any competition or any team.
           </p>
-          <Link href="/peserta/team">
+          <Link href="/peserta/competition">
             <Button className={pillButton}>Join Now!</Button>
           </Link>
         </div>
@@ -189,9 +242,12 @@ export default function PesertaDashboardPage() {
         </div>
 
         <div className="relative space-y-4">
+          {announcements.length === 0 && (
+            <p className="text-sm text-text-secondary">No announcement yet.</p>
+          )}
           {announcements.map((item) => (
             <div
-              key={item.title}
+              key={item.id}
               className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]"
             >
               <div className="flex items-start justify-between gap-4">
@@ -199,11 +255,11 @@ export default function PesertaDashboardPage() {
                   {item.title}
                 </h3>
                 <span className="shrink-0 text-xs text-text-secondary">
-                  {item.date}
+                  {formatDate(item.createdAt)}
                 </span>
               </div>
-              <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">
-                {item.description}
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-text-secondary">
+                {item.content}
               </p>
             </div>
           ))}
