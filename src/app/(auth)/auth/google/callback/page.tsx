@@ -41,14 +41,10 @@ function GoogleCallbackContent() {
         toast.success(`Login berhasil! Selamat datang, ${user.fullName}.`);
 
         setTimeout(() => {
-          if (!user.institution || user.institution.trim() === "") {
-            router.push("/complete-profile");
-          } else {
-            const role = user.role;
-            if (role === "ADMIN") router.push("/admin/dashboard");
-            else if (role === "JURI") router.push("/juri/dashboard");
-            else router.push("/peserta/dashboard");
-          }
+          const role = user.role;
+          if (role === "ADMIN") router.push("/admin/dashboard");
+          else if (role === "JURI") router.push("/juri/dashboard");
+          else router.push("/peserta/dashboard");
         }, 800);
       } catch (err: any) {
         setStatus("error");
