@@ -154,19 +154,11 @@ export function useUserDocuments() {
   return useQuery<UserDocumentItem[]>({
     queryKey: ["userDocuments"],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/user/documents");
-        const list = res.data?.data || res.data;
-        return Array.isArray(list) ? list : [];
-      } catch {
-        try {
-          const resFallback = await apiClient.get("/api/user-documents");
-          const list = resFallback.data?.data || resFallback.data;
-          return Array.isArray(list) ? list : [];
-        } catch {
-          return [];
-        }
-      }
+      // Endpoint ini milik role PESERTA (roleGuard di backend), jadi tidak
+      // ada fallback ke /api/user-documents yang hanya untuk admin.
+      const res = await apiClient.get("/api/user/documents");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
     },
     staleTime: 10 * 1000,
     refetchInterval: 30000,
