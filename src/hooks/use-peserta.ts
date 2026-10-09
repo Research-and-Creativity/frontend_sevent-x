@@ -171,10 +171,11 @@ export function useUserDocuments() {
 export function useCreateTeam() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { name: string; competitionSlug?: string; competitionId?: string }) => {
+    // Backend mencari Competition berdasarkan slug, bukan id.
+    mutationFn: async (data: { name: string; competitionSlug: string }) => {
       const res = await apiClient.post("/api/teams", {
         teamName: data.name,
-        competitionSlug: data.competitionSlug || data.competitionId,
+        competitionSlug: data.competitionSlug,
       });
       return res.data?.data || res.data;
     },
