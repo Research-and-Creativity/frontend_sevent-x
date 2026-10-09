@@ -452,16 +452,25 @@ export function useNewsFeed(params?: { tag?: string; page?: number; limit?: numb
   });
 }
 
+export interface UpdateProfileInput {
+  fullName?: string;
+  institution?: string;
+  birthDate?: string | null;
+  domicile?: string | null;
+  phone?: string | null;
+  discordId?: string | null;
+}
+
 // Hook 17: Update User Profile PATCH /api/user/me
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   const updateUser = useAuthStore((state) => state.updateUser);
-  return useMutation({
-    mutationFn: async (data: { fullName: string; institution?: string }) => {
+  return useMutation<User, unknown, UpdateProfileInput>({
+    mutationFn: async (data) => {
       const res = await apiClient.patch("/api/user/me", data);
-      return res.data?.data || res.data;
+      return res.data?.data ?? res.data;
     },
-    onSuccess: (updatedUser: any) => {
+    onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ["userMe"] });
       queryClient.invalidateQueries({ queryKey: ["userTeam"] });
       queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
@@ -474,19 +483,19 @@ export function useUpdateProfile() {
 
 // Hook 18: Change Password POST /api/auth/change-password
 export function useChangePassword() {
-  return useMutation({
-    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+  return useMutation<unknown, unknown, { currentPassword: string; newPassword: string }>({
+    mutationFn: async (data) => {
       const res = await apiClient.post("/api/auth/change-password", data);
       return res.data?.data || res.data;
     },
   });
 }
 
-// Hook 19: Upload User Document File (KTM, KTP_PASSPORT_SIM) POST /api/user/documents
+// Hook 19: Upload User Document File POST /api/user/documents
 export function useUploadUserDocument() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (formData: FormData) => {
+  return useMutation<unknown, unknown, FormData>({
+    mutationFn: async (formData) => {
       const res = await apiClient.post("/api/user/documents", formData);
       return res.data?.data || res.data;
     },
