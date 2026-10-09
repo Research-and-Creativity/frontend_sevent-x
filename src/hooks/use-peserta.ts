@@ -138,6 +138,20 @@ export function useCompetitions() {
   });
 }
 
+// Detail satu kompetisi GET /api/competitions/:slug
+export function useCompetition(slug?: string) {
+  return useQuery<Competition | null>({
+    queryKey: ["competitionDetail", slug],
+    queryFn: async () => {
+      if (!slug) return null;
+      const res = await apiClient.get(`/api/competitions/${slug}`);
+      return res.data?.data ?? null;
+    },
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export interface UserDocumentItem {
   id: string;
   userId: string;
@@ -181,6 +195,27 @@ export function useCreateTeam() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Batas ukuran mengikuti multer di backend (upload.middleware.ts).
+export const PAYMENT_PROOF_MAX_BYTES = 5 * 1024 * 1024;
+export const SUBMISSION_DELIVERABLE_MAX_BYTES = 10 * 1024 * 1024;
+
+// Hook: Upload bukti pembayaran POST /api/teams/:id/payment-proof (multipart "file")
+export function useUploadPaymentProof() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { teamId: string; file: File }>({
+    mutationFn: async ({ teamId, file }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await apiClient.post(`/api/teams/${teamId}/payment-proof`, formData);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
     },
   });
 }
