@@ -81,9 +81,14 @@ export default function PesertaDashboardPage() {
           <li className="flex items-start gap-2 text-sm text-text-secondary">
             <span className="text-white">•</span>
             <span>
-              {hasJoined
-                ? `Your profile has been verified ${(<Check className="h-4 w-4 text-white" />)}`
-                : "Please complete your identity"}
+              {hasJoined ? (
+                <>
+                  Your profile has been verified
+                  <Check className="ml-1 inline h-4 w-4 text-white" />
+                </>
+              ) : (
+                "Please complete your identity"
+              )}
             </span>
           </li>
         </ul>
