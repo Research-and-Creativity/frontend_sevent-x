@@ -173,7 +173,6 @@ export default function AdminJudgesPage() {
           fullName: selectedUser.fullName,
           email: selectedUser.email,
           institution: selectedUser.institution || null,
-          avatar: selectedUser.avatar || null,
         },
         createdAt: new Date().toISOString().split("T")[0],
       };

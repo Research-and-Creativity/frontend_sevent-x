@@ -843,17 +843,9 @@ export default function PesertaTeamPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center text-white overflow-hidden shrink-0">
-                          {member.user?.avatar ? (
-                            <img
-                              src={member.user.avatar}
-                              alt={memberName}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="font-display text-xs font-bold text-accent">
-                              {memberName.substring(0, 2).toUpperCase()}
-                            </span>
-                          )}
+                          <span className="font-display text-xs font-bold text-accent">
+                            {memberName.substring(0, 2).toUpperCase()}
+                          </span>
                         </div>
 
                         <div className="flex items-center gap-2">

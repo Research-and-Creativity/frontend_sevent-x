@@ -5,9 +5,11 @@ export interface User {
   email: string;
   fullName: string;
   role: UserRole;
-  avatar?: string | null;
+  institution: string;
+  birthDate?: string | null;
+  domicile?: string | null;
   phone?: string | null;
-  institution?: string | null;
+  discordId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,7 +59,6 @@ export interface TeamMember {
     email: string;
     fullName: string;
     institution: string;
-    avatar?: string | null;
   };
   role: "LEADER" | "MEMBER";
   joinedAt: string;

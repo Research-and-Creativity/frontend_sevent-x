@@ -287,7 +287,7 @@ export interface TeamEligibilityMember {
   twibbonApproved: boolean;
   shareStoryApproved: boolean;
   ktmApproved: boolean;
-  ktpApproved: boolean;
+  instagramFollowApproved: boolean;
   allDocumentsApproved: boolean;
 }
 

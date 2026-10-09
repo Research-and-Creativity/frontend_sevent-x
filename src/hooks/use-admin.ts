@@ -38,7 +38,6 @@ export interface AdminJudgeItem {
     id: string;
     fullName: string;
     email: string;
-    avatar?: string | null;
     institution?: string | null;
   };
   createdAt: string;
