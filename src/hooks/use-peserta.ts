@@ -242,9 +242,7 @@ export function useTransferLeadership() {
   return useMutation({
     mutationFn: async (newLeaderId: string) => {
       const res = await apiClient.post("/api/teams/me/transfer-leadership", {
-        newLeaderId,
-        targetUserId: newLeaderId,
-        memberId: newLeaderId,
+        newLeaderUserId: newLeaderId,
       });
       return res.data?.data || res.data;
     },
