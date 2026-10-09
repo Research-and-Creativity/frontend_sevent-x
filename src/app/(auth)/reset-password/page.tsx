@@ -10,7 +10,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { FaWhatsapp, FaInstagram, FaGlobe } from "react-icons/fa6";
+import { SocialLinks } from "@/components/social-links";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/accessibility";
@@ -153,11 +153,7 @@ function ResetPasswordFormContent() {
       <div className="relative z-10 flex items-center justify-between px-8 pb-6 text-xs text-white/50">
         <span>©2026 SEVENT. All Rights Reserved</span>
         <div className="flex items-center gap-3">
-          {[FaWhatsapp, FaInstagram, FaGlobe].map((Icon, i) => (
-            <a key={i} href="#" aria-label="social" className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-white/80 transition-colors">
-              <Icon className="w-4 h-4" />
-            </a>
-          ))}
+          <SocialLinks />
         </div>
       </div>
     </div>

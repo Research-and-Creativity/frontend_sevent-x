@@ -12,7 +12,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { FaWhatsapp, FaInstagram, FaGlobe } from "react-icons/fa6";
+import { SocialLinks } from "@/components/social-links";
 
 const registerSchema = z
   .object({
@@ -280,16 +280,7 @@ export default function RegisterPage() {
       <div className="relative z-10 flex items-center justify-between px-24 pb-6 text-xs text-white/50">
         <span>©2026 SEVENT. All Rights Reserved</span>
         <div className="flex items-center gap-3">
-          {[FaWhatsapp, FaInstagram, FaGlobe].map((Icon, i) => (
-            <a
-              key={i}
-              href="#"
-              aria-label="social"
-              className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-white/80 transition-colors"
-            >
-              <Icon className="w-4 h-4" />
-            </a>
-          ))}
+          <SocialLinks />
         </div>
       </div>
     </div>

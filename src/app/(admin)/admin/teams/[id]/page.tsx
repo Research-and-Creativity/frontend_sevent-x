@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Users, CheckCircle2 } from "lucide-react";
-import { FaFilePdf } from "react-icons/fa6";
+import { FileText } from "lucide-react";
 import { ConfirmModal } from "@/components/confirm-modal";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -100,7 +100,7 @@ export default function AdminRegisteredTeamDetailPage() {
                       <div key={d.label}>
                         <p className="text-xs text-white/70 mb-2">{d.label}</p>
                         <a href="#" className="flex items-center gap-3 border border-white/20 rounded-lg p-3 hover:bg-white/5 transition-colors">
-                          <span className="w-9 h-9 rounded bg-red-500/20 text-red-400 flex items-center justify-center"><FaFilePdf className="w-5 h-5" /></span>
+                          <span className="w-9 h-9 rounded bg-red-500/20 text-red-400 flex items-center justify-center"><FileText className="w-5 h-5" /></span>
                           <span>
                             <p className="text-sm font-semibold">{d.file}</p>
                             <p className="text-[10px] text-white/40">{d.size}</p>
@@ -129,7 +129,7 @@ export default function AdminRegisteredTeamDetailPage() {
         <h2 className="font-display text-2xl font-bold mb-6">Payment Information</h2>
         <p className="text-xs text-white/70 mb-2">Payment Evidence</p>
         <a href="#" className="inline-flex items-center gap-3 border border-white/20 rounded-lg p-3 hover:bg-white/5 transition-colors min-w-[180px]">
-          <span className="w-9 h-9 rounded bg-red-500/20 text-red-400 flex items-center justify-center"><FaFilePdf className="w-5 h-5" /></span>
+          <span className="w-9 h-9 rounded bg-red-500/20 text-red-400 flex items-center justify-center"><FileText className="w-5 h-5" /></span>
           <span>
             <p className="text-sm font-semibold">Filename</p>
             <p className="text-[10px] text-white/40">10.MB</p>
