@@ -205,7 +205,7 @@ export function useUpdateTeamName() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (teamName: string) => {
-      const res = await apiClient.patch("/api/teams/me", { teamName, name: teamName });
+      const res = await apiClient.patch("/api/teams/me", { teamName });
       return res.data?.data || res.data;
     },
     onSuccess: () => {
