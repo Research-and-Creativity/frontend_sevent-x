@@ -7,7 +7,13 @@ import { ArrowRight, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useCompetitions, useCreateTeam, useJoinTeam, useUserTeam } from "@/hooks/use-peserta";
+import {
+  useCompetitions,
+  useCreateTeam,
+  useJoinTeam,
+  useProfileComplete,
+  useUserTeam,
+} from "@/hooks/use-peserta";
 import type { Competition } from "@/types/api";
 
 // Style glass yang sama dengan halaman peserta lainnya
@@ -56,6 +62,11 @@ export default function PesertaCompetitionPage() {
 
   const { data: competitions = [], isLoading, isError } = useCompetitions();
   const { data: userTeam } = useUserTeam();
+  const {
+    isComplete: profileComplete,
+    isLoading: profileLoading,
+    missingFields,
+  } = useProfileComplete();
   const createTeamMutation = useCreateTeam();
   const joinTeamMutation = useJoinTeam();
 
@@ -144,6 +155,22 @@ export default function PesertaCompetitionPage() {
       );
     }
 
+    // Mendaftarkan tim butuh profil yang sudah lengkap. Ini gerbang UX, bukan
+    // gerbang keamanan; yang menentukan boleh submit karya tetap isEligible
+    // di backend.
+    if (!profileLoading && !profileComplete) {
+      return (
+        <Button
+          type="button"
+          onClick={() => router.push("/peserta/profile")}
+          className={`${pillButton} border border-white/20 bg-white/[0.05] text-white hover:bg-white/[0.1]`}
+        >
+          Complete Profile First
+          <ArrowRight className="ml-1.5 h-4 w-4" />
+        </Button>
+      );
+    }
+
     // Backend hanya mengembalikan kompetisi aktif (GET /competitions memfilter
     // isActive) dan createTeam menolak kompetisi tidak aktif, jadi di sini
     // selalu ada aksi.
@@ -195,6 +222,28 @@ export default function PesertaCompetitionPage() {
           team or join a team with a code.
         </p>
       </div>
+
+      {/* Profile gate: clearer than letting the button fail later */}
+      {!profileLoading && !profileComplete && (
+        <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8`}>
+          <div className="relative">
+            <h2 className="font-display text-lg font-bold tracking-tight text-white">
+              Complete your profile first
+            </h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Still missing: {missingFields.join(", ")}. You need a complete
+              profile before registering for a competition.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => router.push("/peserta/profile")}
+            className={`${pillButton} shrink-0 bg-white text-[#1B235E] hover:bg-white/90`}
+          >
+            Complete Profile
+          </Button>
+        </div>
+      )}
 
       {/* Competition list */}
       <div className="space-y-5">
