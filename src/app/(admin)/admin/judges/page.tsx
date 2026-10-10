@@ -28,6 +28,7 @@ import {
   AdminJudgeItem,
 } from "@/hooks/use-admin";
 import { User, Competition } from "@/types/api";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 
 export default function AdminJudgesPage() {
   // 1. Fetch Competitions list (GET /api/competitions)
@@ -182,10 +183,8 @@ export default function AdminJudgesPage() {
         `User ${selectedUser.fullName} berhasil di-assign sebagai Juri untuk kompetisi ${compObj?.name || activeSlug}!`
       );
       setSelectedUser(null);
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Gagal menugaskan juri";
-      toast.error(msg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal menugaskan juri"));
     }
   };
 
@@ -435,16 +434,22 @@ export default function AdminJudgesPage() {
           ) : (
             <div className="divide-y divide-white/5">
               {displayedJudges.map((j) => {
+                // BE kadang mengirim field datar (tanpa relasi user/competition).
+                const flat = j as AdminJudgeItem & {
+                  fullName?: string;
+                  email?: string;
+                  competitionName?: string;
+                };
                 const judgeName =
                   j.user?.fullName ||
-                  (j as any).fullName ||
+                  flat.fullName ||
                   j.user?.email ||
                   "Dewan Juri";
                 const judgeEmail =
-                  j.user?.email || (j as any).email || "evaluator@domain.com";
+                  j.user?.email || flat.email || "evaluator@domain.com";
                 const compTitle =
                   j.competition?.name ||
-                  (j as any).competitionName ||
+                  flat.competitionName ||
                   j.competitionSlug;
 
                 return (

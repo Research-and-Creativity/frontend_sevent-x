@@ -61,6 +61,32 @@ export function getPhaseLabel(phase: string): string {
   return labels[phase] || phase;
 }
 
+// Bentuk timeline dari BE sebelum dinormalisasi menjadi TimelineStage.
+type TimelineResponseItem = {
+  id: string;
+  phase: string;
+  stageName?: string | null;
+  startDate: string;
+  endDate: string;
+  description?: string | null;
+};
+
+function toTimelineStages(items: TimelineResponseItem[]): TimelineStage[] {
+  const now = Date.now();
+  return items.map((t) => ({
+    id: t.id,
+    phase: t.phase,
+    stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
+    startDate: t.startDate,
+    endDate: t.endDate,
+    description: t.description || "",
+    isCompleted: new Date(t.endDate).getTime() < now,
+    isActive:
+      new Date(t.startDate).getTime() <= now &&
+      now <= new Date(t.endDate).getTime(),
+  }));
+}
+
 // Timeline diambil dari GET /api/competitions/:slug/timeline
 export function useCompetitionTimeline(slug?: string) {
   return useQuery<TimelineStage[]>({
@@ -70,38 +96,13 @@ export function useCompetitionTimeline(slug?: string) {
       try {
         const res = await apiClient.get(`/api/competitions/${slug}/timeline`);
         const list = res.data?.data || res.data;
-        const timelines = Array.isArray(list) ? list : [];
-        const now = Date.now();
-        return timelines.map((t: any) => ({
-          id: t.id,
-          phase: t.phase,
-          stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
-          startDate: t.startDate,
-          endDate: t.endDate,
-          description: t.description || "",
-          isCompleted: new Date(t.endDate).getTime() < now,
-          isActive:
-            new Date(t.startDate).getTime() <= now &&
-            now <= new Date(t.endDate).getTime(),
-        }));
+        return toTimelineStages((Array.isArray(list) ? list : []) as TimelineResponseItem[]);
       } catch {
         // Fallback: get from detail competition
         const res = await apiClient.get(`/api/competitions/${slug}`);
         const competition = res.data?.data || res.data;
         const timelines = competition?.timelines || [];
-        const now = Date.now();
-        return timelines.map((t: any) => ({
-          id: t.id,
-          phase: t.phase,
-          stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
-          startDate: t.startDate,
-          endDate: t.endDate,
-          description: t.description || "",
-          isCompleted: new Date(t.endDate).getTime() < now,
-          isActive:
-            new Date(t.startDate).getTime() <= now &&
-            now <= new Date(t.endDate).getTime(),
-        }));
+        return toTimelineStages(timelines as TimelineResponseItem[]);
       }
     },
     enabled: !!slug,

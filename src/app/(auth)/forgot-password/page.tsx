@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
@@ -51,10 +52,8 @@ export default function ForgotPasswordPage() {
     try {
       await apiClient.post("/api/auth/forgot-password", data);
       toast.success("Password reset instructions sent to your email!");
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Failed to send reset link.",
-      );
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to send reset link."));
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +68,7 @@ export default function ForgotPasswordPage() {
       </Link>
       <div ref={formRef} className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6 opacity-0">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">RESET PASSWORD</h1>
-        <p className="text-center text-[0.8rem] text-white/60 mt-1 mb-4">Enter the email associated with your account and we'll send you instructions to reset your password.</p>
+        <p className="text-center text-[0.8rem] text-white/60 mt-1 mb-4">Enter the email associated with your account and we&apos;ll send you instructions to reset your password.</p>
         <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             <div>

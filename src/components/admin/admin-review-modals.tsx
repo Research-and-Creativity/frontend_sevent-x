@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -137,8 +137,14 @@ export interface RejectModalProps {
   confirmButtonText?: string;
 }
 
-export function AdminRejectModal({
-  isOpen,
+export function AdminRejectModal(props: RejectModalProps) {
+  // Form dirender hanya saat modal terbuka supaya field alasan selalu kosong
+  // saat dibuka, tanpa perlu mereset state di dalam effect.
+  if (!props.isOpen) return null;
+  return <RejectModalForm {...props} />;
+}
+
+function RejectModalForm({
   onClose,
   onConfirm,
   isLoading,
@@ -150,14 +156,6 @@ export function AdminRejectModal({
   confirmButtonText = "Tolak Dokumen",
 }: RejectModalProps) {
   const [reason, setReason] = useState("");
-
-  useEffect(() => {
-    if (isOpen) {
-      setReason("");
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

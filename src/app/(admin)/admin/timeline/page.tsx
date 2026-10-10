@@ -8,7 +8,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Plus, RefreshCw, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Competition, TimelineStage } from "@/types/api";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 import { toast } from "sonner";
+
+// Bentuk timeline dari BE sebelum dinormalisasi (BE juga menyertakan `name`).
+type TimelineResponseItem = {
+  id: string;
+  phase: string;
+  stageName?: string | null;
+  name?: string | null;
+  startDate: string;
+  endDate: string;
+  description?: string | null;
+};
 
 export default function AdminTimelinePage() {
   const queryClient = useQueryClient();
@@ -46,9 +58,11 @@ export default function AdminTimelinePage() {
       try {
         const res = await apiClient.get(`/api/competitions/${activeSlug}/timeline`);
         const list = res.data?.data || res.data;
-        const timelines = Array.isArray(list) ? list : [];
+        const timelines: TimelineResponseItem[] = Array.isArray(list)
+          ? list
+          : [];
         const now = Date.now();
-        return timelines.map((t: any) => ({
+        return timelines.map((t) => ({
           id: t.id,
           stageName: t.stageName || t.name || "Milestone",
           phase: t.phase,
@@ -97,8 +111,11 @@ export default function AdminTimelinePage() {
       queryClient.invalidateQueries({ queryKey: ["competitionTimeline", activeSlug] });
       queryClient.invalidateQueries({ queryKey: ["publicCompetitionTimeline", activeSlug] });
     },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message || err.message || "Gagal menambahkan timeline stage";
+    onError: (err: unknown) => {
+      const msg = getErrorMessageWithDefault(
+        err,
+        "Gagal menambahkan timeline stage"
+      );
       toast.error(msg);
     },
   });

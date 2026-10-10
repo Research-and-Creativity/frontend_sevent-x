@@ -63,7 +63,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
           blockquote: ({ ...props }) => (
             <blockquote className="border-l-2 border-accent pl-3 py-1 my-2 bg-surface/40 rounded-r-lg italic text-text-secondary text-xs" {...props} />
           ),
-          code: ({ className: codeClassName, children, ...props }: any) => {
+          code: ({ className: codeClassName, children, ...props }: React.ComponentPropsWithoutRef<"code">) => {
             const isInline = !codeClassName && typeof children === "string" && !children.includes("\n");
             if (isInline) {
               return (

@@ -17,7 +17,22 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage, getErrorMessageWithDefault } from "@/lib/errors";
 import { toast } from "sonner";
+
+// Bentuk respons tim yang masih/kemungkinan dipakai BE di luar tipe Team resmi.
+type LooseTeam = Team & {
+  documents?: Array<{
+    type: string;
+    fileUrl?: string;
+    status?: string;
+    rejectionReason?: string | null;
+    reviewCount?: number;
+  }>;
+  paymentProofStatus?: string;
+  paymentRejectionReason?: string | null;
+  paymentReviewCount?: number;
+};
 import {
   Pencil,
   X,
@@ -51,12 +66,15 @@ export default function PesertaTeamPage() {
   // Local state to manage team updates after mutation
   const [localTeam, setLocalTeam] = useState<Team | null>(null);
 
-  // Sync serverTeam to localTeam
-  useEffect(() => {
-    if (serverTeam !== undefined) {
-      setLocalTeam(serverTeam);
-    }
-  }, [serverTeam]);
+  // Ikuti data tim dari server. Penyesuaian dilakukan saat render (bukan effect)
+  // supaya React langsung mengulang render tanpa efek samping.
+  const [syncedServerTeam, setSyncedServerTeam] = useState<
+    Team | null | undefined
+  >(undefined);
+  if (serverTeam !== undefined && serverTeam !== syncedServerTeam) {
+    setSyncedServerTeam(serverTeam);
+    setLocalTeam(serverTeam);
+  }
 
   // Form & Tab State A
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
@@ -98,11 +116,22 @@ export default function PesertaTeamPage() {
   const [twibbonError, setTwibbonError] = useState<string | null>(null);
   const [storyError, setStoryError] = useState<string | null>(null);
 
-  // Pre-populate Twibbon & Story URLs from fetched docs
-  useEffect(() => {
-    if (twibbonDoc?.fileUrl) setTwibbonUrl(twibbonDoc.fileUrl);
-    if (storyDoc?.fileUrl) setStoryUrl(storyDoc.fileUrl);
-  }, [twibbonDoc, storyDoc]);
+  // Pre-populate Twibbon & Story URLs dari dokumen yang terambil. adjustment
+  // dilakukan saat render agar isian tidak tertimpa effect setelah tiap render.
+  const incomingTwibbonUrl = twibbonDoc?.fileUrl ?? "";
+  const incomingStoryUrl = storyDoc?.fileUrl ?? "";
+  const [syncedDocUrls, setSyncedDocUrls] = useState({
+    twibbon: "",
+    story: "",
+  });
+  if (
+    incomingTwibbonUrl !== syncedDocUrls.twibbon ||
+    incomingStoryUrl !== syncedDocUrls.story
+  ) {
+    setSyncedDocUrls({ twibbon: incomingTwibbonUrl, story: incomingStoryUrl });
+    setTwibbonUrl(incomingTwibbonUrl);
+    setStoryUrl(incomingStoryUrl);
+  }
 
   const isLoading = isUserLoading || isTeamLoading;
   const team = localTeam;
@@ -119,16 +148,20 @@ export default function PesertaTeamPage() {
   );
   const memberCount = team?.members?.length || 1;
 
+  // Bukti pembayaran bisa muncul dalam beberapa bentuk dari BE. Bentuk yang
+  // lama dibungkus satu tipe longgar agar tidak perlu `any`.
+  const looseTeam = team as LooseTeam | undefined;
+
   // Real Payment Proof Status, Rejection Reason & Review Count from backend response
   const paymentProofObj =
     team?.paymentProof ||
-    (team as any)?.documents?.find(
-      (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
+    looseTeam?.documents?.find(
+      (d) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
     );
 
   const getPaymentProofStatus = (): string | null => {
     if (paymentProofObj?.status) return paymentProofObj.status;
-    if ((team as any)?.paymentProofStatus) return (team as any).paymentProofStatus;
+    if (looseTeam?.paymentProofStatus) return looseTeam.paymentProofStatus;
     if (team?.paymentProof) return "REVIEW";
     return null;
   };
@@ -136,19 +169,19 @@ export default function PesertaTeamPage() {
   const paymentProofStatus = getPaymentProofStatus();
   const paymentRejectionReason =
     paymentProofObj?.rejectionReason ||
-    (team as any)?.paymentRejectionReason ||
-    (team as any)?.rejectionReason ||
+    looseTeam?.paymentRejectionReason ||
+    looseTeam?.rejectionReason ||
     null;
   const paymentReviewCount =
     paymentProofObj?.reviewCount ||
-    (team as any)?.paymentReviewCount ||
-    (team as any)?.reviewCount ||
+    looseTeam?.paymentReviewCount ||
+    looseTeam?.reviewCount ||
     1;
 
   const paymentFileUrl =
     typeof team?.paymentProof === "string"
       ? team.paymentProof
-      : paymentProofObj?.fileUrl || (paymentProofObj as any)?.url || null;
+      : paymentProofObj?.fileUrl || null;
 
   const isPaymentApproved =
     paymentProofStatus?.toUpperCase() === "APPROVE" ||
@@ -269,7 +302,7 @@ export default function PesertaTeamPage() {
     (c) =>
       c.id === team?.competitionId ||
       c.slug === team?.competitionId ||
-      c.slug === (team?.competition as any)?.slug
+      c.slug === team?.competition?.slug
   );
 
   // Helper URL validator
@@ -348,10 +381,8 @@ export default function PesertaTeamPage() {
       if (created) setLocalTeam(created);
       toast.success(`Tim "${createTeamName}" berhasil dibuat!`);
       refetchTeam();
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Gagal membuat tim";
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal membuat tim"));
     }
   };
 
@@ -368,12 +399,8 @@ export default function PesertaTeamPage() {
       if (joined) setLocalTeam(joined);
       toast.success("Berhasil bergabung dengan tim!");
       refetchTeam();
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal bergabung dengan tim";
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal bergabung dengan tim"));
     }
   };
 
@@ -412,12 +439,8 @@ export default function PesertaTeamPage() {
       toast.success("Nama tim berhasil diperbarui!");
       setIsEditNameOpen(false);
       refetchTeam();
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal memperbarui nama tim";
-      toast.error(msg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal memperbarui nama tim"));
     }
   };
 
@@ -445,10 +468,8 @@ export default function PesertaTeamPage() {
       setIsLeaveModalOpen(false);
       toast.success("Anda telah keluar dari tim.");
       refetchTeam();
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Gagal keluar dari tim";
-      toast.error(msg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal keluar dari tim"));
     }
   };
 
@@ -460,10 +481,8 @@ export default function PesertaTeamPage() {
       setIsDisbandModalOpen(false);
       toast.success("Tim berhasil dibubarkan.");
       refetchTeam();
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Gagal membubarkan tim";
-      toast.error(msg);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal membubarkan tim"));
     }
   };
 
@@ -479,12 +498,10 @@ export default function PesertaTeamPage() {
       setSelectedNewLeaderId("");
       toast.success("Kepemimpinan tim berhasil dialihkan!");
       refetchTeam();
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal mengalihkan kepemimpinan tim";
-      toast.error(msg);
+    } catch (err: unknown) {
+      toast.error(
+        getErrorMessageWithDefault(err, "Gagal mengalihkan kepemimpinan tim")
+      );
     }
   };
 
@@ -521,10 +538,8 @@ export default function PesertaTeamPage() {
       setIsPaymentConfirmOpen(false);
       setIsEditingPayment(false);
       refetchTeam();
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal mengunggah bukti pembayaran."
-      );
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Gagal mengunggah bukti pembayaran."));
     } finally {
       setIsUploadingPayment(false);
     }
@@ -556,10 +571,8 @@ export default function PesertaTeamPage() {
       toast.success("Tautan Twibbon berhasil disimpan!");
       setIsEditingTwibbon(false);
       refetchUserDocs();
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menyimpan tautan Twibbon."
-      );
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Gagal menyimpan tautan Twibbon."));
     } finally {
       setIsSavingTwibbon(false);
     }
@@ -591,10 +604,8 @@ export default function PesertaTeamPage() {
       toast.success("Tautan Share Story berhasil disimpan!");
       setIsEditingStory(false);
       refetchUserDocs();
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menyimpan tautan Share Story."
-      );
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Gagal menyimpan tautan Share Story."));
     } finally {
       setIsSavingStory(false);
     }

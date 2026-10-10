@@ -45,7 +45,7 @@ export function SponsorshipSection() {
             SPONSORSHIP
           </h2>
           <p className="text-sm text-white/50 leading-relaxed">
-            Become a sponsor and join us in shaping Indonesia's digital future.
+            Become a sponsor and join us in shaping Indonesia&apos;s digital future.
           </p>
         </div>
 
@@ -71,11 +71,11 @@ export function SponsorshipSection() {
 
           <div className="sp-panel border border-white/25 rounded-xl p-5 bg-white/[0.03] shadow-[0_0_25px_rgba(255,255,255,0.06)]">
             <h3 className="font-display text-2xl font-bold tracking-widest text-white mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-              LET'S BUILD IT TOGETHER
+              LET&apos;S BUILD IT TOGETHER
             </h3>
             <p className="text-sm text-white/50 leading-relaxed mb-4">
               Great technology never grows alone. Partner with SEVENT X and put
-              your name on the next generation of Indonesian engineers'
+              your name on the next generation of Indonesian engineers&apos;
               experience.
             </p>
             <button className="cursor-pointer bg-white text-[#7C83BC] text-sm font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">

@@ -8,6 +8,7 @@ import { Newspaper, Plus, Trash2, Tag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { NewsPost, NewsTag } from "@/types/api";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 
 export default function AdminNewsPage() {
   const queryClient = useQueryClient();
@@ -100,12 +101,8 @@ export default function AdminNewsPage() {
       queryClient.invalidateQueries({ queryKey: ["adminNewsList"] });
       queryClient.invalidateQueries({ queryKey: ["newsAnnouncements"] });
     },
-    onError: (err: any) => {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal mempublikasikan berita";
-      toast.error(msg);
+    onError: (err: unknown) => {
+      toast.error(getErrorMessageWithDefault(err, "Gagal mempublikasikan berita"));
     },
   });
 
@@ -120,12 +117,10 @@ export default function AdminNewsPage() {
       queryClient.invalidateQueries({ queryKey: ["adminNewsList"] });
       queryClient.invalidateQueries({ queryKey: ["newsAnnouncements"] });
     },
-    onError: (err: any) => {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal menghapus artikel berita";
-      toast.error(msg);
+    onError: (err: unknown) => {
+      toast.error(
+        getErrorMessageWithDefault(err, "Gagal menghapus artikel berita")
+      );
     },
   });
 

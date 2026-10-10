@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
@@ -46,9 +47,8 @@ export default function LoginPage() {
       else if (role === "JURI" || role === "JUDGE")
         router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
-    } catch (error: any) {
-      console.log(error);
-      toast.error(error.response?.data?.message || "Invalid credentials.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Invalid credentials."));
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +98,7 @@ export default function LoginPage() {
           WELCOME BACK!
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
-          Input your email and password, let's continue your journey!
+          Input your email and password, let&apos;s continue your journey!
         </p>
 
         <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
@@ -213,7 +213,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-sm text-white/50 mt-4">
-            Doesn't have an account?{" "}
+            Doesn&apos;t have an account?{" "}
             <Link
               href="/register"
               className="font-semibold text-white underline underline-offset-4 hover:text-white/80"

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
@@ -66,8 +67,8 @@ export default function RegisterPage() {
       if (user && accessToken) setAuth(user, accessToken);
       toast.success("Account created successfully!");
       router.push("/peserta/dashboard");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Registration failed.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Registration failed."));
     } finally {
       setIsLoading(false);
     }

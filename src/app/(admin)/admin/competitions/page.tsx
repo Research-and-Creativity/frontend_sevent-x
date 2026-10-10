@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 import { Competition } from "@/types/api";
 
 export default function AdminCompetitionsPage() {
@@ -52,8 +53,8 @@ export default function AdminCompetitionsPage() {
       queryClient.invalidateQueries({ queryKey: ["adminCompetitionsList"] });
       queryClient.invalidateQueries({ queryKey: ["competitionsList"] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Gagal menambahkan kompetisi");
+    onError: (err: unknown) => {
+      toast.error(getErrorMessageWithDefault(err, "Gagal menambahkan kompetisi"));
     },
   });
 
@@ -69,8 +70,8 @@ export default function AdminCompetitionsPage() {
       queryClient.invalidateQueries({ queryKey: ["adminCompetitionsList"] });
       queryClient.invalidateQueries({ queryKey: ["competitionsList"] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || "Gagal memperbarui kompetisi");
+    onError: (err: unknown) => {
+      toast.error(getErrorMessageWithDefault(err, "Gagal memperbarui kompetisi"));
     },
   });
 

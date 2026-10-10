@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
@@ -14,18 +15,21 @@ function GoogleCallbackContent() {
   const code = searchParams.get("code");
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
-  );
-  const [errorMessage, setErrorMessage] = useState("");
+  const [result, setResult] = useState<{
+    status: "loading" | "success" | "error";
+    message: string;
+  }>({ status: "loading", message: "" });
   const isExecuting = useRef(false);
 
+  // Kode yang tidak ada langsung berstatus error, jadi diturunkan dari `code`
+  // alih-alih diset dari dalam effect.
+  const status = code ? result.status : "error";
+  const errorMessage = code
+    ? result.message
+    : "Kode otorisasi Google tidak ditemukan.";
+
   useEffect(() => {
-    if (!code) {
-      setStatus("error");
-      setErrorMessage("Kode otorisasi Google tidak ditemukan.");
-      return;
-    }
+    if (!code) return;
     if (isExecuting.current) return;
     isExecuting.current = true;
 
@@ -37,7 +41,7 @@ function GoogleCallbackContent() {
           throw new Error("Respon tidak valid dari server.");
 
         setAuth(user, accessToken);
-        setStatus("success");
+        setResult({ status: "success", message: "" });
         toast.success(`Login berhasil! Selamat datang, ${user.fullName}.`);
 
         setTimeout(() => {
@@ -46,13 +50,12 @@ function GoogleCallbackContent() {
           else if (role === "JURI") router.push("/juri/dashboard");
           else router.push("/peserta/dashboard");
         }, 800);
-      } catch (err: any) {
-        setStatus("error");
-        const msg =
-          err.response?.data?.message ||
-          err.message ||
-          "Autentikasi Google gagal. Silakan coba kembali.";
-        setErrorMessage(msg);
+      } catch (err: unknown) {
+        const msg = getErrorMessageWithDefault(
+          err,
+          "Autentikasi Google gagal. Silakan coba kembali."
+        );
+        setResult({ status: "error", message: msg });
         toast.error(msg);
       }
     };

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
@@ -58,8 +59,12 @@ function ResetPasswordFormContent() {
       setIsSuccess(true);
       toast.success("Password reset successful!");
       setTimeout(() => router.push("/login"), 2500);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || "Failed to reset password.");
+    } catch (error: unknown) {
+      const fallback =
+        error instanceof Error && error.message
+          ? error.message
+          : "Failed to reset password.";
+      toast.error(getErrorMessage(error, fallback));
     } finally {
       setIsLoading(false);
     }

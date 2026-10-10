@@ -1,29 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 
+const SEEN_KEY = "seventx-welcome-seen";
+const SEEN_EVENT = "seventx-welcome-seen-change";
+
+// Penanda "overlay sudah pernah tampil" hidup di sessionStorage, jadi dibaca lewat
+// useSyncExternalStore. Dengan begitu render pertama di server dan client sama
+// (tidak ada hydration mismatch) tanpa perlu setState di dalam effect.
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener(SEEN_EVENT, onStoreChange);
+  return () => window.removeEventListener(SEEN_EVENT, onStoreChange);
+}
+
+function getSnapshot() {
+  return !sessionStorage.getItem(SEEN_KEY);
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
+function markSeen() {
+  sessionStorage.setItem(SEEN_KEY, "1");
+  window.dispatchEvent(new Event(SEEN_EVENT));
+}
+
 export function WelcomeOverlay() {
-  const [visible, setVisible] = useState(false);
+  const shouldShow = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [finished, setFinished] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const seen = sessionStorage.getItem("seventx-welcome-seen");
-    if (seen) return;
-    setVisible(true);
+    if (!shouldShow) return;
     const t1 = setTimeout(() => setLeaving(true), 2200);
     const t2 = setTimeout(() => {
-      setVisible(false);
-      sessionStorage.setItem("seventx-welcome-seen", "1");
+      setFinished(true);
+      markSeen();
     }, 3000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, []);
+  }, [shouldShow]);
 
-  if (!visible) return null;
+  if (!shouldShow || finished) return null;
 
   return (
     <div

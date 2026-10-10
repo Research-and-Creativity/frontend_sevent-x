@@ -7,3 +7,11 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+// Beberapa halaman lama memakai rantai fallback
+// response.data.message -> error.message -> pesan default. Helper ini
+// mempertahankan perilaku tersebut tanpa memakai `any`.
+export function getErrorMessageWithDefault(err: unknown, fallback: string): string {
+  const message = err instanceof Error && err.message ? err.message : fallback;
+  return getErrorMessage(err, message);
+}
