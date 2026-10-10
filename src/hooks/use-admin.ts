@@ -116,6 +116,7 @@ export function useUpdatePaymentProofStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminTeams"] });
+      queryClient.invalidateQueries({ queryKey: ["teamDetail"] });
     },
   });
 }
@@ -213,8 +214,86 @@ export function useUpdateUserDocumentStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminUserDocuments"] });
       queryClient.invalidateQueries({ queryKey: ["adminOverview"] });
+      queryClient.invalidateQueries({ queryKey: ["teamDetail"] });
+      queryClient.invalidateQueries({ queryKey: ["adminTeams"] });
     },
   });
+}
+
+export interface TeamDetailMemberDocument {
+  id: string;
+  type: "TWIBBON" | "SHARE_STORY" | "KTM" | "INSTAGRAM_FOLLOW" | string;
+  fileUrl: string;
+  status: "REVIEW" | "APPROVE" | "REJECT" | string;
+  rejectionReason: string | null;
+}
+
+export interface TeamDetailMember {
+  id: string;
+  role: string;
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    institution: string;
+    birthDate?: string | null;
+    domicile?: string | null;
+    phone?: string | null;
+    discordId?: string | null;
+    documents: TeamDetailMemberDocument[];
+  };
+}
+
+export interface TeamDetail {
+  id: string;
+  teamName: string;
+  teamCode: string;
+  status: "REVIEW" | "APPROVE" | "REJECT" | string;
+  documentStatus?: "REVIEW" | "APPROVE" | "REJECT" | string;
+  createdAt: string;
+  competition?: { id: string; name: string; slug: string; maxMember: number };
+  members: TeamDetailMember[];
+  paymentProof?: {
+    fileUrl: string;
+    status: "REVIEW" | "APPROVE" | "REJECT" | string;
+    rejectionReason: string | null;
+  } | null;
+  submission?: {
+    projectTitle: string;
+    githubUrl: string;
+    demoVideoUrl: string;
+    deploymentUrl: string | null;
+    fileUrl: string | null;
+  } | null;
+}
+
+// Hook 9: Detail satu tim lengkap dengan dokumen anggota & bukti pembayaran
+// GET /api/teams/:id (ADMIN atau anggota tim). Dipakai halaman detail admin.
+export function useTeamDetail(teamId: string) {
+  return useQuery<TeamDetail>({
+    queryKey: ["teamDetail", teamId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/api/teams/${teamId}`);
+      return res.data?.data || res.data;
+    },
+    enabled: Boolean(teamId),
+    staleTime: 30 * 1000,
+  });
+}
+
+// Empat dokumen wajib peserta; KTP tidak termasuk syarat eligibilitas.
+export const REQUIRED_DOC_LABELS: Array<{
+  type: TeamDetailMemberDocument["type"];
+  label: string;
+}> = [
+  { type: "TWIBBON", label: "Twibbon" },
+  { type: "SHARE_STORY", label: "Post Story" },
+  { type: "KTM", label: "Student ID" },
+  { type: "INSTAGRAM_FOLLOW", label: "Follow Instagram" },
+];
+
+export function fileNameFromUrl(url: string): string {
+  return url.split("/").pop() || "Dokumen";
 }
 
 
