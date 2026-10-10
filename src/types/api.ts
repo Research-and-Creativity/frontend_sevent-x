@@ -76,6 +76,8 @@ export interface Team {
     maxMember: number;
   };
   status: "REVIEW" | "APPROVE" | "REJECT";
+  // Status verifikasi dokumen seluruh anggota, agregasi dari BE.
+  documentStatus?: "REVIEW" | "APPROVE" | "REJECT";
   members?: TeamMember[];
   paymentProof?: {
     id: string;

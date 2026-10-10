@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Users, Search, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Team } from "@/types/api";
-import { DUMMY_TEAMS } from "@/lib/dummy-teams";
+import {
+  docStatusInfo,
+  payStatusInfo,
+  teamLeaderName,
+  formatRegistrationDate,
+} from "@/lib/admin-team-status";
 
 export default function AdminDocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,72 +23,52 @@ export default function AdminDocumentsPage() {
   const [timeSort, setTimeSort] = useState("newest");
   const [nameSort, setNameSort] = useState("az");
 
-  // TEMPORARY: use dummy data until API integration is finalized
-  const teams = DUMMY_TEAMS as any as Team[];
-  const isLoading = false;
-  const isError = false;
-  const refetch = () => Promise.resolve();
-
-  // Original API fetch (kept for later):
-  // const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
-  //   queryKey: ["adminTeamsVerified"],
-  //   queryFn: async () => {
-  //     const res = await apiClient.get("/api/teams");
-  //     const list = res.data?.data || res.data;
-  //     return Array.isArray(list) ? list : [];
-  //   },
-  // });
-
-  const verifiedTeams = teams.filter((t) => {
-    const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
-    const s = (pObj?.status || (t as any).status || "").toString().toUpperCase();
-    return s.includes("APPROVE") || s.includes("VERIF") || s.includes("PAID");
+  // Daftar tim beserta agregasi status dokumen & pembayaran (BE /api/teams).
+  const { data: teams = [], isLoading, isError, refetch } = useQuery<Team[]>({
+    queryKey: ["adminTeamsDocuments"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/teams");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
   });
 
-  const filtered = verifiedTeams
+  const filtered = teams
     .filter((t) => {
-      const name = t.teamName || (t as any).name || "";
-      const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "";
-      return name.toLowerCase().includes(searchQuery.toLowerCase()) || leader.toLowerCase().includes(searchQuery.toLowerCase());
+      const leader = teamLeaderName(t);
+      return (
+        t.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        leader.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     })
     .filter((t) => {
       if (docFilter === "all") return true;
-      const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
-      const s = (pObj?.status || (t as any).status || "").toString().toUpperCase();
-      if (docFilter === "approved") return s.includes("APPROVE") || s.includes("VERIF");
-      if (docFilter === "revise") return s.includes("REJECT") || s.includes("REVISE");
-      if (docFilter === "review") return !s.includes("APPROVE") && !s.includes("VERIF") && !s.includes("REJECT") && !s.includes("REVISE");
+      const s = docStatusInfo(t).label.toLowerCase();
+      if (docFilter === "approved") return s === "approved";
+      if (docFilter === "revise") return s === "revise";
+      if (docFilter === "review") return s === "need review";
       return true;
     })
     .filter((t) => {
       if (payFilter === "all") return true;
-      const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
-      const s = (pObj?.status || (t as any).paymentStatus || "").toString().toUpperCase();
-      if (payFilter === "paid") return s.includes("APPROVE") || s.includes("PAID");
-      if (payFilter === "not_paid") return s.includes("REJECT") || s.includes("UNPAID") || s === "NOT PAID" || s.includes("NOT_PAID");
-      if (payFilter === "review") return !s.includes("APPROVE") && !s.includes("PAID") && !s.includes("REJECT") && !s.includes("UNPAID") && !s.includes("NOT_PAID");
+      const s = payStatusInfo(t).label.toLowerCase();
+      if (payFilter === "paid") return s === "paid";
+      if (payFilter === "not_paid") return s === "not paid";
+      if (payFilter === "review") return s === "need review";
       return true;
     })
     .sort((a, b) => {
-      const na = a.teamName || (a as any).name || "";
-      const nb = b.teamName || (b as any).name || "";
-      if (nameSort === "az") return na.localeCompare(nb);
-      if (nameSort === "za") return nb.localeCompare(na);
+      if (nameSort === "az") return a.teamName.localeCompare(b.teamName);
+      if (nameSort === "za") return b.teamName.localeCompare(a.teamName);
       return 0;
     })
     .sort((a, b) => {
-      const da = new Date((a as any).createdAt || (a as any).registrationDate || 0).getTime();
-      const db = new Date((b as any).createdAt || (b as any).registrationDate || 0).getTime();
+      const da = new Date(a.createdAt || 0).getTime();
+      const db = new Date(b.createdAt || 0).getTime();
       if (timeSort === "newest") return db - da;
       if (timeSort === "oldest") return da - db;
       return 0;
     });
-
-  const timeLabel = (t: Team) => {
-    const created = (t as any).createdAt || (t as any).registrationDate;
-    if (!created) return "-";
-    try { return new Date(created).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(created); }
-  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -141,47 +126,55 @@ export default function AdminDocumentsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center space-y-2 bg-white/5 border border-dashed border-white/10 rounded-xl">
             <Users className="w-8 h-8 text-white/40 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-white">Belum ada tim yang verified</p>
+            <p className="text-sm font-semibold text-white">
+              {teams.length === 0
+                ? "Belum ada tim yang terdaftar"
+                : "Tidak ada tim yang cocok dengan filter"}
+            </p>
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="text-left text-white/70 border-b border-white/10">
-                <th className="pb-3 font-semibold">Team</th>
-                <th className="pb-3 font-semibold">Team Leader Name</th>
-                <th className="pb-3 font-semibold">Time Registration</th>
-                <th className="pb-3 font-semibold">Status Document</th>
-                <th className="pb-3 font-semibold">Status Payment</th>
-                <th className="pb-3 font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filtered.map((t) => {
-                const teamName = t.teamName || (t as any).name || "Unnamed Team";
-                const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "-";
-                return (
-                  <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-5 pr-4">{teamName}</td>
-                    <td className="py-5 pr-4">{leader}</td>
-                    <td className="py-5 pr-4">{timeLabel(t)}</td>
-                    <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Verified</span></td>
-                    <td className="py-5 pr-4"><span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578] text-[#63CFA0] text-xs font-semibold">Paid</span></td>
-                    <td className="py-5"><Link href={`/admin/documents/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="text-left text-white/70 border-b border-white/10">
+                  <th className="pb-3 font-semibold">Team</th>
+                  <th className="pb-3 font-semibold">Team Leader Name</th>
+                  <th className="pb-3 font-semibold">Time Registration</th>
+                  <th className="pb-3 font-semibold">Status Document</th>
+                  <th className="pb-3 font-semibold">Status Payment</th>
+                  <th className="pb-3 font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filtered.map((t) => {
+                  const doc = docStatusInfo(t);
+                  const pay = payStatusInfo(t);
+                  return (
+                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-5 pr-4">{t.teamName}</td>
+                      <td className="py-5 pr-4">{teamLeaderName(t)}</td>
+                      <td className="py-5 pr-4">{formatRegistrationDate(t.createdAt)}</td>
+                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span></td>
+                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span></td>
+                      <td className="py-5"><Link href={`/admin/documents/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
 
         <div className="flex items-center justify-between pt-5 text-xs text-white/50">
-          <span>Showing {filtered.length} data out of {verifiedTeams.length}</span>
+          <span>Showing {filtered.length} data out of {teams.length}</span>
           <div className="flex items-center gap-3">
             <span>Show</span>
-            <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1"><option>10</option></select>
+            <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1" defaultValue="10" disabled>
+              <option>10</option>
+            </select>
             <span>data per page</span>
-            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg></button>
+            <button disabled className="border border-white/20 rounded-lg p-1.5 opacity-40"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button disabled className="border border-white/20 rounded-lg p-1.5 opacity-40"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg></button>
           </div>
         </div>
       </div>

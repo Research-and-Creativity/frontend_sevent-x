@@ -16,6 +16,7 @@ interface CalculatedRankItem {
   category: string;
   finalScore: number;
   isFinalist: boolean;
+  isFullyScored?: boolean;
 }
 
 export default function AdminResultsPage() {
@@ -35,7 +36,7 @@ export default function AdminResultsPage() {
   });
 
   const [selectedCompSlug, setSelectedCompSlug] = useState("");
-  const activeSlug = selectedCompSlug || competitions[0]?.slug || "web-development";
+  const activeSlug = selectedCompSlug || competitions[0]?.slug || "";
 
   const [roundName, setRoundName] = useState("Final Round");
   const [isCalculating, setIsCalculating] = useState(false);
@@ -45,66 +46,13 @@ export default function AdminResultsPage() {
 
   const [rankings, setRankings] = useState<CalculatedRankItem[]>([]);
 
-  // Mock Ranking Data generated on calculation
-  const mockCalculatedRankings: CalculatedRankItem[] = [
-    {
-      rank: 1,
-      teamId: "t-101",
-      teamName: "Aura Tech",
-      projectTitle: "Predictive Crop Yield Engine & Sensor Dashboard",
-      category: "Web Development",
-      finalScore: 94.2,
-      isFinalist: true,
-    },
-    {
-      rank: 2,
-      teamId: "t-105",
-      teamName: "Apex Coders",
-      projectTitle: "E-Commerce Micro-Frontend Engine",
-      category: "Web Development",
-      finalScore: 88.5,
-      isFinalist: true,
-    },
-    {
-      rank: 3,
-      teamId: "t-102",
-      teamName: "Nexus Innovators",
-      projectTitle: "Smart Campus IoT Portal",
-      category: "Web Development",
-      finalScore: 85.0,
-      isFinalist: true,
-    },
-    {
-      rank: 4,
-      teamId: "t-104",
-      teamName: "ByteSquad",
-      projectTitle: "AI Healthcare Diagnostics Web App",
-      category: "Web Development",
-      finalScore: 81.4,
-      isFinalist: true,
-    },
-    {
-      rank: 5,
-      teamId: "t-103",
-      teamName: "CyberCrafters",
-      projectTitle: "Decentralized Auth Hub",
-      category: "Web Development",
-      finalScore: 78.9,
-      isFinalist: true,
-    },
-    {
-      rank: 6,
-      teamId: "t-106",
-      teamName: "Quantum Shift",
-      projectTitle: "Cloud Resource Optimizer",
-      category: "Web Development",
-      finalScore: 74.2,
-      isFinalist: false,
-    },
-  ];
-
-  // Handler: Calculate Scores (sends competitionSlug and receives calculated rankings directly)
+  // BE mengembalikan array datar sesuai CalculatedRankItem.
   const handleCalculateScores = async () => {
+    if (!activeSlug) {
+      toast.error("Pilih Kompetisi terlebih dahulu.");
+      return;
+    }
+
     setIsCalculating(true);
     try {
       const res = await apiClient.post("/api/admin/announcements/calculate", {
@@ -112,21 +60,29 @@ export default function AdminResultsPage() {
         round: roundName,
       });
       const data = res.data?.data || res.data;
-      if (Array.isArray(data) && data.length > 0) {
-        setRankings(data);
+      const list: CalculatedRankItem[] = Array.isArray(data) ? data : [];
+      setRankings(list);
+
+      if (list.length === 0) {
+        toast.info("Belum ada tim yang bisa dihitung pada kompetisi ini.");
       } else {
-        setRankings(mockCalculatedRankings);
+        toast.success("Kalkulasi skor akumulasi juri berhasil dihitung!");
       }
-    } catch {
-      setRankings(mockCalculatedRankings);
+    } catch (err) {
+      setRankings([]);
+      const message =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      toast.error(message || "Gagal menghitung skor akumulasi juri.");
     } finally {
       setIsCalculating(false);
       setHasCalculated(true);
-      toast.success("Kalkulasi skor akumulasi juri berhasil dihitung!");
     }
   };
 
-  // Handler: Publish Results (sends competitionSlug)
+  // Handler: Publish Results (mengubah publishedAt di BE)
   const handlePublishResults = async () => {
     if (!hasCalculated) return;
     setIsPublishing(true);
@@ -135,15 +91,18 @@ export default function AdminResultsPage() {
         competitionSlug: activeSlug,
         round: roundName,
       });
-    } catch {
-      // Fallback
-    }
-
-    setTimeout(() => {
-      setIsPublishing(false);
       setIsPublished(true);
       toast.success("Pengumuman Pemenang Resmi Berhasil Dipublikasikan!");
-    }, 600);
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : undefined;
+      toast.error(message || "Gagal mempublikasikan hasil.");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -181,14 +140,9 @@ export default function AdminResultsPage() {
                 </option>
               ))}
               {competitions.length === 0 && (
-                <>
-                  <option value="web-development" className="bg-card text-white">
-                    National Web Development Competition 2026
-                  </option>
-                  <option value="ui-ux-design" className="bg-card text-white">
-                    National UI/UX Design Challenge 2026
-                  </option>
-                </>
+                <option value="" className="bg-card text-white">
+                  Memuat kompetisi...
+                </option>
               )}
             </select>
           </div>
@@ -284,7 +238,13 @@ export default function AdminResultsPage() {
 
                     {/* Final Score */}
                     <td className="py-4 text-center font-display font-bold text-sm text-accent">
-                      {item.finalScore.toFixed(1)} <span className="text-xs text-text-secondary font-normal">/ 100</span>
+                      {item.finalScore.toFixed(1)}{" "}
+                      <span className="text-xs text-text-secondary font-normal">/ 100</span>
+                      {item.isFullyScored === false && (
+                        <p className="mt-1 font-sans text-[10px] font-normal text-amber-400">
+                          Belum dinilai penuh
+                        </p>
+                      )}
                     </td>
 
                     {/* Status Badge */}
@@ -333,7 +293,7 @@ export default function AdminResultsPage() {
       {!hasCalculated && (
         <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 text-center space-y-3">
           <p className="text-xs text-text-secondary">
-            Hitung skor dulu sebelum publikasi. Pilih cabang kompetisi dan klik tombol <strong className="text-white">"Hitung Akumulasi Skor Juri"</strong> di atas.
+            Hitung skor dulu sebelum publikasi. Pilih cabang kompetisi dan klik tombol <strong className="text-white">&quot;Hitung Akumulasi Skor Juri&quot;</strong> di atas.
           </p>
 
           <div>

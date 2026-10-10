@@ -7,20 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users,
-  ExternalLink,
   Search,
   CheckCircle2,
   XCircle,
   AlertCircle,
-  X,
-  Loader2,
   RefreshCw,
-  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import {
+  docStatusInfo,
+  payStatusInfo,
+  teamLeaderName,
+  formatRegistrationDate,
+  getErrorMessage,
+} from "@/lib/admin-team-status";
 import { Team } from "@/types/api";
-import { DUMMY_TEAMS } from "@/lib/dummy-teams";
 import { useCompetitions } from "@/hooks/use-peserta";
 import { useUpdatePaymentProofStatus } from "@/hooks/use-admin";
 
@@ -44,23 +46,24 @@ export default function AdminTeamsPage() {
   const { data: competitions = [] } = useCompetitions();
 
   // 2. Fetch teams list from GET /api/teams
-  // TEMPORARY: use dummy data until API integration is finalized
-  const USE_DUMMY = true;
-  const teams = USE_DUMMY ? (DUMMY_TEAMS as any as Team[]) : [];
-  const isTeamsLoading = false;
-  const isTeamsFetching = false;
-  const isTeamsError = false;
-  const refetchTeams = () => Promise.resolve();
-
-  // Original API fetch (kept for later):
-  // const { data: teams = [], isLoading: isTeamsLoading, isFetching: isTeamsFetching, isError: isTeamsError, refetch: refetchTeams } = useQuery<Team[]>({
-  //   queryKey: ["adminTeams", selectedCompSlug],
-  //   queryFn: async () => {
-  //     const res = await apiClient.get("/api/teams", { params: selectedCompSlug ? { competitionSlug: selectedCompSlug } : undefined });
-  //     const list = res.data?.data || res.data;
-  //     return Array.isArray(list) ? list : [];
-  //   },
-  // });
+  const {
+    data: teams = [],
+    isLoading: isTeamsLoading,
+    isFetching: isTeamsFetching,
+    isError: isTeamsError,
+    refetch: refetchTeams,
+  } = useQuery<Team[]>({
+    queryKey: ["adminTeams", selectedCompSlug],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/teams", {
+        params: selectedCompSlug
+          ? { competitionSlug: selectedCompSlug }
+          : undefined,
+      });
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+  });
 
   const updatePaymentStatusMutation = useUpdatePaymentProofStatus();
 
@@ -97,10 +100,8 @@ export default function AdminTeamsPage() {
         `Bukti pembayaran tim "${approveModalTeam.teamName}" berhasil disetujui!`
       );
       setApproveModalTeam(null);
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menyetujui bukti pembayaran."
-      );
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal menyetujui bukti pembayaran."));
     }
   };
 
@@ -121,81 +122,50 @@ export default function AdminTeamsPage() {
         `Bukti pembayaran tim "${rejectModalTeam.teamName}" berhasil ditolak.`
       );
       setRejectModalTeam(null);
-    } catch (err: any) {
-      toast.error(
-        err.response?.data?.message || "Gagal menolak bukti pembayaran."
-      );
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal menolak bukti pembayaran."));
     }
   };
 
-  const paymentStatusLabel = (t: Team) => {
-    const created = (t as any).createdAt || (t as any).registrationDate;
-    if (!created) return "-";
-    try { return new Date(created).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(created); }
-  };
-
-  const docStatusInfo = (t: Team) => {
-    const s = ((t as any).documentStatus || (t as any).status || "").toString().toUpperCase();
-    if (s.includes("APPROV") || s.includes("VERIF")) return { label: "Approved", cls: "border-[#3CB578] text-[#63CFA0]" };
-    if (s.includes("REJECT") || s.includes("REVISE")) return { label: "Revise", cls: "border-[#E5B33C] text-[#F0C969]" };
-    return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
-  };
-
-  const payStatusInfo = (t: Team) => {
-    const pObj = t.paymentProof || (t as any).documents?.find((d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT");
-    const s = (pObj?.status || (t as any).paymentStatus || "").toString().toUpperCase();
-    if (s.includes("APPROV") || s.includes("PAID") || s.includes("VERIF")) return { label: "Paid", cls: "border-[#3CB578] text-[#63CFA0]" };
-    if (s.includes("REJECT") || s.includes("UNPAID") || s === "NOT PAID") return { label: "Not Paid", cls: "border-[#E55353] text-[#F08080]" };
-    return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
-  };
-
-  const filteredTeams = teams.filter((t) => {
-    const name = t.teamName || (t as any).name || "";
-    const id = t.id || "";
-    const leader =
-      t.members?.find((m) => m.role === "LEADER")?.user?.fullName ||
-      (t as any).leader ||
-      "";
-    const compSlug =
-      t.competition?.slug || (t as any).competitionSlug || (t as any).slug || "";
-
-    const matchSearch =
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchComp = !selectedCompSlug || compSlug === selectedCompSlug;
-    return matchSearch && matchComp;
-  })
-  .filter((t) => {
-    if (docFilter === "all") return true;
-    const d = docStatusInfo(t);
-    const s = d.label.toLowerCase();
-    if (docFilter === "approved") return s === "approved";
-    if (docFilter === "revise") return s === "revise";
-    if (docFilter === "review") return s === "need review";
-    return true;
-  })
-  .filter((t) => {
-    if (payFilter === "all") return true;
-    const p = payStatusInfo(t);
-    const s = p.label.toLowerCase();
-    if (payFilter === "paid") return s === "paid";
-    if (payFilter === "not_paid") return s === "not paid";
-    if (payFilter === "review") return s === "need review";
-    return true;
-  })
-  .sort((a, b) => {
-    if (nameSort === "az") return (a.teamName || (a as any).name || "").localeCompare(b.teamName || (b as any).name || "");
-    if (nameSort === "za") return (b.teamName || (b as any).name || "").localeCompare(a.teamName || (a as any).name || "");
-    return 0;
-  })
-  .sort((a, b) => {
-    const da = new Date((a as any).createdAt || (a as any).registrationDate || 0).getTime();
-    const db = new Date((b as any).createdAt || (b as any).registrationDate || 0).getTime();
-    if (timeSort === "newest") return db - da;
-    if (timeSort === "oldest") return da - db;
-    return 0;
-  });
+  const filteredTeams = teams
+    .filter((t) => {
+      const leader = teamLeaderName(t);
+      const matchSearch =
+        t.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchComp =
+        !selectedCompSlug || t.competition?.slug === selectedCompSlug;
+      return matchSearch && matchComp;
+    })
+    .filter((t) => {
+      if (docFilter === "all") return true;
+      const s = docStatusInfo(t).label.toLowerCase();
+      if (docFilter === "approved") return s === "approved";
+      if (docFilter === "revise") return s === "revise";
+      if (docFilter === "review") return s === "need review";
+      return true;
+    })
+    .filter((t) => {
+      if (payFilter === "all") return true;
+      const s = payStatusInfo(t).label.toLowerCase();
+      if (payFilter === "paid") return s === "paid";
+      if (payFilter === "not_paid") return s === "not paid";
+      if (payFilter === "review") return s === "need review";
+      return true;
+    })
+    .sort((a, b) => {
+      if (nameSort === "az") return a.teamName.localeCompare(b.teamName);
+      if (nameSort === "za") return b.teamName.localeCompare(a.teamName);
+      return 0;
+    })
+    .sort((a, b) => {
+      const da = new Date(a.createdAt || 0).getTime();
+      const db = new Date(b.createdAt || 0).getTime();
+      if (timeSort === "newest") return db - da;
+      if (timeSort === "oldest") return da - db;
+      return 0;
+    });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -207,6 +177,30 @@ export default function AdminTeamsPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Registered Team</h2>
           <div className="flex items-center gap-3">
+            <select
+              value={selectedCompSlug}
+              onChange={(e) => setSelectedCompSlug(e.target.value)}
+              className="cursor-pointer bg-transparent border border-white/20 rounded-full pl-4 pr-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-white/50"
+            >
+              <option value="" className="bg-[#15161A]">
+                All Competitions
+              </option>
+              {competitions.map((c) => (
+                <option key={c.id || c.slug} value={c.slug} className="bg-[#15161A]">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleReloadData}
+              disabled={isManualReloading || isTeamsFetching}
+              title="Muat ulang data"
+              className="cursor-pointer w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5 disabled:opacity-40"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isManualReloading || isTeamsFetching ? "animate-spin" : ""}`}
+              />
+            </button>
             <button onClick={() => setShowFilters(!showFilters)} className="cursor-pointer w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
             </button>
@@ -281,20 +275,53 @@ export default function AdminTeamsPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredTeams.map((t) => {
-                  const teamName = t.teamName || (t as any).name || "Unnamed Team";
-                  const leader = t.members?.find((m) => m.role === "LEADER")?.user?.fullName || (t as any).leader || "-";
-                  const rawStatus = paymentStatusLabel(t);
+                  const teamName = t.teamName;
+                  const leader = teamLeaderName(t);
+                  const registeredAt = formatRegistrationDate(t.createdAt);
                   const doc = docStatusInfo(t);
                   const pay = payStatusInfo(t);
+                  // Tanpa bukti pembayaran, BE akan menolak aksi approve/reject.
+                  const hasProof = Boolean(t.paymentProof);
+                  const isBusy = updatePaymentStatusMutation.isPending;
                   return (
                     <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-5 pr-4">{teamName}</td>
                       <td className="py-5 pr-4">{leader}</td>
-                      <td className="py-5 pr-4">{rawStatus}</td>
+                      <td className="py-5 pr-4">{registeredAt}</td>
                       <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span></td>
                       <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span></td>
                       <td className="py-5">
-                        <Link href={`/admin/teams/${t.id}`} className="text-white/60 hover:text-white"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></Link>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenApproveModal(t)}
+                            disabled={!hasProof || pay.label === "Paid" || isBusy}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#3CB578]/40 px-3 py-1.5 text-xs font-semibold text-[#63CFA0] transition-colors hover:bg-[#3CB578]/10 disabled:cursor-not-allowed disabled:opacity-40"
+                            title={
+                              !hasProof
+                                ? "Belum ada bukti pembayaran"
+                                : pay.label === "Paid"
+                                ? "Pembayaran sudah disetujui"
+                                : "Setujui bukti pembayaran"
+                            }
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenRejectModal(t)}
+                            disabled={!hasProof || isBusy}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E55353]/40 px-3 py-1.5 text-xs font-semibold text-[#F08080] transition-colors hover:bg-[#E55353]/10 disabled:cursor-not-allowed disabled:opacity-40"
+                            title={hasProof ? "Tolak bukti pembayaran" : "Belum ada bukti pembayaran"}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Reject
+                          </button>
+                          <Link href={`/admin/teams/${t.id}`} className="text-white/60 hover:text-white" title="Lihat detail tim">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -317,15 +344,11 @@ export default function AdminTeamsPage() {
       </div>
 
       {approveModalTeam && (() => {
-        const pObj =
-          approveModalTeam.paymentProof ||
-          (approveModalTeam as any).documents?.find(
-            (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
-          );
+        const pObj = approveModalTeam.paymentProof;
         const stUpper = (pObj?.status || approveModalTeam.status || "").toUpperCase();
         const isPrevRejected = stUpper === "REJECT" || stUpper === "REJECTED";
         const prevReason =
-          pObj?.rejectionReason || (approveModalTeam as any).rejectionReason || null;
+          pObj?.rejectionReason || approveModalTeam.rejectionReason || null;
 
         return (
           <AdminApproveModal
@@ -346,11 +369,7 @@ export default function AdminTeamsPage() {
 
       {/* REJECT PAYMENT PROOF CONFIRMATION MODAL */}
       {rejectModalTeam && (() => {
-        const pObj =
-          rejectModalTeam.paymentProof ||
-          (rejectModalTeam as any).documents?.find(
-            (d: any) => d.type === "PAYMENT_PROOF" || d.type === "PAYMENT"
-          );
+        const pObj = rejectModalTeam.paymentProof;
         const stUpper = (pObj?.status || rejectModalTeam.status || "").toUpperCase();
         const isPrevApproved =
           stUpper === "APPROVE" || stUpper === "APPROVED" || stUpper === "VERIFIED";
