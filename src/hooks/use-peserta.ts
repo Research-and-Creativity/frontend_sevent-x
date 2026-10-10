@@ -50,19 +50,6 @@ export function useUserSubmission() {
 }
 export const useSubmission = useUserSubmission;
 
-export function useNews(limit: number = 2) {
-  return useQuery<NewsPost[]>({
-    queryKey: ["newsAnnouncements", limit],
-    queryFn: async () => {
-      const res = await apiClient.get(`/api/news?limit=${limit}`);
-      const list = res.data?.data;
-      return Array.isArray(list) ? list.slice(0, limit) : [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
-export const useNewsAnnouncements = useNews;
-
 // Helper: ubah enum phase jadi label yang enak dibaca
 export function getPhaseLabel(phase: string): string {
   const labels: Record<string, string> = {
