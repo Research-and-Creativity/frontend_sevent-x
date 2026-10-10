@@ -4,27 +4,19 @@ import Link from "next/link";
 import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
+import { useJudgeSubmissions } from "@/hooks/use-juri";
+import { useCompetitionTimeline } from "@/hooks/use-peserta";
+import {
+  byTotalScoreDesc,
+  formatCountdown,
+  formatSubmittedDate,
+  leaderName,
+} from "@/lib/juri-submission";
 
-const topScores = [
-  {
-    team: "Tim Anomali",
-    product: "Product",
-    leader: "Yanto",
-    date: "21 October 2026",
-  },
-  {
-    team: "Coba coba saja",
-    product: "Product",
-    leader: "Azmi",
-    date: "22 October 2026",
-  },
-  {
-    team: "Adalah pokoknya",
-    product: "Product",
-    leader: "Wifakul",
-    date: "23 October 2026",
-  },
-];
+function percent(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(100, Math.round((part / total) * 100));
+}
 
 // Style glass dipakai ulang di semua container
 const glass =
@@ -42,8 +34,25 @@ const glassButton =
 export default function JuriDashboardPage() {
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe } = useUserMe();
+  const { data: submissions = [] } = useJudgeSubmissions();
+
   const currentUser = userMe || storeUser;
-  const name = currentUser?.fullName || "Mr. Yanto Hary";
+  const name = currentUser?.fullName || "Juri";
+
+  const judgedCount = submissions.filter(
+    (s) => s.evaluationStatus?.isEvaluated
+  ).length;
+  const pendingCount = submissions.length - judgedCount;
+
+  // Batas penilaian mengikuti tahap penjurian yang sedang berjalan.
+  const competitionSlug = submissions[0]?.team?.competition?.slug;
+  const { data: timeline = [] } = useCompetitionTimeline(competitionSlug);
+  const activeStage = timeline.find((s) => s.isActive);
+  const deadline = activeStage ? new Date(activeStage.endDate) : null;
+
+  const topScores = byTotalScoreDesc(
+    submissions.filter((s) => s.evaluationStatus?.isEvaluated)
+  ).slice(0, 3);
 
   return (
     <div className="relative isolate max-w-7xl mx-auto pb-10">
@@ -70,11 +79,16 @@ export default function JuriDashboardPage() {
               <Users className="w-5 h-5 text-white/70" />
             </div>
             <p className="relative font-display text-4xl font-bold">
-              547{" "}
-              <span className="text-lg text-white/40 font-normal">/ 1001</span>
+              {pendingCount}{" "}
+              <span className="text-lg text-white/40 font-normal">
+                / {submissions.length}
+              </span>
             </p>
             <div className="relative mt-4 h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-              <div className="h-full w-[55%] rounded-full bg-[#7D8CFF] shadow-[0_0_8px_rgba(125,140,255,0.4)]" />
+              <div
+                className="h-full rounded-full bg-[#7D8CFF] shadow-[0_0_8px_rgba(125,140,255,0.4)]"
+                style={{ width: `${percent(pendingCount, submissions.length)}%` }}
+              />
             </div>
           </div>
 
@@ -86,11 +100,16 @@ export default function JuriDashboardPage() {
               <Users className="w-5 h-5 text-white/70" />
             </div>
             <p className="relative font-display text-4xl font-bold">
-              282{" "}
-              <span className="text-lg text-white/40 font-normal">/ 1001</span>
+              {judgedCount}{" "}
+              <span className="text-lg text-white/40 font-normal">
+                / {submissions.length}
+              </span>
             </p>
             <div className="relative mt-4 h-1.5 rounded-full bg-white/[0.07] overflow-hidden">
-              <div className="h-full w-[28%] rounded-full bg-[#7D8CFF] shadow-[0_0_8px_rgba(125,140,255,0.4)]" />
+              <div
+                className="h-full rounded-full bg-[#7D8CFF] shadow-[0_0_8px_rgba(125,140,255,0.4)]"
+                style={{ width: `${percent(judgedCount, submissions.length)}%` }}
+              />
             </div>
           </div>
 
@@ -102,10 +121,12 @@ export default function JuriDashboardPage() {
               <Clock className="w-5 h-5 text-white/70" />
             </div>
             <p className="relative font-display text-4xl font-bold">
-              02d : 14h : 45m
+              {deadline ? formatCountdown(deadline) : "--"}
             </p>
             <p className="relative text-xs text-white/50 mt-2">
-              Until last judgement time
+              {activeStage
+                ? `Until ${activeStage.stageName} ends`
+                : "Until last judgement time"}
             </p>
           </div>
         </div>
@@ -125,30 +146,43 @@ export default function JuriDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {topScores.map((t) => (
-                <tr
-                  key={t.team}
-                  className="hover:bg-white/[0.03] transition-colors"
-                >
-                  <td className="py-5 pr-4">{t.team}</td>
-                  <td className="py-5 pr-4">{t.product}</td>
-                  <td className="py-5 pr-4">{t.leader}</td>
-                  <td className="py-5 pr-4">{t.date}</td>
-                  <td className="py-5">
-                    <Link
-                      href="/juri/team"
-                      className="text-white/60 hover:text-white"
-                    >
-                      <Eye className="w-5 h-5" />
-                    </Link>
+              {topScores.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-sm text-white/60">
+                    Belum ada karya yang dinilai.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                topScores.map((t) => (
+                  <tr
+                    key={t.id}
+                    className="hover:bg-white/[0.03] transition-colors"
+                  >
+                    <td className="py-5 pr-4">{t.team?.teamName ?? "-"}</td>
+                    <td className="py-5 pr-4">{t.projectTitle ?? "-"}</td>
+                    <td className="py-5 pr-4">{leaderName(t)}</td>
+                    <td className="py-5 pr-4">
+                      {formatSubmittedDate(t.submittedAt)}
+                    </td>
+                    <td className="py-5">
+                      <Link
+                        href={`/juri/judged/${t.id}`}
+                        className="text-white/60 hover:text-white"
+                        title="View Details"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
           <div className="relative flex items-center justify-between pt-5 text-xs text-white/50">
-            <span>Showing 10 data out of 100</span>
+            <span>
+              Showing {topScores.length} data out of {judgedCount}
+            </span>
             <div className="flex items-center gap-3">
               <span>Show</span>
               <select className={glassSelect}>

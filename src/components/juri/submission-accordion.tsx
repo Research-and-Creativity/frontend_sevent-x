@@ -22,10 +22,11 @@ interface SubmissionAccordionProps {
     label: string;
     url: string;
   }[];
-  proposal: {
+  proposal?: {
     name: string;
     size: string;
-  };
+    url?: string;
+  } | null;
   defaultOpen?: boolean;
 }
 
@@ -131,34 +132,42 @@ export function SubmissionAccordion({
               </div>
             </div>
 
-            {/* Proposal */}
+            {/* Deliverable */}
             <div className={`${glass} p-6 lg:p-8`}>
               <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-5">
-                Proposal
+                Deliverable
               </h2>
 
-              <a
-                href="#"
-                className="relative flex items-center gap-4 w-full max-w-xs rounded-xl border border-white/40 bg-white/[0.03] p-4 hover:bg-white/[0.07] transition-colors"
-              >
-                <span className="flex flex-col items-center leading-none shrink-0">
-                  <FileText
-                    className="w-9 h-9 text-red-500"
-                    strokeWidth={1.5}
-                  />
-                  <span className="-mt-5 mb-3 text-[7px] font-bold text-red-500">
-                    PDF
+              {proposal ? (
+                <a
+                  href={proposal.url ?? "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="relative flex items-center gap-4 w-full max-w-xs rounded-xl border border-white/40 bg-white/[0.03] p-4 hover:bg-white/[0.07] transition-colors"
+                >
+                  <span className="flex flex-col items-center leading-none shrink-0">
+                    <FileText
+                      className="w-9 h-9 text-red-500"
+                      strokeWidth={1.5}
+                    />
+                    <span className="-mt-5 mb-3 text-[7px] font-bold text-red-500">
+                      FILE
+                    </span>
                   </span>
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-white truncate">
-                    {proposal.name}
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-white truncate">
+                      {proposal.name}
+                    </span>
+                    <span className="block text-xs text-white/60">
+                      {proposal.size}
+                    </span>
                   </span>
-                  <span className="block text-xs text-white/60">
-                    {proposal.size}
-                  </span>
-                </span>
-              </a>
+                </a>
+              ) : (
+                <p className="text-sm text-white/50">
+                  Belum ada file yang diunggah peserta.
+                </p>
+              )}
             </div>
           </div>
         </>

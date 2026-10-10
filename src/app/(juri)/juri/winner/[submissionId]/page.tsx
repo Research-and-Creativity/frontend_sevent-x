@@ -1,9 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronUp } from "lucide-react";
+import { AlertCircle, ChevronUp, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { SubmissionAccordion } from "@/components/juri/submission-accordion";
+import {
+  JudgeBreakdownPanel,
+  ScoreSummary,
+} from "@/components/juri/judgement-panels";
+import { useJudgeRankings, useJudgeSubmissionDetail } from "@/hooks/use-juri";
+import {
+  competitionName,
+  externalLinks,
+  memberNames,
+  podiumLabel,
+  proposalFile,
+} from "@/lib/juri-submission";
 
 // Style glass yang sama dengan halaman juri lainnya
 const glass =
@@ -12,50 +26,57 @@ const glass =
   "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl " +
   "before:bg-gradient-to-br before:from-white/[0.04] before:to-transparent";
 
-// Bar collapsible (Judgement Preliminary / Judgement Final)
+// Bar collapsible
 const glassBar =
   "flex w-full items-center justify-between px-6 py-4 lg:px-8 text-left cursor-pointer " +
   "hover:bg-white/[0.04] transition-colors";
 
 export default function WinnerDetailPage() {
+  const params = useParams<{ submissionId: string }>();
+  const submissionId = params.submissionId;
+
+  const { data, isLoading, isError, refetch } =
+    useJudgeSubmissionDetail(submissionId);
+  const { data: rankingData } = useJudgeRankings();
+
   const [isPreliminaryOpen, setIsPreliminaryOpen] = useState(false);
   const [isFinalOpen, setIsFinalOpen] = useState(true);
 
-  // Mock data (akan diganti dengan data API di kemudian hari)
-  const team = {
-    name: "Team Anomali",
-    members: [
-      "Haryanto",
-      "Wifakul Azmi",
-      "Rifki Naufal Dzaki",
-      "Farrel Ghazali",
-      "Geusan Edurals Aria Daffa",
-    ],
-  };
+  const submission = data?.submission;
+  const criteriaList = data?.criteriaList ?? [];
+  const existingScores = data?.existingScores ?? [];
+  const teamName = submission?.team?.teamName ?? "-";
+  const notes = data?.evaluation?.feedback ?? "";
 
-  const product = {
-    title: "Productnya adalah pokoknya",
-    description: "Lorem ipsum dolor sit amet",
-  };
+  // Baris ranking untuk tim ini (dikirim endpoint ranking, bukan dari daftar).
+  const ranking =
+    rankingData?.rankings.find((r) => r.submissionId === submissionId) ??
+    rankingData?.rankings.find((r) => r.teamId === submission?.teamId);
 
-  const externalLinks = [
-    { label: "Github Repository", url: "https://github.com/" },
-    { label: "Live Deployment", url: "https://vercel.app" },
-    { label: "Demonstration Video", url: "http://youtube.com/" },
-  ];
+  if (isLoading) {
+    return (
+      <div className={`${glass} p-10 flex items-center justify-center gap-3 text-white/70`}>
+        <Loader2 className="w-5 h-5 animate-spin" />
+        <span className="text-sm">Memuat detail karya...</span>
+      </div>
+    );
+  }
 
-  const proposal = { name: "Proposal", size: "10.MB" };
-
-  // Rekap nilai (read-only)
-  const scores = [
-    { label: "Category 1", value: "100" },
-    { label: "Category 2", value: "100" },
-    { label: "Category 3", value: "100" },
-    { label: "Category 4", value: "95" },
-    { label: "Final Score", value: "97.5" },
-  ];
-
-  const notes = "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing Elit.";
+  if (isError || !submission) {
+    return (
+      <div className={`${glass} p-10 text-center space-y-4`}>
+        <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+        <p className="text-sm font-semibold text-white">Gagal memuat detail karya</p>
+        <Button
+          size="sm"
+          onClick={() => refetch()}
+          className="bg-primary text-white text-xs h-8 rounded-lg"
+        >
+          Coba Lagi
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative isolate space-y-6">
@@ -74,25 +95,34 @@ export default function WinnerDetailPage() {
         ← Back to Winner
       </Link>
 
-      {/* Header: Competition • Category */}
+      {/* Header: Competition */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white">
           Competition
           <span className="mx-3 text-white/70">•</span>
-          Software Development
+          {competitionName(submission)}
+          {ranking && (
+            <>
+              <span className="mx-3 text-white/70">•</span>
+              {podiumLabel(ranking.rank)}
+            </>
+          )}
         </h1>
       </div>
 
       {/* Bar Submission (collapsible, default tertutup) */}
       <SubmissionAccordion
-        team={team}
-        product={product}
-        externalLinks={externalLinks}
-        proposal={proposal}
+        team={{ name: teamName, members: memberNames(submission) }}
+        product={{
+          title: submission.projectTitle ?? "-",
+          description: submission.description ?? "-",
+        }}
+        externalLinks={externalLinks(submission)}
+        proposal={proposalFile(submission)}
         defaultOpen={false}
       />
 
-      {/* Bar Judgement Preliminary (collapsible, default tertutup) */}
+      {/* Bar Judgement Preliminary (collapsible) */}
       <button
         type="button"
         onClick={() => setIsPreliminaryOpen((prev) => !prev)}
@@ -111,26 +141,13 @@ export default function WinnerDetailPage() {
 
       {isPreliminaryOpen && (
         <div className={`${glass} p-6 lg:p-8`}>
-          {/* Scores table (read-only) */}
-          <div className="w-full mb-6">
-            <div className="grid grid-cols-5 gap-4 border-b border-white/10 pb-4 mb-4 text-sm font-medium text-white/60 text-center">
-              {scores.map((s) => (
-                <div key={s.label}>{s.label}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-5 gap-4 text-center text-white pb-6 border-b border-white/10">
-              {scores.map((s) => (
-                <div key={s.label}>{s.value}</div>
-              ))}
-            </div>
-          </div>
+          <ScoreSummary criteriaList={criteriaList} scores={existingScores} />
 
-          {/* Notes (read-only) */}
           <div>
             <h3 className="text-sm font-semibold text-white/80 mb-2">
               Notes For The Team
             </h3>
-            <p className="text-white text-sm">{notes}</p>
+            <p className="text-white text-sm whitespace-pre-line">{notes || "-"}</p>
           </div>
         </div>
       )}
@@ -154,27 +171,18 @@ export default function WinnerDetailPage() {
 
       {isFinalOpen && (
         <div className={`${glass} p-6 lg:p-8`}>
-          {/* Scores table (read-only) */}
-          <div className="w-full mb-6">
-            <div className="grid grid-cols-5 gap-4 border-b border-white/10 pb-4 mb-4 text-sm font-medium text-white/60 text-center">
-              {scores.map((s) => (
-                <div key={s.label}>{s.label}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-5 gap-4 text-center text-white pb-6 border-b border-white/10">
-              {scores.map((s) => (
-                <div key={s.label}>{s.value}</div>
-              ))}
-            </div>
-          </div>
-
-          {/* Notes (read-only) */}
-          <div>
-            <h3 className="text-sm font-semibold text-white/80 mb-2">
-              Notes For The Team
-            </h3>
-            <p className="text-white text-sm">{notes}</p>
-          </div>
+          {ranking ? (
+            <JudgeBreakdownPanel
+              finalScore={ranking.finalScore}
+              isFullyScored={ranking.isFullyScored}
+              breakdown={ranking.judgeBreakdown}
+              recommendationTally={ranking.recommendationTally}
+            />
+          ) : (
+            <p className="text-sm text-white/60">
+              Skor akhir untuk karya ini belum tersedia.
+            </p>
+          )}
         </div>
       )}
     </div>
