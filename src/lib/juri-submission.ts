@@ -57,6 +57,20 @@ export function competitionName(sub: JudgeSubmissionItem): string {
   return sub.team?.competition?.name || "Competition";
 }
 
+// 1-3 mendapat gelar podium, sisanya urutan biasa.
+export function podiumLabel(rank: number): string {
+  if (rank === 1) return "Winner";
+  if (rank === 2) return "1st Runner Up";
+  if (rank === 3) return "2nd Runner Up";
+  return `Rank ${rank}`;
+}
+
+export function formatScore(score: number): string {
+  return Number.isInteger(score)
+    ? String(score)
+    : String(score.toFixed(2));
+}
+
 // Urutkan dari skor tertinggi untuk "Top 3 Highest Score".
 export function byTotalScoreDesc(
   list: JudgeSubmissionItem[]

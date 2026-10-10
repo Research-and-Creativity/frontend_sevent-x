@@ -45,6 +45,7 @@ interface ScoringFormProps {
   teamName: string;
   criteriaList: Criteria;
   existingScores: JudgeSubmissionScore[];
+  feedback: string | null;
   isLocked: boolean;
 }
 
@@ -55,6 +56,7 @@ function ScoringForm({
   teamName,
   criteriaList,
   existingScores,
+  feedback,
   isLocked,
 }: ScoringFormProps) {
   const router = useRouter();
@@ -65,9 +67,7 @@ function ScoringForm({
     for (const s of existingScores) seeded[s.criteriaId] = String(s.score);
     return seeded;
   });
-  const [notes, setNotes] = useState(
-    () => existingScores.find((s) => s.note)?.note ?? ""
-  );
+  const [notes, setNotes] = useState(() => feedback ?? "");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const missing = useMemo(
@@ -101,10 +101,8 @@ function ScoringForm({
         scores: criteriaList.map((c) => ({
           criteriaId: c.id,
           score: Number(scores[c.id]),
-          // BE menyimpan catatan per kriteria; satu catatan tim dikirim ke
-          // seluruh kriteria supaya tidak ada yang hilang.
-          ...(notes.trim() ? { note: notes.trim() } : {}),
         })),
+        feedback: notes.trim(),
         isDraft: false,
       });
       setIsConfirmOpen(false);
@@ -225,6 +223,7 @@ export default function AlreadySubmittedDetailPage() {
   const submission = data?.submission;
   const criteriaList = data?.criteriaList ?? [];
   const existingScores = data?.existingScores ?? [];
+  const feedback = data?.evaluation?.feedback ?? null;
   const isLocked = data?.evaluationStatus?.isLocked ?? false;
   const teamName = submission?.team?.teamName ?? "-";
 
@@ -301,6 +300,7 @@ export default function AlreadySubmittedDetailPage() {
         teamName={teamName}
         criteriaList={criteriaList}
         existingScores={existingScores}
+        feedback={feedback}
         isLocked={isLocked}
       />
     </div>

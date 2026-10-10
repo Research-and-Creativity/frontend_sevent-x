@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfirmModal } from "@/components/confirm-modal";
-import { toast } from "sonner";
 
 import { SubmissionAccordion } from "@/components/juri/submission-accordion";
+import { ScoreSummary } from "@/components/juri/judgement-panels";
+import { RecommendationActions } from "@/components/juri/recommendation-actions";
 import { useJudgeSubmissionDetail } from "@/hooks/use-juri";
 import {
   competitionName,
@@ -25,37 +24,20 @@ const glass =
 
 export default function JudgedDetailPage() {
   const params = useParams<{ submissionId: string }>();
-  const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useJudgeSubmissionDetail(
     params.submissionId
   );
-
-  const [isConfirmWaitlistOpen, setIsConfirmWaitlistOpen] = useState(false);
-  const [isConfirmFinalistOpen, setIsConfirmFinalistOpen] = useState(false);
 
   const submission = data?.submission;
   const criteriaList = data?.criteriaList ?? [];
   const existingScores = data?.existingScores ?? [];
   const teamName = submission?.team?.teamName ?? "-";
 
-  const scoreByCriteria = new Map(
-    existingScores.map((s) => [s.criteriaId, s.score])
-  );
-  const totalScore = existingScores.reduce((acc, s) => acc + s.score, 0);
-  const notes = existingScores.find((s) => s.note)?.note ?? "";
+  const recommendation = data?.evaluation?.recommendation ?? null;
 
-  const handleConfirmWaitlist = () => {
-    setIsConfirmWaitlistOpen(false);
-    toast.success(`Tim "${teamName}" berhasil dimasukkan ke Waitlist!`);
-    router.push("/juri/judged");
-  };
-
-  const handleConfirmFinalist = () => {
-    setIsConfirmFinalistOpen(false);
-    toast.success(`Tim "${teamName}" berhasil dipilih sebagai Finalist!`);
-    router.push("/juri/judged");
-  };
+  // Catatan tim disimpan sekali per karya-juri (JudgeEvaluation.feedback).
+  const notes = data?.evaluation?.feedback ?? "";
 
   if (isLoading) {
     return (
@@ -126,36 +108,7 @@ export default function JudgedDetailPage() {
           Judgement Preliminary
         </h2>
 
-        {existingScores.length === 0 ? (
-          <p className="text-sm text-white/60">
-            Belum ada nilai yang tersimpan untuk karya ini.
-          </p>
-        ) : (
-          <div className="w-full mb-6">
-            <div
-              className="grid gap-4 border-b border-white/10 pb-4 mb-4 text-sm font-medium text-white/60 text-center"
-              style={{
-                gridTemplateColumns: `repeat(${criteriaList.length + 1}, minmax(0, 1fr))`,
-              }}
-            >
-              {criteriaList.map((c) => (
-                <div key={c.id}>{c.name}</div>
-              ))}
-              <div className="text-white">Final Score</div>
-            </div>
-            <div
-              className="grid gap-4 text-center text-white pb-6 border-b border-white/10"
-              style={{
-                gridTemplateColumns: `repeat(${criteriaList.length + 1}, minmax(0, 1fr))`,
-              }}
-            >
-              {criteriaList.map((c) => (
-                <div key={c.id}>{scoreByCriteria.get(c.id) ?? "-"}</div>
-              ))}
-              <div className="font-bold text-[#7D8CFF]">{totalScore}</div>
-            </div>
-          </div>
-        )}
+        <ScoreSummary criteriaList={criteriaList} scores={existingScores} />
 
         {/* Notes */}
         <div className="mb-6 pb-6 border-b border-white/10">
@@ -167,52 +120,13 @@ export default function JudgedDetailPage() {
           </p>
         </div>
 
-        {/* Disclaimer & Buttons */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <p className="text-xs text-white/60 leading-relaxed max-w-3xl">
-            *Teams scoring below the minimum threshold are automatically
-            disqualified. Eligible teams are categorized as Finalists or
-            Waitlisted. Waitlisted teams are system-qualified, but judges
-            reserve the right to prioritize more qualified teams for the Finals.
-          </p>
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsConfirmWaitlistOpen(true)}
-              className="cursor-pointer px-6 py-2.5 rounded-full border border-[#3B5BFF] text-white text-sm font-semibold hover:bg-[#3B5BFF]/10 transition-colors bg-[#3B5BFF]/20"
-            >
-              Waitlist
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsConfirmFinalistOpen(true)}
-              className="cursor-pointer px-6 py-2.5 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-white/90 transition-colors"
-            >
-              Finalist
-            </button>
-          </div>
-        </div>
+        {/* Rekomendasi juri */}
+        <RecommendationActions
+          submissionId={params.submissionId}
+          teamName={teamName}
+          recommendation={recommendation}
+        />
       </div>
-
-      <ConfirmModal
-        open={isConfirmWaitlistOpen}
-        onOpenChange={setIsConfirmWaitlistOpen}
-        title="Konfirmasi Waitlist"
-        description={`Apakah Anda yakin ingin memasukkan "${teamName}" ke dalam Waitlist?`}
-        confirmText="Ya, Waitlist"
-        cancelText="Batal"
-        onConfirm={handleConfirmWaitlist}
-      />
-
-      <ConfirmModal
-        open={isConfirmFinalistOpen}
-        onOpenChange={setIsConfirmFinalistOpen}
-        title="Konfirmasi Finalist"
-        description={`Apakah Anda yakin ingin memilih "${teamName}" sebagai Finalist?`}
-        confirmText="Ya, Finalist"
-        cancelText="Batal"
-        onConfirm={handleConfirmFinalist}
-      />
     </div>
   );
 }
