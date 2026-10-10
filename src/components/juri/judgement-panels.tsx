@@ -67,6 +67,7 @@ interface JudgeBreakdownPanelProps {
     criteriaCount: number;
     averageScore: number;
   }>;
+  recommendationTally?: Record<"FINALIST" | "WAITLIST", number>;
 }
 
 /** Rincian skor akhir lintas juri + rata-rata tiap juri (hitungan panitia). */
@@ -74,6 +75,7 @@ export function JudgeBreakdownPanel({
   finalScore,
   isFullyScored,
   breakdown,
+  recommendationTally,
 }: JudgeBreakdownPanelProps) {
   return (
     <div className="space-y-5">
@@ -121,6 +123,25 @@ export function JudgeBreakdownPanel({
             </tbody>
           </table>
         </div>
+      )}
+
+      {recommendationTally && (recommendationTally.FINALIST > 0 || recommendationTally.WAITLIST > 0) && (
+        <p className="text-xs text-white/60">
+          Rekomendasi juri:{" "}
+          {recommendationTally.FINALIST > 0 && (
+            <span className="text-[#7D8CFF] font-semibold">
+              {recommendationTally.FINALIST} Finalist
+            </span>
+          )}
+          {recommendationTally.FINALIST > 0 && recommendationTally.WAITLIST > 0 && (
+            <span>, </span>
+          )}
+          {recommendationTally.WAITLIST > 0 && (
+            <span className="text-[#EAB308] font-semibold">
+              {recommendationTally.WAITLIST} Waitlist
+            </span>
+          )}
+        </p>
       )}
     </div>
   );

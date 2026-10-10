@@ -176,6 +176,7 @@ export default function WinnerDetailPage() {
               finalScore={ranking.finalScore}
               isFullyScored={ranking.isFullyScored}
               breakdown={ranking.judgeBreakdown}
+              recommendationTally={ranking.recommendationTally}
             />
           ) : (
             <p className="text-sm text-white/60">
