@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api-client";
 
 export interface JudgeSubmissionScore {
   id: string;
+  criteriaId: string;
   score: number;
   note?: string | null;
   isLocked: boolean;

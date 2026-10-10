@@ -20,8 +20,8 @@ import {
   payStatusInfo,
   teamLeaderName,
   formatRegistrationDate,
-  getErrorMessage,
 } from "@/lib/admin-team-status";
+import { getErrorMessage } from "@/lib/errors";
 import { Team } from "@/types/api";
 import { useCompetitions } from "@/hooks/use-peserta";
 import { useUpdatePaymentProofStatus } from "@/hooks/use-admin";
