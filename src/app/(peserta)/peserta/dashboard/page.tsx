@@ -21,7 +21,7 @@ const glass =
 
 // Tombol pill putih sesuai desain
 const pillButton =
-  "bg-white text-[#1B235E] hover:bg-white/90 rounded-full px-5 h-9 text-xs font-semibold shadow-sm";
+  "cursor-pointer bg-white text-[#1B235E] hover:bg-white/90 rounded-full px-5 h-9 text-xs font-semibold shadow-sm";
 
 const statCard =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5";
@@ -97,9 +97,6 @@ export default function PesertaDashboardPage() {
       {!profileLoading && !profileComplete && (
         <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8`}>
           <div className="relative flex items-start gap-3">
-            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5865F2]/20 text-[#8B93F8]">
-              <MessageCircle className="h-5 w-5" />
-            </span>
             <div>
               <h2 className="font-display text-lg font-bold tracking-tight text-white">
                 Join the Sevent Discord server
