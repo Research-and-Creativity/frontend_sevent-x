@@ -55,17 +55,28 @@ export function SponsorshipSection() {
               AVAILABLE TIERS
             </h3>
             <div className="flex flex-wrap gap-3 mb-5">
-              {["Package", "Package", "Package", "Package"].map((p, i) => (
+              {[
+                { name: "Diamond", price: "Rp2,5jt" },
+                { name: "Platinum", price: "Rp800rb" },
+                { name: "Gold", price: "Rp500rb" },
+                { name: "Silver", price: "Rp300rb" },
+                { name: "Bronze", price: "Rp150rb" },
+              ].map((tier) => (
                 <span
-                  key={i}
-                  className="text-base text-white/90 border border-[#5B5EA6] rounded px-4 py-2 bg-[#3B3F6E]/50"
+                  key={tier.name}
+                  className="text-sm text-white/90 border border-[#5B5EA6] rounded px-4 py-2 bg-[#3B3F6E]/50"
                 >
-                  {p}
+                  {tier.name}
+                  <span className="text-white/50"> · {tier.price}</span>
                 </span>
               ))}
             </div>
             <p className="text-xs text-white/40 leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Setiap paket mencakup promosi media sosial, dokumentasi &
+              aftermovie, serta apresiasi resmi. Benefit tambahan seperti logo
+              pada twibbon, video ads di LED, hingga dedicated Reels tersedia
+              pada paket menengah ke atas. Tersedia juga paket In Kind berupa
+              voucher, produk, atau doorprize.
             </p>
           </div>
 
@@ -78,9 +89,14 @@ export function SponsorshipSection() {
               your name on the next generation of Indonesian engineers&apos;
               experience.
             </p>
-            <button className="cursor-pointer bg-white text-[#7C83BC] text-sm font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
+            <a
+              href="https://wa.me/6282237211097"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block cursor-pointer bg-white text-[#7C83BC] text-sm font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all"
+            >
               Discover More
-            </button>
+            </a>
           </div>
         </div>
       </div>

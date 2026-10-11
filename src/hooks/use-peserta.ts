@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
-import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse } from "@/types/api";
+import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse, GalleryItem } from "@/types/api";
 
 export interface TimelineStage {
   id: string;
@@ -116,6 +116,23 @@ export function useCompetitions() {
     queryFn: async () => {
       try {
         const res = await apiClient.get("/api/competitions");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Daftar seluruh item galeri (public) GET /api/gallery
+export function useGallery() {
+  return useQuery<GalleryItem[]>({
+    queryKey: ["gallery"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/gallery");
         const list = res.data?.data || res.data;
         return Array.isArray(list) ? list : [];
       } catch {

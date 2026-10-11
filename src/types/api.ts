@@ -19,9 +19,11 @@ export type TimelinePhase = "REGISTRATION" | "UPLOAD_KARYA" | "PENJURIAN" | "FIN
 export interface Timeline {
   id: string;
   competitionId: string;
+  stageName?: string;
   phase: TimelinePhase;
   startDate: string;
   endDate: string;
+  description?: string | null;
 }
 
 export interface Competition {
@@ -155,6 +157,15 @@ export interface NewsPost {
   author?: { id: string; fullName: string };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GalleryItem {
+  id: string;
+  title: string;
+  imageUrl: string;
+  fileId?: string | null;
+  order: number;
+  createdAt: string;
 }
 
 export interface Announcement {

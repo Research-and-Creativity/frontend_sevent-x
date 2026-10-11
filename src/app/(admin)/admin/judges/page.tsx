@@ -27,36 +27,14 @@ import {
   useRemoveJudge,
   AdminJudgeItem,
 } from "@/hooks/use-admin";
-import { User, Competition } from "@/types/api";
+import { User } from "@/types/api";
 import { getErrorMessageWithDefault } from "@/lib/errors";
 
 export default function AdminJudgesPage() {
   // 1. Fetch Competitions list (GET /api/competitions)
-  const { data: competitions = [], isLoading: isCompLoading } = useCompetitions();
+  const { data: competitions = [] } = useCompetitions();
 
-  const defaultComps: Competition[] = [
-    {
-      id: "1",
-      name: "National Web Development Competition 2026",
-      slug: "web-development",
-      description: "",
-      maxMember: 5,
-      isActive: true,
-      createdAt: "",
-      updatedAt: "",
-    },
-    {
-      id: "2",
-      name: "National UI/UX Design Challenge 2026",
-      slug: "ui-ux-design",
-      description: "",
-      maxMember: 3,
-      isActive: true,
-      createdAt: "",
-      updatedAt: "",
-    },
-  ];
-  const activeComps = competitions.length > 0 ? competitions : defaultComps;
+  const activeComps = competitions;
 
   // Search & Debounce State
   const [searchInput, setSearchInput] = useState("");
@@ -82,57 +60,16 @@ export default function AdminJudgesPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedCompSlug, setSelectedCompSlug] = useState<string>("");
 
-  const activeSlug = selectedCompSlug || activeComps[0]?.slug || "web-development";
+  const activeSlug = selectedCompSlug || activeComps[0]?.slug || "";
 
   // 3. Fetch Assigned Judges (GET /api/admin/judges)
   const {
     data: remoteJudges = [],
     isLoading: isJudgesLoading,
-    refetch: refetchJudges,
   } = useAdminJudges();
 
   const assignJudgeMutation = useAssignJudge();
   const removeJudgeMutation = useRemoveJudge();
-
-  // Local fallback mock list if remote is empty
-  const [fallbackJudges, setFallbackJudges] = useState<AdminJudgeItem[]>([
-    {
-      id: "j-101",
-      userId: "u-401",
-      competitionSlug: "web-development",
-      competition: {
-        id: "1",
-        name: "National Web Development Competition 2026",
-        slug: "web-development",
-      },
-      user: {
-        id: "u-401",
-        fullName: "Dr. Bambang Hidayat, M.Kom.",
-        email: "bambang.hidayat@evaluator.ac.id",
-        institution: "Institut Teknologi Bandung",
-      },
-      createdAt: "2026-10-10",
-    },
-    {
-      id: "j-102",
-      userId: "u-402",
-      competitionSlug: "ui-ux-design",
-      competition: {
-        id: "2",
-        name: "National UI/UX Design Challenge 2026",
-        slug: "ui-ux-design",
-      },
-      user: {
-        id: "u-402",
-        fullName: "Dr. Siti Nurhaliza, M.Ds.",
-        email: "siti.nurhaliza@design.org",
-        institution: "Universitas Indonesia",
-      },
-      createdAt: "2026-10-12",
-    },
-  ]);
-
-  const displayedJudges = remoteJudges.length > 0 ? remoteJudges : fallbackJudges;
 
   // Handle User Selection from Search
   const handleSelectUser = (user: User) => {
@@ -160,24 +97,6 @@ export default function AdminJudgesPage() {
       });
 
       const compObj = activeComps.find((c) => c.slug === activeSlug);
-      const newJudgeItem: AdminJudgeItem = {
-        id: `j-${Date.now()}`,
-        userId: selectedUser.id,
-        competitionSlug: activeSlug,
-        competition: {
-          id: compObj?.id || "1",
-          name: compObj?.name || activeSlug,
-          slug: activeSlug,
-        },
-        user: {
-          id: selectedUser.id,
-          fullName: selectedUser.fullName,
-          email: selectedUser.email,
-          institution: selectedUser.institution || null,
-        },
-        createdAt: new Date().toISOString().split("T")[0],
-      };
-      setFallbackJudges((prev) => [newJudgeItem, ...prev]);
 
       toast.success(
         `User ${selectedUser.fullName} berhasil di-assign sebagai Juri untuk kompetisi ${compObj?.name || activeSlug}!`
@@ -192,11 +111,9 @@ export default function AdminJudgesPage() {
   const handleRemoveJudge = async (judgeId: string, judgeName: string) => {
     try {
       await removeJudgeMutation.mutateAsync(judgeId);
-      setFallbackJudges((prev) => prev.filter((j) => j.id !== judgeId));
       toast.success(`Penugasan juri ${judgeName} berhasil dicabut.`);
-    } catch {
-      setFallbackJudges((prev) => prev.filter((j) => j.id !== judgeId));
-      toast.success(`Penugasan juri ${judgeName} berhasil dicabut.`);
+    } catch (err: unknown) {
+      toast.error(getErrorMessageWithDefault(err, "Gagal mencabut penugasan juri"));
     }
   };
 
@@ -418,7 +335,7 @@ export default function AdminJudgesPage() {
               </h3>
             </div>
             <span className="text-xs font-mono text-text-secondary">
-              {displayedJudges.length} Juri Ter-assign
+              {remoteJudges.length} Juri Ter-assign
             </span>
           </div>
 
@@ -427,13 +344,13 @@ export default function AdminJudgesPage() {
               <Skeleton className="h-16 w-full rounded-xl bg-surface/40" />
               <Skeleton className="h-16 w-full rounded-xl bg-surface/40" />
             </div>
-          ) : displayedJudges.length === 0 ? (
+          ) : remoteJudges.length === 0 ? (
             <div className="p-6 bg-surface/30 rounded-xl border border-white/5 text-center text-xs text-text-secondary">
               Belum ada juri yang ditugaskan.
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {displayedJudges.map((j) => {
+              {remoteJudges.map((j) => {
                 // BE kadang mengirim field datar (tanpa relasi user/competition).
                 const flat = j as AdminJudgeItem & {
                   fullName?: string;

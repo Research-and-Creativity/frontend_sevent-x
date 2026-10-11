@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { User, UserRole } from "@/types/api";
+import { User, UserRole, NewsPost, NewsTag, GalleryItem } from "@/types/api";
 
 // Hook 1: Fetch Users list for Admin with search & role filter
 export function useAdminUsers(search?: string, role?: UserRole | string) {
@@ -294,6 +294,158 @@ export const REQUIRED_DOC_LABELS: Array<{
 
 export function fileNameFromUrl(url: string): string {
   return url.split("/").pop() || "Dokumen";
+}
+
+// ===== Gallery =====
+
+export function useAdminGallery() {
+  return useQuery<GalleryItem[]>({
+    queryKey: ["adminGallery"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/admin/gallery");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? (list as GalleryItem[]) : [];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useGalleryItem(id: string) {
+  return useQuery<GalleryItem | null>({
+    queryKey: ["galleryItem", id],
+    queryFn: async () => {
+      const res = await apiClient.get(`/api/admin/gallery/${id}`);
+      return (res.data?.data ?? res.data ?? null) as GalleryItem | null;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useCreateGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ title, file }: { title: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("file", file);
+      const res = await apiClient.post("/api/admin/gallery", formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminGallery"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    },
+  });
+}
+
+export function useUpdateGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      title,
+      file,
+    }: {
+      id: string;
+      title?: string;
+      file?: File;
+    }) => {
+      const formData = new FormData();
+      if (title !== undefined) formData.append("title", title);
+      if (file) formData.append("file", file);
+      const res = await apiClient.put(`/api/admin/gallery/${id}`, formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["adminGallery"] });
+      queryClient.invalidateQueries({ queryKey: ["galleryItem", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    },
+  });
+}
+
+export function useDeleteGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.delete(`/api/admin/gallery/${id}`);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminGallery"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery"] });
+    },
+  });
+}
+
+// ===== Announcement (reuses NewsPost) =====
+
+export function useAdminNews() {
+  return useQuery<NewsPost[]>({
+    queryKey: ["adminNews"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/news", { params: { limit: 100 } });
+      const data = res.data?.data;
+      if (data && Array.isArray(data.news)) return data.news as NewsPost[];
+      if (Array.isArray(data)) return data as NewsPost[];
+      return [];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCreateNews() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      title: string;
+      content: string;
+      tag: NewsTag;
+    }) => {
+      const res = await apiClient.post("/api/admin/news", payload);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminNews"] });
+      queryClient.invalidateQueries({ queryKey: ["newsFeed"] });
+    },
+  });
+}
+
+export function useUpdateNews() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      title?: string;
+      content?: string;
+      tag?: NewsTag;
+    }) => {
+      const res = await apiClient.put(`/api/admin/news/${id}`, payload);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminNews"] });
+      queryClient.invalidateQueries({ queryKey: ["newsFeed"] });
+    },
+  });
+}
+
+export function useDeleteNews() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.delete(`/api/admin/news/${id}`);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminNews"] });
+      queryClient.invalidateQueries({ queryKey: ["newsFeed"] });
+    },
+  });
 }
 
 

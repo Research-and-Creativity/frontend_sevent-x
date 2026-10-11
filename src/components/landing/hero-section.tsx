@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { REGISTRATION_DEADLINE } from "@/config/site";
+import { useCompetitions } from "@/hooks/use-peserta";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -46,7 +47,20 @@ function useCountdown(target: string) {
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const time = useCountdown(REGISTRATION_DEADLINE);
+  const { data: competitions = [] } = useCompetitions();
+
+  const deadline = useMemo(() => {
+    const times = competitions
+      .flatMap((c) => c.timelines ?? [])
+      .filter((t) => t.phase === "REGISTRATION")
+      .map((t) => new Date(t.endDate).getTime())
+      .filter((ts) => !Number.isNaN(ts));
+    return times.length
+      ? new Date(Math.max(...times)).toISOString()
+      : REGISTRATION_DEADLINE;
+  }, [competitions]);
+
+  const time = useCountdown(deadline);
 
   useGSAP(
     () => {
