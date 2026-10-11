@@ -3,6 +3,7 @@
 // Adaptasi dari freebbonize (github.com/GithubFarelAlghazali/freebbonize)
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import TwibbonCanvas from "@/components/twibbon/twibbon-canvas";
 import TwibbonUpload from "@/components/twibbon/twibbon-upload";
 import TwibbonAdjust from "@/components/twibbon/twibbon-adjust";
@@ -35,10 +36,17 @@ export default function TwibbonPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D] text-text-primary overflow-x-hidden">
+    <div className="relative min-h-screen flex flex-col bg-[#05070D] text-text-primary overflow-x-hidden">
       <Navbar />
       <main className="relative flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#1E3A8A]/30 rounded-full blur-[140px] pointer-events-none" />
+        <Image
+          src="/assets/image/logo_putih.svg"
+          alt=""
+          width={1000}
+          height={1262}
+          className="absolute right-[-30%] top-[6%] w-[70vw] max-w-[1200px] h-auto opacity-[0.06] pointer-events-none"
+        />
 
         <div className="relative text-center mb-14 max-w-2xl">
           <h1 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
