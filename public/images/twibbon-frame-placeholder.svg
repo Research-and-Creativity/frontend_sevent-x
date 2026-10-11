@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- Placeholder twibbon frame - replace with official SEVENT-X frame -->
+  <defs>
+    <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="75%" stop-color="transparent"/>
+      <stop offset="85%" stop-color="#00E5FF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0.8"/>
+    </radialGradient>
+    <radialGradient id="innerClear" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="70%" stop-color="transparent"/>
+      <stop offset="71%" stop-color="#0B0F19"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Outer decorative ring -->
+  <circle cx="250" cy="250" r="248" fill="none" stroke="#00E5FF" stroke-width="3" opacity="0.9"/>
+  <circle cx="250" cy="250" r="240" fill="none" stroke="#00E5FF" stroke-width="1" opacity="0.3"/>
+  <circle cx="250" cy="250" r="235" fill="none" stroke="#1B235E" stroke-width="8"/>
+
+  <!-- Corner accents (top-left) -->
+  <path d="M 30 100 L 30 30 L 100 30" fill="none" stroke="#00E5FF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Corner accents (top-right) -->
+  <path d="M 400 30 L 470 30 L 470 100" fill="none" stroke="#00E5FF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Corner accents (bottom-left) -->
+  <path d="M 30 400 L 30 470 L 100 470" fill="none" stroke="#00E5FF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Corner accents (bottom-right) -->
+  <path d="M 400 470 L 470 470 L 470 400" fill="none" stroke="#00E5FF" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Bottom banner -->
+  <rect x="0" y="400" width="500" height="100" fill="#0B0F19" opacity="0.85"/>
+  <rect x="0" y="400" width="500" height="2" fill="#00E5FF" opacity="0.8"/>
+
+  <!-- Event title text -->
+  <text x="250" y="438" font-family="monospace" font-size="20" font-weight="bold" fill="#00E5FF" text-anchor="middle" letter-spacing="6">SEVENT-X</text>
+  <text x="250" y="462" font-family="monospace" font-size="10" fill="#ffffff" text-anchor="middle" letter-spacing="3" opacity="0.7">INFORMATION TECHNOLOGY COMPETITION</text>
+
+  <!-- Placeholder watermark (diagonal) -->
+  <text x="250" y="200" font-family="monospace" font-size="13" fill="#00E5FF" text-anchor="middle" opacity="0.15" transform="rotate(-30, 250, 200)">PLACEHOLDER FRAME</text>
+  <text x="250" y="220" font-family="monospace" font-size="10" fill="#00E5FF" text-anchor="middle" opacity="0.15" transform="rotate(-30, 250, 220)">REPLACE WITH OFFICIAL ASSET</text>
+</svg>

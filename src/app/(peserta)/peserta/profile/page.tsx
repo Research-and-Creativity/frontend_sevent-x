@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -444,6 +445,16 @@ export default function PesertaProfilePage() {
                   <p className="text-xs text-rose-400">
                     {uploaded.rejectionReason}
                   </p>
+                )}
+                {doc.type === "TWIBBON" && !uploaded && (
+                  <Link
+                    href="/twibbon"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
+                  >
+                    Belum punya twibbon? Bikin di sini →
+                  </Link>
                 )}
               </div>
             );
