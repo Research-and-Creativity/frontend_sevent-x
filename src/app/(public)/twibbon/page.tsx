@@ -1,6 +1,6 @@
 "use client";
 
-// Adapted from github.com/GithubFarelAlghazali/freebbonize
+// Adaptasi dari freebbonize (github.com/GithubFarelAlghazali/freebbonize)
 
 import { useState, useRef } from "react";
 import TwibbonCanvas from "@/components/twibbon/twibbon-canvas";
@@ -35,37 +35,33 @@ export default function TwibbonPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D] text-text-primary">
+    <div className="relative min-h-screen flex flex-col bg-linear-to-b from-[#1B235E] via-[#10163A] to-[#05070D] text-text-primary overflow-x-hidden">
       <Navbar />
-      <main className="flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
-        <div className="text-center mb-16 max-w-2xl">
-          <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+      <main className="relative flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#1E3A8A]/30 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="relative text-center mb-14 max-w-2xl">
+          <h1 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
             Twibbon SEVENT-X
           </h1>
-          <p className="text-white/50 text-sm md:text-base font-light">
+          <p className="text-white/50 text-sm md:text-base">
             Upload foto terbaikmu, atur posisinya, dan bagikan semangat kompetisi.
           </p>
         </div>
 
-        {/* Unified Glass Card Layout */}
-        <div className="w-full max-w-4xl bg-white/[0.02] border border-white/10 rounded-3xl p-6 md:p-10 backdrop-blur-xl shadow-2xl shadow-black/50">
+        <div className="relative w-full max-w-4xl border border-white/20 rounded-xl bg-white/[0.03] p-6 md:p-10 shadow-[0_0_35px_rgba(120,150,255,0.18)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
-            
-            {/* Left: Canvas Area */}
             <div className="flex justify-center md:justify-end">
-              <div className="relative bg-[#05070D] rounded-xl overflow-hidden ring-1 ring-white/10">
-                <TwibbonCanvas
-                  isEditMode={step === "adjust"}
-                  transform={transform}
-                  setTransform={setTransform}
-                  userPhoto={userPhoto}
-                  frameSrc={campaignData.frameSrc}
-                  canvasRef={canvasRef}
-                />
-              </div>
+              <TwibbonCanvas
+                isEditMode={step === "adjust"}
+                transform={transform}
+                setTransform={setTransform}
+                userPhoto={userPhoto}
+                frameSrc={campaignData.frameSrc}
+                canvasRef={canvasRef}
+              />
             </div>
 
-            {/* Right: Interactive Panel */}
             <div className="flex flex-col justify-center">
               {step === "upload" && (
                 <TwibbonUpload onPhotoSelected={handlePhotoSelected} />
@@ -82,17 +78,16 @@ export default function TwibbonPage() {
                 <TwibbonDownload canvasRef={canvasRef} onReset={handleReset} />
               )}
             </div>
-            
           </div>
         </div>
 
-        <p className="mt-12 text-white/20 text-xs text-center">
+        <p className="relative mt-12 text-white/20 text-xs text-center">
           Powered by{" "}
           <a
             href="https://github.com/GithubFarelAlghazali/freebbonize"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#00E5FF]/40 hover:text-[#00E5FF] transition-colors underline"
+            className="text-white/40 hover:text-white transition-colors underline"
           >
             freebbonize
           </a>

@@ -30,20 +30,22 @@ export default function TwibbonAdjust({
   ];
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="mb-4">
-        <div className="text-[#00E5FF] font-mono text-xs tracking-wider mb-2 uppercase">Langkah 2</div>
-        <h2 className="text-2xl font-bold text-white">
+    <div className="flex flex-col gap-6">
+      <div>
+        <p className="text-xs tracking-[0.2em] text-white/50 uppercase mb-2">
+          Langkah 2
+        </p>
+        <h2 className="font-display text-2xl font-bold tracking-wide text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
           Atur Posisi
         </h2>
       </div>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-4">
         {sliders.map(({ label, key, min, max, step }) => (
           <li key={key}>
-            <div className="flex justify-between mb-1">
-              <span className="text-xs text-white/50">{label}</span>
-              <span className="text-xs text-[#00E5FF] font-mono">{transform[key]}</span>
+            <div className="flex justify-between mb-2">
+              <span className="text-xs tracking-wide text-white/50">{label}</span>
+              <span className="font-mono text-xs text-white">{transform[key]}</span>
             </div>
             <input
               type="range"
@@ -54,16 +56,16 @@ export default function TwibbonAdjust({
               onChange={(e) =>
                 setTransform((prev) => ({ ...prev, [key]: Number(e.target.value) }))
               }
-              className="w-full h-1 rounded-full appearance-none bg-white/10 accent-[#00E5FF] cursor-pointer"
+              className="w-full h-1 rounded-full appearance-none bg-white/10 accent-white cursor-pointer"
             />
           </li>
         ))}
       </ul>
 
-      <div className="flex gap-2 mt-1">
+      <div className="flex items-center gap-3 mt-1">
         <label
           htmlFor="change-photo"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white/60 text-xs cursor-pointer transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-white/20 text-white/60 text-xs hover:bg-white/5 transition-colors cursor-pointer"
         >
           <Camera className="w-3.5 h-3.5" />
           Ganti Foto
@@ -78,7 +80,7 @@ export default function TwibbonAdjust({
 
         <button
           onClick={onGenerate}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#00E5FF] text-[#0B0F19] font-bold text-sm hover:bg-[#00E5FF]/90 transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-white text-[#7C83BC] font-semibold text-sm hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(180,190,255,0.6)] cursor-pointer"
         >
           Generate
           <ArrowRight className="w-4 h-4" />
