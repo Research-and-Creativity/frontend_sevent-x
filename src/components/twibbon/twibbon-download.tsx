@@ -42,22 +42,23 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
   const fieldLabels: Record<string, string> = {
     nama: "Nama lengkap",
     institusi: "Institusi / Kampus",
-    // fallback for unmapped keys
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="mb-4">
-        <div className="text-[#00E5FF] font-mono text-xs tracking-wider mb-2 uppercase">Langkah 3</div>
-        <h2 className="text-2xl font-bold text-white">
+    <div className="flex flex-col gap-6">
+      <div>
+        <p className="text-xs tracking-[0.2em] text-white/50 uppercase mb-2">
+          Langkah 3
+        </p>
+        <h2 className="font-display text-2xl font-bold tracking-wide text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
           Selesai!
         </h2>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {captionProps.map((key) => (
-          <div key={key} className="flex flex-col gap-1">
-            <label className="text-xs text-white/40">
+          <div key={key} className="flex flex-col gap-1.5">
+            <label className="text-xs text-white/50">
               {fieldLabels[key] ?? key}
             </label>
             <input
@@ -67,33 +68,33 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
                 setCaptionValues((prev) => ({ ...prev, [key]: e.target.value }))
               }
               placeholder={fieldLabels[key] ?? key}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#00E5FF]/50 transition-colors"
+              className="w-full px-5 py-2.5 rounded-full bg-white/5 border border-white/20 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/50 transition-colors"
             />
           </div>
         ))}
       </div>
 
-      <div className="relative rounded-lg bg-white/5 border border-white/10 p-3">
+      <div className="relative rounded-xl bg-white/5 border border-white/20 p-4">
         <p className="text-white/60 text-xs leading-relaxed whitespace-pre-line pr-8">
           {filledCaption}
         </p>
         <button
           onClick={handleCopy}
-          className="absolute top-2 right-2 text-white/30 hover:text-[#00E5FF] transition-colors"
+          className="absolute top-3 right-3 text-white/40 hover:text-white transition-colors cursor-pointer"
           aria-label="Salin caption"
         >
           {isCopied ? (
-            <ClipboardCheck className="w-4 h-4 text-[#00E5FF]" />
+            <ClipboardCheck className="w-4 h-4 text-white" />
           ) : (
             <Clipboard className="w-4 h-4" />
           )}
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex items-center gap-3">
         <button
           onClick={onReset}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white/50 text-xs transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-white/20 text-white/60 text-xs hover:bg-white/5 transition-colors cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Ulang
@@ -101,7 +102,7 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
 
         <button
           onClick={handleDownload}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#00E5FF] text-[#0B0F19] font-bold text-sm hover:bg-[#00E5FF]/90 transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-white text-[#7C83BC] font-semibold text-sm hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(180,190,255,0.6)] cursor-pointer"
         >
           <Download className="w-4 h-4" />
           Download PNG

@@ -17,19 +17,21 @@ export default function TwibbonUpload({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="mb-4">
-        <div className="text-[#00E5FF] font-mono text-xs tracking-wider mb-2 uppercase">Langkah 1</div>
-        <h2 className="text-2xl font-bold text-white">
+      <div>
+        <p className="text-xs tracking-[0.2em] text-white/50 uppercase mb-2">
+          Langkah 1
+        </p>
+        <h2 className="font-display text-2xl font-bold tracking-wide text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
           Pilih Foto
         </h2>
       </div>
 
       <label
         htmlFor="photo-upload"
-        className="group flex flex-col items-center justify-center gap-3 w-full h-40 rounded-xl border border-dashed border-white/20 bg-white/5 hover:bg-[#00E5FF]/5 hover:border-[#00E5FF]/50 transition-all cursor-pointer"
+        className="group flex flex-col items-center justify-center gap-3 w-full h-44 rounded-xl border border-dashed border-white/20 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/40 transition-colors cursor-pointer"
       >
-        <Upload className="w-8 h-8 text-white/30 group-hover:text-[#00E5FF] transition-colors" />
-        <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">
+        <Upload className="w-8 h-8 text-white/30 group-hover:text-white transition-colors" />
+        <span className="text-sm text-white/50 group-hover:text-white/80 transition-colors">
           Klik untuk pilih foto
         </span>
         <input
