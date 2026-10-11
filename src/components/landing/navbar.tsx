@@ -46,12 +46,15 @@ export function Navbar() {
     { scope: navRef },
   );
 
+  // href absolut ("/#...") supaya navigasi tetap benar saat Navbar dipakai di
+  // halaman lain seperti /twibbon.
   const navLinks = [
-    { label: "Home", href: "#hero" },
-    { label: "About", href: "#about" },
-    { label: "Competition", href: "#competitions" },
-    { label: "Timeline", href: "#timeline" },
-    { label: "FAQ", href: "#faq" },
+    { label: "Home", href: "/#hero" },
+    { label: "About", href: "/#about" },
+    { label: "Competition", href: "/#competitions" },
+    { label: "Timeline", href: "/#timeline" },
+    { label: "FAQ", href: "/#faq" },
+    { label: "Twibbon", href: "/twibbon" },
   ];
 
   return (
