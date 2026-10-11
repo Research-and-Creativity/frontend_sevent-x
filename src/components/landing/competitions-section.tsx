@@ -6,19 +6,38 @@ import { PatternLanding1 } from "./pattern-landing1";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
+import { useCompetitions } from "@/hooks/use-peserta";
+import type { Competition } from "@/types/api";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const competitions = [
+type CompetitionCard = {
+  key: string;
+  title: string;
+  image: string;
+  description: string;
+};
+
+// Logo dipetakan dari slug kompetisi. Bila slug belum dikenal, pakai logo brand.
+const LOGO_BY_SLUG: Record<string, string> = {
+  "software-development": "/assets/image/logo_softdev.svg",
+  "ui-ux": "/assets/image/logo_uiux.svg",
+};
+
+// Tampilan cadangan bila API belum mengembalikan data (mis. backend belum jalan),
+// supaya section tidak kosong.
+const FALLBACK_CARDS: CompetitionCard[] = [
   {
+    key: "softdev",
     title: "SOFTDEV",
     image: "/assets/image/logo_softdev.svg",
     description:
       "Software Development challenges, participants to develop their own ideas and turn them into technical applications.",
   },
   {
+    key: "uiux",
     title: "UI/UX DESIGN",
     image: "/assets/image/logo_uiux.svg",
     description:
@@ -26,8 +45,24 @@ const competitions = [
   },
 ];
 
+function toCard(competition: Competition): CompetitionCard {
+  return {
+    key: competition.slug,
+    title: competition.name.toUpperCase(),
+    image: LOGO_BY_SLUG[competition.slug] ?? "/assets/image/logo_biru.svg",
+    description: competition.description,
+  };
+}
+
 export function CompetitionsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { data: competitions } = useCompetitions();
+
+  const activeCompetitions = (competitions ?? []).filter((c) => c.isActive);
+  const cards =
+    activeCompetitions.length > 0
+      ? activeCompetitions.map(toCard)
+      : FALLBACK_CARDS;
 
   useGSAP(
     () => {
@@ -47,7 +82,7 @@ export function CompetitionsSection() {
         scrollTrigger: { trigger: ".comp-grid", start: "top 80%" },
       });
     },
-    { scope: containerRef },
+    { scope: containerRef, dependencies: [competitions] },
   );
 
   return (
@@ -75,9 +110,9 @@ export function CompetitionsSection() {
         </div>
 
         <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
-          {competitions.map((c) => (
+          {cards.map((c) => (
             <div
-              key={c.title}
+              key={c.key}
               className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm"
             >
               <div className="flex gap-5 items-stretch">
