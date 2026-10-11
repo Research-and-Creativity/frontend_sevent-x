@@ -19,7 +19,7 @@ export function CtaSection() {
       if (prefersReducedMotion() || typeof window === "undefined") return;
       gsap.from(".cta-inner", {
         opacity: 0, scale: 0.95, duration: 0.8,
-        scrollTrigger: { trigger: containerRef.current, start: "top 85%" },
+        scrollTrigger: { trigger: containerRef.current, start: "top 85%", once: true },
       });
     },
     { scope: containerRef },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { PatternLanding1 } from "./pattern-landing1";
 import gsap from "gsap";
@@ -56,22 +57,24 @@ function toCard(competition: Competition): CompetitionCard {
 
 export function CompetitionsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: competitions } = useCompetitions();
+  const { data: competitions, isLoading } = useCompetitions();
 
   const activeCompetitions = (competitions ?? []).filter((c) => c.isActive);
-  const cards =
-    activeCompetitions.length > 0
-      ? activeCompetitions.map(toCard)
-      : FALLBACK_CARDS;
+  // Hanya kartu real dari API yang boleh dianimasikan GSAP (.comp-card).
+  // Fallback/skeleton tidak memakai class itu supaya tidak pernah "membeku".
+  const cards = activeCompetitions.length > 0
+    ? activeCompetitions.map(toCard)
+    : [];
 
   useGSAP(
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
+      if (isLoading) return;
       gsap.from(".comp-header", {
         opacity: 0,
         y: 30,
         duration: 0.8,
-        scrollTrigger: { trigger: ".comp-header", start: "top 85%" },
+        scrollTrigger: { trigger: ".comp-header", start: "top 85%", once: true },
       });
       gsap.from(".comp-card", {
         opacity: 0,
@@ -79,10 +82,10 @@ export function CompetitionsSection() {
         duration: 0.8,
         stagger: 0.2,
         ease: "power3.out",
-        scrollTrigger: { trigger: ".comp-grid", start: "top 80%" },
+        scrollTrigger: { trigger: ".comp-grid", start: "top 80%", once: true },
       });
     },
-    { scope: containerRef, dependencies: [competitions] },
+    { scope: containerRef, dependencies: [competitions, isLoading] },
   );
 
   return (
@@ -109,29 +112,42 @@ export function CompetitionsSection() {
           </p>
         </div>
 
-        <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
-          {cards.map((c) => (
-            <div
-              key={c.key}
-              className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm"
-            >
-              <div className="flex gap-5 items-stretch">
-                <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
-                <div className="flex flex-col justify-center flex-1">
-                  <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                    {c.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-white/50 leading-relaxed mb-4">
-                    {c.description}
-                  </p>
-                  <button className="cursor-pointer w-full bg-white text-[#7C83BC] text-xs font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
-                    Register Now!
-                  </button>
+        {isLoading ? (
+          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-40 rounded-lg border border-white/10 bg-white/[0.03] animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
+            {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => (
+              <div
+                key={c.key}
+                className={`${cards.length > 0 ? "comp-card " : ""}border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm`}
+              >
+                <div className="flex gap-5 items-stretch">
+                  <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
+                  <div className="flex flex-col justify-center flex-1">
+                    <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                      {c.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/50 leading-relaxed mb-4">
+                      {c.description}
+                    </p>
+                    <Link href="/register" className="block w-full">
+                      <button className="cursor-pointer w-full bg-white text-[#7C83BC] text-xs font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
+                        Register Now!
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

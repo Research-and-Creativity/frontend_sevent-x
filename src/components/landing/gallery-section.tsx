@@ -22,14 +22,14 @@ export function GallerySection() {
         opacity: 0,
         y: 30,
         duration: 0.8,
-        scrollTrigger: { trigger: ".gallery-header", start: "top 85%" },
+        scrollTrigger: { trigger: ".gallery-header", start: "top 85%", once: true },
       });
       gsap.from(".gallery-cell", {
         opacity: 0,
         scale: 0.92,
         duration: 0.5,
         stagger: 0.06,
-        scrollTrigger: { trigger: ".gallery-grid", start: "top 80%" },
+        scrollTrigger: { trigger: ".gallery-grid", start: "top 80%", once: true },
       });
     },
     { scope: containerRef, dependencies: [items.length] },

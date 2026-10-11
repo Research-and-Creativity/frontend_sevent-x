@@ -20,14 +20,14 @@ export function SponsorshipSection() {
         opacity: 0,
         y: 30,
         duration: 0.8,
-        scrollTrigger: { trigger: ".sp-header", start: "top 85%" },
+        scrollTrigger: { trigger: ".sp-header", start: "top 85%", once: true },
       });
       gsap.from(".sp-panel", {
         opacity: 0,
         y: 40,
         duration: 0.8,
         stagger: 0.15,
-        scrollTrigger: { trigger: ".sp-panels", start: "top 80%" },
+        scrollTrigger: { trigger: ".sp-panels", start: "top 80%", once: true },
       });
     },
     { scope: containerRef },

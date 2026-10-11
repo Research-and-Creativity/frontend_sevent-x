@@ -28,14 +28,14 @@ export function WhatIsSeventSection() {
         x: -60,
         duration: 1,
         ease: "power3.out",
-        scrollTrigger: { trigger: containerRef.current, start: "top 75%" },
+        scrollTrigger: { trigger: containerRef.current, start: "top 75%", once: true },
       });
       gsap.from(".wis-right", {
         opacity: 0,
         x: 60,
         duration: 1,
         ease: "power3.out",
-        scrollTrigger: { trigger: containerRef.current, start: "top 75%" },
+        scrollTrigger: { trigger: containerRef.current, start: "top 75%", once: true },
       });
       gsap.to(".wis-logo", {
         y: -16,

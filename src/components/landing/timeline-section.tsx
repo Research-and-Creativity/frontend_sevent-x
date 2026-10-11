@@ -89,14 +89,14 @@ export function TimelineSection() {
         opacity: 0,
         y: 30,
         duration: 0.8,
-        scrollTrigger: { trigger: ".tl-header", start: "top 85%" },
+        scrollTrigger: { trigger: ".tl-header", start: "top 85%", once: true },
       });
       gsap.from(".tl-item", {
         opacity: 0,
         y: 40,
         duration: 0.7,
         stagger: 0.12,
-        scrollTrigger: { trigger: ".tl-track", start: "top 80%" },
+        scrollTrigger: { trigger: ".tl-track", start: "top 80%", once: true },
       });
     },
     { scope: containerRef, dependencies: [events.length] },
