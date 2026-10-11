@@ -54,17 +54,20 @@ Alur "satu karya dari daftar sampai menang". Ikuti berurutan, ganti login tiap t
    - ⚠️ Coba simpan kosong dulu → harus ditolak (profil belum lengkap).
 
 ### 2.2 Peserta buat/join tim
-1. Buka **Competition** `/peserta/competition` → pilih **Competitive Programming** → **Create new Team** (atau **Join Team** pakai kode undangan).
+1. Buka **Competition** `/peserta/competition` → pilih lomba (**Software Development** atau **UI/UX Competition**) → **Create new Team** (atau **Join Team** pakai kode undangan).
 2. Catat **invite code** di `/peserta/team`.
    - ⚠️ Kalau profil belum lengkap → tombol jadi **Complete Profile First** (ditolak).
 
+> Ada 2 kompetisi: **Software Development** (`software-development`) dan **UI/UX Competition** (`ui-ux`). Data seed (tim & juri) berada di Software Development.
+
 ### 2.3 Peserta upload dokumen & pembayaran
 1. `/peserta/profile` → **Verification Document**: upload 4 file (**Twibbon, Post Story, Student ID, Follow Instagram**). Ini upload file nyata ke Google Drive.
+   - Belum punya twibbon? Di kartu **Twibbon** ada tautan **"Bikin di sini"** → halaman `/twibbon` (upload foto → sesuaikan → download PNG), lalu upload hasilnya.
 2. `/peserta/team` → upload **Payment Proof**.
 3. Boleh juga isi link Twibbon/Share Story lewat halaman Team.
 
 ### 2.4 Peserta submit karya
-1. Buka `/peserta/competition/competitive-programming` → isi **Product Information** (judul, deskripsi, GitHub, video demo, link deploy, file proposal) → **Submit All**.
+1. Buka `/peserta/competition/software-development` → isi **Product Information** (judul, deskripsi, GitHub, video demo, link deploy, file proposal) → **Submit All**.
 
 ### 2.5 Admin verifikasi → tim jadi APPROVE
 1. Login **admin** → **Registered Team** `/admin/teams` → klik tim → `/admin/teams/{id}`.
@@ -93,12 +96,13 @@ Alur "satu karya dari daftar sampai menang". Ikuti berurutan, ganti login tiap t
 
 | Halaman | URL | Yang dites |
 |---|---|---|
-| Landing | `/` | Navbar anchor, hero, CTA daftar, FAQ accordion, countdown |
+| Landing | `/` | Navbar anchor + link Twibbon, hero, CTA daftar, FAQ accordion, countdown, **section Competition (ambil dari API)** |
+| Twibbon | `/twibbon` | Upload foto → sesuaikan → download PNG + copy caption |
 | Auth | `/login`, `/register`, `/forgot-password`, `/reset-password` | Login, daftar, lupa & reset password |
 | Dashboard | `/peserta/dashboard` | Welcome, ringkasan profil/kompetisi/pengumuman, timeline |
 | Profile | `/peserta/profile` | Edit data, ganti password, upload 4 dokumen |
 | Competition | `/peserta/competition` | Pilih lomba, buat/join tim |
-| Competition detail | `/peserta/competition/competitive-programming` | Submission & payment |
+| Competition detail | `/peserta/competition/software-development` | Submission & payment |
 | Team | `/peserta/team` | Anggota, invite code, transfer leader, kick, keluar/bubarkan |
 | Announcements | `/peserta/announcements` | Filter All/Important/Info/Update + hasil lomba |
 
@@ -142,7 +146,7 @@ Sidebar: **Overview** · **Registered Team** · **Verified Team** · **Web Infor
 
 Supaya tidak bingung kenapa "tidak berfungsi":
 
-- `/` (landing) — semua hardcoded.
+- `/` (landing) — sebagian besar hardcoded, **kecuali section Competition** yang sudah ambil data dari `GET /api/competitions` (fallback ke data statis bila API kosong).
 - `/admin/dashboard` — data dummy statis.
 - `/admin/gallery`, `/admin/gallery/add`, `/admin/gallery/{id}` — tanpa API.
 - `/admin/announcement`, `/admin/announcement/create` — tanpa API (fungsi pengumuman nyata ada di `/admin/results`).
