@@ -31,14 +31,14 @@ const LOGO_BY_SLUG: Record<string, string> = {
 // supaya section tidak kosong.
 const FALLBACK_CARDS: CompetitionCard[] = [
   {
-    key: "softdev",
+    key: "software-development",
     title: "SOFTDEV",
     image: "/assets/image/logo_softdev.svg",
     description:
       "Software Development challenges, participants to develop their own ideas and turn them into technical applications.",
   },
   {
-    key: "uiux",
+    key: "ui-ux",
     title: "UI/UX DESIGN",
     image: "/assets/image/logo_uiux.svg",
     description:
@@ -60,8 +60,9 @@ export function CompetitionsSection() {
   const { data: competitions, isLoading } = useCompetitions();
 
   const activeCompetitions = (competitions ?? []).filter((c) => c.isActive);
-  // Hanya kartu real dari API yang boleh dianimasikan GSAP (.comp-card).
-  // Fallback/skeleton tidak memakai class itu supaya tidak pernah "membeku".
+  // Kartu real & fallback sama-sama memakai .comp-card (cabang non-loading),
+  // jadi animasi masuk selalu ada walau backend mati. Key fallback = slug asli
+  // supaya data real tidak pernah mengganti node DOM (anti "freeze").
   const cards = activeCompetitions.length > 0
     ? activeCompetitions.map(toCard)
     : [];
@@ -126,7 +127,7 @@ export function CompetitionsSection() {
             {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => (
               <div
                 key={c.key}
-                className={`${cards.length > 0 ? "comp-card " : ""}border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm`}
+                className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm"
               >
                 <div className="flex gap-5 items-stretch">
                   <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
