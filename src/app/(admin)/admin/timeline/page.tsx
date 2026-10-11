@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Plus, RefreshCw, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Competition, TimelineStage } from "@/types/api";
@@ -20,6 +17,12 @@ type TimelineResponseItem = {
   startDate: string;
   endDate: string;
   description?: string | null;
+};
+
+const STATUS_STYLE: Record<string, string> = {
+  ACTIVE: "border-[#5B8DEF] text-[#7FA7F5]",
+  COMPLETED: "border-[#3CB578] text-[#63CFA0]",
+  UPCOMING: "border-white/20 text-white/40",
 };
 
 export default function AdminTimelinePage() {
@@ -153,146 +156,123 @@ export default function AdminTimelinePage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="pb-2 border-b border-border/40">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Competition Timeline Stages
-        </h1>
-        <p className="text-xs text-text-secondary mt-1">
-          Pengaturan milestone tahapan pendaftaran, batas submission karya, serta masa penjurian per kompetisi.
-        </p>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+        <h1 className="font-display text-3xl font-bold">Timeline</h1>
       </div>
 
       {/* Filter / Selector Cabang Kompetisi */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-xs font-mono font-semibold uppercase text-text-secondary">
-              Pilih Cabang Kompetisi
-            </span>
-            <p className="text-xs text-text-secondary">
-              Kelola timeline khusus untuk cabang lomba yang dipilih:
-            </p>
-          </div>
-
-          <div className="w-full sm:w-72">
-            <select
-              value={activeSlug}
-              onChange={(e) => setSelectedCompSlug(e.target.value)}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
-            >
-              {competitions.length === 0 && (
-                <option value="" className="bg-card text-white">Memuat kompetisi...</option>
-              )}
-              {competitions.map((c) => (
-                <option key={c.id || c.slug} value={c.slug} className="bg-card text-white">
-                  {c.name} ({c.slug})
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-sm text-white/70">Pilih Cabang Kompetisi</p>
+          <p className="text-xs text-white/40 mt-1">
+            Kelola timeline khusus untuk cabang lomba yang dipilih.
+          </p>
         </div>
-      </Card>
+
+        <select
+          value={activeSlug}
+          onChange={(e) => setSelectedCompSlug(e.target.value)}
+          className="w-full sm:w-72 h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
+        >
+          {competitions.length === 0 && (
+            <option value="">Memuat kompetisi...</option>
+          )}
+          {competitions.map((c) => (
+            <option key={c.id || c.slug} value={c.slug}>
+              {c.name} ({c.slug})
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Form Tambah Milestone */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6">
-        <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-          <Calendar className="w-5 h-5 text-accent" />
-          <h2 className="font-display text-xl font-bold text-white">Tambah Milestone Tahapan Baru</h2>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+          <Calendar className="w-5 h-5 text-white/70" />
+          <h2 className="font-display text-2xl font-bold">Tambah Milestone Tahapan Baru</h2>
         </div>
 
-        <form onSubmit={handleAddStage} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-            <div className="sm:col-span-8 space-y-1.5">
-              <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                Judul Milestone (Wajib)
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Misal: Pendaftaran & Registrasi Tim..."
-                value={newStageName}
-                onChange={(e) => setNewStageName(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div className="sm:col-span-4 space-y-1.5">
-              <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                Fase (Phase)
-              </label>
-              <select
-                value={newPhase}
-                onChange={(e) => setNewPhase(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
-              >
-                <option value="REGISTRATION" className="bg-card text-white">REGISTRATION</option>
-                <option value="UPLOAD_KARYA" className="bg-card text-white">UPLOAD_KARYA</option>
-                <option value="PENJURIAN" className="bg-card text-white">PENJURIAN</option>
-                <option value="FINAL" className="bg-card text-white">FINAL</option>
-              </select>
-            </div>
-
-            <div className="sm:col-span-6 space-y-1.5">
-              <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                Tanggal Mulai (Wajib)
-              </label>
-              <input
-                type="date"
-                required
-                value={newStartDate}
-                onChange={(e) => setNewStartDate(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div className="sm:col-span-6 space-y-1.5">
-              <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                Tanggal Selesai (Wajib)
-              </label>
-              <input
-                type="date"
-                required
-                value={newEndDate}
-                onChange={(e) => setNewEndDate(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div className="sm:col-span-12 space-y-1.5">
-              <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
-                Deskripsi Milestone (Opsional)
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Deskripsi kegiatan atau instruksi tahapan resmi..."
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent resize-none"
-              />
-            </div>
+        <form onSubmit={handleAddStage} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-1">
+            <label className="text-sm text-white/70">Judul Milestone (Wajib)</label>
+            <input
+              type="text"
+              required
+              placeholder="Misal: Pendaftaran & Registrasi Tim..."
+              value={newStageName}
+              onChange={(e) => setNewStageName(e.target.value)}
+              className="mt-2 w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white placeholder:text-white/40 focus:outline-none focus:border-white/60"
+            />
           </div>
 
-          <div className="flex justify-end pt-2">
-            <Button
+          <div>
+            <label className="text-sm text-white/70">Fase (Phase)</label>
+            <select
+              value={newPhase}
+              onChange={(e) => setNewPhase(e.target.value)}
+              className="mt-2 w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
+            >
+              <option value="REGISTRATION">REGISTRATION</option>
+              <option value="UPLOAD_KARYA">UPLOAD_KARYA</option>
+              <option value="PENJURIAN">PENJURIAN</option>
+              <option value="FINAL">FINAL</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm text-white/70">Tanggal Mulai (Wajib)</label>
+            <input
+              type="date"
+              required
+              value={newStartDate}
+              onChange={(e) => setNewStartDate(e.target.value)}
+              className="mt-2 w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-white/70">Tanggal Selesai (Wajib)</label>
+            <input
+              type="date"
+              required
+              value={newEndDate}
+              onChange={(e) => setNewEndDate(e.target.value)}
+              className="mt-2 w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 [color-scheme:dark]"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="text-sm text-white/70">Deskripsi Milestone (Opsional)</label>
+            <textarea
+              rows={2}
+              placeholder="Deskripsi kegiatan atau instruksi tahapan resmi..."
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-white/30 bg-transparent px-5 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 resize-none"
+            />
+          </div>
+
+          <div className="sm:col-span-2 flex justify-end">
+            <button
               type="submit"
               disabled={addStageMutation.isPending}
-              className="bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-10 px-6 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 bg-white text-[#5B6BBF] font-semibold text-sm px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors cursor-pointer disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               <span>{addStageMutation.isPending ? "Menyimpan..." : "Tambah Milestone"}</span>
-            </Button>
+            </button>
           </div>
         </form>
 
         {/* List Milestone Tahapan Terdaftar */}
-        <div className="space-y-4 pt-4 border-t border-white/10">
+        <div className="space-y-4 pt-6 border-t border-white/10">
           <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold text-base text-white">
+            <h3 className="font-display font-bold text-base">
               Daftar Milestone ({activeSlug || "Pilih Kompetisi"})
             </h3>
             <button
               onClick={() => refetchTimeline()}
-              className="text-xs text-text-secondary hover:text-white flex items-center gap-1 cursor-pointer"
+              className="text-xs text-white/50 hover:text-white flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Refresh</span>
@@ -301,52 +281,49 @@ export default function AdminTimelinePage() {
 
           {isTimelineLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-20 w-full rounded-2xl bg-surface/50" />
-              <Skeleton className="h-20 w-full rounded-2xl bg-surface/50" />
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="h-20 w-full rounded-2xl bg-white/5 animate-pulse" />
+              ))}
             </div>
           ) : isTimelineError ? (
-            <div className="bg-surface/50 border border-rose-500/30 rounded-2xl p-6 text-center space-y-2">
+            <div className="py-12 text-center space-y-2">
               <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
-              <p className="text-xs text-rose-300">Gagal memuat tahapan timeline untuk kompetisi ini.</p>
+              <p className="text-sm text-rose-300">
+                Gagal memuat tahapan timeline untuk kompetisi ini.
+              </p>
             </div>
           ) : timelineStages.length === 0 ? (
-            <div className="bg-surface/50 border border-white/10 rounded-2xl p-6 text-center text-xs text-text-secondary">
+            <p className="py-16 text-center text-sm text-white/40">
               Belum ada tahapan timeline yang ditambahkan untuk kompetisi ini.
-            </div>
+            </p>
           ) : (
             timelineStages.map((stage) => {
               const status = stage.isActive ? "ACTIVE" : stage.isCompleted ? "COMPLETED" : "UPCOMING";
               return (
                 <div
                   key={stage.id}
-                  className="bg-surface/50 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <h4 className="font-bold text-white text-base">{stage.stageName}</h4>
                       <span
-                        className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded ${
-                          status === "ACTIVE"
-                            ? "bg-accent/20 text-accent border border-accent/30 animate-pulse"
-                            : status === "COMPLETED"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : "bg-surface text-text-secondary border border-border"
-                        }`}
+                        className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${STATUS_STYLE[status]}`}
                       >
                         {status}
                       </span>
                       {stage.phase && (
-                        <span className="text-[10px] font-mono text-text-secondary px-2 py-0.5 bg-card rounded">
+                        <span className="text-[11px] text-white/40 px-3 py-1 rounded-full bg-white/5">
                           {stage.phase}
                         </span>
                       )}
                     </div>
                     {stage.description && (
-                      <p className="text-xs text-text-secondary">{stage.description}</p>
+                      <p className="text-xs text-white/40">{stage.description}</p>
                     )}
                   </div>
 
-                  <span className="font-mono text-xs font-bold text-white bg-card border border-white/10 px-3 py-1.5 rounded-xl shrink-0 self-start sm:self-auto">
+                  <span className="text-sm text-white/70 font-semibold bg-white/5 border border-white/10 px-4 py-1.5 rounded-full shrink-0 self-start sm:self-auto">
                     {formatDateRange(stage.startDate, stage.endDate)}
                   </span>
                 </div>
@@ -354,7 +331,7 @@ export default function AdminTimelinePage() {
             })
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

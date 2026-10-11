@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   ShieldCheck,
   Search,
@@ -118,64 +115,55 @@ export default function AdminJudgesPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Header Page */}
-      <div className="pb-2 border-b border-border/40">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Judges Management & Assignment
-        </h1>
-        <p className="text-xs text-text-secondary mt-1">
-          Cari user yang sudah terdaftar di sistem dan assign sebagai Dewan Juri
-          pada cabang kompetisi yang sesuai.
-        </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+        <h1 className="font-display text-3xl font-bold">Judges</h1>
       </div>
 
       {/* Main Section: Form Assign Juri via Search User */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative">
-        <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-          <ShieldCheck className="w-5 h-5 text-accent" />
-          <h2 className="font-display text-xl font-bold text-white">
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+          <ShieldCheck className="w-5 h-5 text-white/70" />
+          <h2 className="font-display text-2xl font-bold">
             Assign Dewan Juri Baru
           </h2>
         </div>
 
         {/* STEP 1: Search User Box */}
         <div className="space-y-4">
-          <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+          <label className="block text-sm text-white/70">
             Langkah 1: Cari User Terdaftar (Dosen / Evaluator / Peserta)
           </label>
 
           <div className="relative">
-            <div className="relative">
-              <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-3" />
-              <input
-                type="text"
-                placeholder="Cari nama atau email dosen (misal: Bambang, siti@domain.com)..."
-                value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                  setIsDropdownOpen(true);
-                }}
-                onFocus={() => {
-                  if (searchInput.trim()) setIsDropdownOpen(true);
-                }}
-                className="w-full bg-surface border border-border/80 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors"
-              />
-              {isFetchingUsers && (
-                <Loader2 className="w-4 h-4 text-accent animate-spin absolute right-3.5 top-3" />
-              )}
-            </div>
+            <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Cari nama atau email dosen (misal: Bambang, siti@domain.com)..."
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              onFocus={() => {
+                if (searchInput.trim()) setIsDropdownOpen(true);
+              }}
+              className="w-full h-12 rounded-full border border-white/30 bg-transparent pl-12 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 transition-colors"
+            />
+            {isFetchingUsers && (
+              <Loader2 className="w-4 h-4 text-white/40 animate-spin absolute right-4 top-1/2 -translate-y-1/2" />
+            )}
 
             {/* Dropdown Hasil Pencarian User */}
             {isDropdownOpen && debouncedSearch && (
-              <div className="absolute z-50 mt-2 w-full bg-[#070D1E] border border-white/15 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto divide-y divide-white/10">
+              <div className="absolute z-50 mt-2 w-full bg-[#15161A] border border-white/15 rounded-2xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto divide-y divide-white/10">
                 {isSearchingUsers ? (
-                  <div className="p-4 text-center text-xs text-text-secondary flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                  <div className="p-4 text-center text-sm text-white/40 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Mencari user di database...</span>
                   </div>
                 ) : searchUsers.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-text-secondary">
+                  <div className="p-4 text-center text-sm text-white/40">
                     Tidak ada user terdaftar dengan kata kunci{" "}
                     <span className="text-white font-semibold">
                       &quot;{debouncedSearch}&quot;
@@ -188,31 +176,31 @@ export default function AdminJudgesPage() {
                       key={u.id}
                       type="button"
                       onClick={() => handleSelectUser(u)}
-                      className="w-full text-left p-3 hover:bg-white/10 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                      className="w-full text-left p-4 hover:bg-white/5 transition-colors flex items-center justify-between gap-3 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center text-accent font-bold text-xs shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[#7FA7F5] font-bold text-xs shrink-0">
                           {u.fullName
                             ? u.fullName.substring(0, 2).toUpperCase()
                             : "US"}
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-white group-hover:text-accent transition-colors">
+                          <p className="text-sm font-bold text-white">
                             {u.fullName || "Tanpa Nama"}
                           </p>
-                          <p className="text-[11px] text-text-secondary font-mono flex items-center gap-1.5">
-                            <Mail className="w-3 h-3 text-text-secondary" />
+                          <p className="text-xs text-white/40 flex items-center gap-1.5">
+                            <Mail className="w-3 h-3" />
                             <span>{u.email}</span>
                           </p>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-surface border border-border text-text-secondary">
+                        <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-white/20 text-white/60">
                           {u.role}
                         </span>
                         {u.institution && (
-                          <span className="text-[10px] text-text-secondary block mt-0.5 truncate max-w-40">
+                          <span className="text-[11px] text-white/40 block mt-0.5 truncate max-w-40">
                             {u.institution}
                           </span>
                         )}
@@ -229,15 +217,15 @@ export default function AdminJudgesPage() {
         {selectedUser ? (
           <form
             onSubmit={handleAssignJudge}
-            className="p-5 bg-surface/70 border border-accent/40 rounded-2xl space-y-5 animate-in fade-in slide-in-from-top-2 duration-300"
+            className="p-5 bg-white/[0.03] border border-[#5B8DEF]/40 rounded-2xl space-y-5"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center text-accent">
+                <div className="w-10 h-10 rounded-xl bg-[#5B8DEF]/10 border border-[#5B8DEF]/40 flex items-center justify-center text-[#7FA7F5]">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-wider block">
+                  <span className="text-[11px] text-white/40 uppercase tracking-wider block">
                     User Terpilih
                   </span>
                   <h3 className="font-display font-bold text-base text-white">
@@ -249,7 +237,7 @@ export default function AdminJudgesPage() {
               <button
                 type="button"
                 onClick={() => setSelectedUser(null)}
-                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                className="text-sm text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer self-start sm:self-auto"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Ganti User</span>
@@ -258,22 +246,20 @@ export default function AdminJudgesPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
               {/* User Details Box */}
-              <div className="sm:col-span-6 space-y-2 bg-black/20 p-3.5 rounded-xl border border-white/5 text-xs">
-                <div className="flex items-center gap-2 text-text-secondary">
-                  <Mail className="w-3.5 h-3.5 text-accent" />
-                  <span className="font-mono text-white">
-                    {selectedUser.email}
-                  </span>
+              <div className="sm:col-span-6 space-y-2 bg-black/20 p-4 rounded-2xl border border-white/5 text-sm">
+                <div className="flex items-center gap-2 text-white/40">
+                  <Mail className="w-3.5 h-3.5 text-[#7FA7F5]" />
+                  <span className="text-white">{selectedUser.email}</span>
                 </div>
                 {selectedUser.institution && (
-                  <div className="flex items-center gap-2 text-text-secondary">
-                    <School className="w-3.5 h-3.5 text-accent" />
+                  <div className="flex items-center gap-2 text-white/40">
+                    <School className="w-3.5 h-3.5 text-[#7FA7F5]" />
                     <span>{selectedUser.institution}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-text-secondary">
-                  <UserIcon className="w-3.5 h-3.5 text-accent" />
-                  <span className="font-mono uppercase text-[10px]">
+                <div className="flex items-center gap-2 text-white/40">
+                  <UserIcon className="w-3.5 h-3.5 text-[#7FA7F5]" />
+                  <span className="uppercase text-[11px]">
                     Current Role: {selectedUser.role} • ID: #{selectedUser.id}
                   </span>
                 </div>
@@ -281,19 +267,18 @@ export default function AdminJudgesPage() {
 
               {/* Competition Selector */}
               <div className="sm:col-span-6 space-y-1.5">
-                <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+                <label className="block text-sm text-white/70">
                   Langkah 2: Pilih Cabang Kompetisi yang Dinilai
                 </label>
                 <select
                   value={activeSlug}
                   onChange={(e) => setSelectedCompSlug(e.target.value)}
-                  className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
+                  className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
                 >
                   {activeComps.map((comp) => (
                     <option
                       key={comp.id || comp.slug}
                       value={comp.slug}
-                      className="bg-card text-white"
                     >
                       {comp.name} ({comp.slug})
                     </option>
@@ -304,10 +289,10 @@ export default function AdminJudgesPage() {
 
             {/* Submit Button */}
             <div className="flex justify-end pt-2">
-              <Button
+              <button
                 type="submit"
                 disabled={assignJudgeMutation.isPending}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold h-10 px-6 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
+                className="flex items-center gap-2 bg-white text-[#5B6BBF] font-semibold text-sm px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors cursor-pointer disabled:opacity-50"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>
@@ -315,11 +300,11 @@ export default function AdminJudgesPage() {
                     ? "Menugaskan Juri..."
                     : "Assign sebagai Juri"}
                 </span>
-              </Button>
+              </button>
             </div>
           </form>
         ) : (
-          <div className="p-4 bg-surface/30 border border-dashed border-white/10 rounded-xl text-center text-xs text-text-secondary">
+          <div className="p-4 bg-white/[0.03] border border-dashed border-white/15 rounded-2xl text-center text-sm text-white/40">
             Cari dan klik salah satu user di atas untuk melanjutkan penugasan
             sebagai juri.
           </div>
@@ -329,27 +314,28 @@ export default function AdminJudgesPage() {
         <div className="space-y-4 pt-6 border-t border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-accent" />
-              <h3 className="font-display font-bold text-base text-white">
+              <Trophy className="w-4 h-4 text-white/70" />
+              <h3 className="font-display font-bold text-base">
                 Daftar Dewan Juri Terdaftar
               </h3>
             </div>
-            <span className="text-xs font-mono text-text-secondary">
+            <span className="text-xs text-white/40">
               {remoteJudges.length} Juri Ter-assign
             </span>
           </div>
 
           {isJudgesLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-16 w-full rounded-xl bg-surface/40" />
-              <Skeleton className="h-16 w-full rounded-xl bg-surface/40" />
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="h-16 w-full rounded-2xl bg-white/5 animate-pulse" />
+              ))}
             </div>
           ) : remoteJudges.length === 0 ? (
-            <div className="p-6 bg-surface/30 rounded-xl border border-white/5 text-center text-xs text-text-secondary">
+            <p className="py-10 text-center text-sm text-white/40">
               Belum ada juri yang ditugaskan.
-            </div>
+            </p>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-white/10">
               {remoteJudges.map((j) => {
                 // BE kadang mengirim field datar (tanpa relasi user/competition).
                 const flat = j as AdminJudgeItem & {
@@ -372,10 +358,10 @@ export default function AdminJudgesPage() {
                 return (
                   <div
                     key={j.id}
-                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface/30 px-3 rounded-xl transition-colors"
+                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.03] px-3 rounded-2xl transition-colors"
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center text-accent font-bold text-xs shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#7FA7F5] font-bold text-xs shrink-0">
                         {judgeName.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="space-y-0.5">
@@ -383,20 +369,20 @@ export default function AdminJudgesPage() {
                           <h4 className="font-bold text-white text-sm">
                             {judgeName}
                           </h4>
-                          <span className="text-[10px] font-mono font-bold bg-accent/10 text-accent px-2 py-0.5 rounded border border-accent/20">
+                          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#5B8DEF]/40 text-[#7FA7F5]">
                             {j.competitionSlug}
                           </span>
                         </div>
-                        <p className="text-xs text-text-secondary font-mono flex flex-wrap items-center gap-2">
+                        <p className="text-xs text-white/40 flex flex-wrap items-center gap-2">
                           <span>{judgeEmail}</span>
                           <span>•</span>
-                          <span className="text-white/80 font-sans">
+                          <span className="text-white/70">
                             {compTitle}
                           </span>
                           {j.user?.institution && (
                             <>
                               <span>•</span>
-                              <span className="text-text-secondary font-sans">
+                              <span className="text-white/40">
                                 {j.user.institution}
                               </span>
                             </>
@@ -406,20 +392,19 @@ export default function AdminJudgesPage() {
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
-                      <span className="font-mono text-[10px] text-text-secondary">
+                      <span className="text-[11px] text-white/40">
                         {j.createdAt
                           ? `Assigned: ${j.createdAt.split("T")[0]}`
                           : ""}
                       </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
+                      <button
+                        type="button"
                         onClick={() => handleRemoveJudge(j.id, judgeName)}
-                        className="bg-surface hover:bg-rose-500/10 text-rose-400 border-rose-500/30 text-xs h-8 px-3 rounded-lg cursor-pointer"
+                        className="flex items-center gap-1 text-xs h-8 px-4 rounded-full border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        <Trash2 className="w-3.5 h-3.5" />
                         <span>Hapus</span>
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 );
@@ -427,7 +412,7 @@ export default function AdminJudgesPage() {
             </div>
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

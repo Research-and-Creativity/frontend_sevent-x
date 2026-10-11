@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { Competition } from "@/types/api";
 
@@ -107,22 +106,16 @@ export default function AdminResultsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header & Subtitle Singkat */}
-      <div className="pb-2 border-b border-border/40">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Publish Results & Winner Announcement
-        </h1>
-        <p className="text-xs text-text-secondary mt-1">
-          Konsolidasi skor akumulasi juri dan publikasi pemenang resmi ke peserta.
-        </p>
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+        <h1 className="font-display text-3xl font-bold">Results</h1>
       </div>
 
-      {/* 2. Selector Controls Bar: Pilih Kompetisi, Round, & Tombol Hitung */}
-      <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-4">
+      {/* Selector Controls Bar: Pilih Kompetisi, Round, & Tombol Hitung */}
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
           {/* Dropdown Pilih Kompetisi (berbasis slug) */}
           <div className="sm:col-span-5 space-y-1.5">
-            <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+            <label className="block text-sm text-white/70">
               Pilih Kompetisi
             </label>
             <select
@@ -132,24 +125,22 @@ export default function AdminResultsPage() {
                 setHasCalculated(false);
                 setIsPublished(false);
               }}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
+              className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
             >
               {competitions.map((comp) => (
-                <option key={comp.id || comp.slug} value={comp.slug} className="bg-card text-white">
+                <option key={comp.id || comp.slug} value={comp.slug}>
                   {comp.name}
                 </option>
               ))}
               {competitions.length === 0 && (
-                <option value="" className="bg-card text-white">
-                  Memuat kompetisi...
-                </option>
+                <option value="">Memuat kompetisi...</option>
               )}
             </select>
           </div>
 
           {/* Input / Dropdown Round */}
           <div className="sm:col-span-4 space-y-1.5">
-            <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">
+            <label className="block text-sm text-white/70">
               Tahap / Round
             </label>
             <select
@@ -159,43 +150,44 @@ export default function AdminResultsPage() {
                 setHasCalculated(false);
                 setIsPublished(false);
               }}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent cursor-pointer"
+              className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
             >
-              <option value="Final Round" className="bg-card text-white">Final Round</option>
-              <option value="Phase 1 Preliminary" className="bg-card text-white">Phase 1 Preliminary</option>
-              <option value="Phase 2 Finalist" className="bg-card text-white">Phase 2 Finalist</option>
+              <option value="Final Round">Final Round</option>
+              <option value="Phase 1 Preliminary">Phase 1 Preliminary</option>
+              <option value="Phase 2 Finalist">Phase 2 Finalist</option>
             </select>
           </div>
 
           {/* Tombol Hitung Akumulasi Skor Juri */}
           <div className="sm:col-span-3">
-            <Button
+            <button
               type="button"
               disabled={isCalculating}
               onClick={handleCalculateScores}
-              className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-semibold h-10 rounded-xl cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 bg-white text-[#5B6BBF] font-semibold text-sm h-12 px-6 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors cursor-pointer disabled:opacity-50"
             >
+              {isCalculating && <Loader2 className="w-4 h-4 animate-spin" />}
               {isCalculating ? "Mengkalkulasi..." : "Hitung Akumulasi Skor Juri"}
-            </Button>
+            </button>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* 3. Hasil Kalkulasi Tabel Ranking (Pola Style Sama dengan Teams & Payment) */}
+      {/* Hasil Kalkulasi Tabel Ranking */}
       {hasCalculated && (
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
             <div className="space-y-0.5">
-              <h2 className="font-display text-xl font-bold text-white">
+              <h2 className="font-display text-2xl font-bold">
                 Hasil Ranking Skor Akumulasi
               </h2>
-              <p className="text-xs text-text-secondary font-mono">
+              <p className="text-xs text-white/40">
                 {roundName} • Total {rankings.length} Submissions Calculated
               </p>
             </div>
 
             {isPublished && (
-              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold px-3 py-1 rounded-lg">
+              <span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578]/40 text-xs font-semibold text-[#63CFA0]">
                 Sudah Dipublikasikan
               </span>
             )}
@@ -203,9 +195,9 @@ export default function AdminResultsPage() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-text-secondary font-mono uppercase">
+                <tr className="border-b border-white/10 text-white/70">
                   <th className="pb-3 font-semibold text-center w-16">Rank</th>
                   <th className="pb-3 font-semibold">Nama Tim & Project</th>
                   <th className="pb-3 font-semibold">Category</th>
@@ -215,10 +207,10 @@ export default function AdminResultsPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {rankings.map((item) => (
-                  <tr key={item.teamId} className="hover:bg-surface/50 transition-colors">
+                  <tr key={item.teamId} className="hover:bg-white/[0.03] transition-colors">
                     {/* Rank Number */}
-                    <td className="py-4 text-center font-mono font-bold text-sm">
-                      <span className={item.rank <= 3 ? "text-accent" : "text-text-secondary"}>
+                    <td className="py-4 text-center font-bold text-sm">
+                      <span className={item.rank <= 3 ? "text-[#7FA7F5]" : "text-white/40"}>
                         #{item.rank}
                       </span>
                     </td>
@@ -226,22 +218,22 @@ export default function AdminResultsPage() {
                     {/* Team & Project */}
                     <td className="py-4 pr-4">
                       <p className="font-bold text-white text-sm">{item.teamName}</p>
-                      <p className="text-xs text-text-secondary truncate max-w-md">
+                      <p className="text-xs text-white/40 truncate max-w-md">
                         {item.projectTitle}
                       </p>
                     </td>
 
                     {/* Category */}
-                    <td className="py-4 pr-4 font-mono text-text-secondary">
+                    <td className="py-4 pr-4 text-white/40">
                       {item.category}
                     </td>
 
                     {/* Final Score */}
-                    <td className="py-4 text-center font-display font-bold text-sm text-accent">
+                    <td className="py-4 text-center font-bold text-sm text-[#7FA7F5]">
                       {item.finalScore.toFixed(1)}{" "}
-                      <span className="text-xs text-text-secondary font-normal">/ 100</span>
+                      <span className="text-xs text-white/40 font-normal">/ 100</span>
                       {item.isFullyScored === false && (
-                        <p className="mt-1 font-sans text-[10px] font-normal text-amber-400">
+                        <p className="mt-1 font-normal text-[11px] text-amber-400">
                           Belum dinilai penuh
                         </p>
                       )}
@@ -250,11 +242,11 @@ export default function AdminResultsPage() {
                     {/* Status Badge */}
                     <td className="py-4 text-right">
                       {item.isFinalist ? (
-                        <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md">
+                        <span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578]/40 text-xs font-semibold text-[#63CFA0]">
                           Finalis
                         </span>
                       ) : (
-                        <span className="bg-surface text-text-secondary border border-border text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md">
+                        <span className="inline-block px-4 py-1.5 rounded-full border border-white/20 text-xs font-semibold text-white/40">
                           Peserta
                         </span>
                       )}
@@ -265,46 +257,47 @@ export default function AdminResultsPage() {
             </table>
           </div>
 
-          {/* 4. Action Bar: Publikasikan Pemenang Resmi */}
+          {/* Action Bar: Publikasikan Pemenang Resmi */}
           <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-text-secondary">
+            <p className="text-sm text-white/40">
               {isPublished
                 ? "Pengumuman pemenang resmi telah dikirim ke leaderboard publik peserta."
                 : "Klik tombol di kanan untuk mempublikasikan hasil kalkulasi ini ke publik."}
             </p>
 
-            <Button
+            <button
               type="button"
               disabled={isPublishing || isPublished}
               onClick={handlePublishResults}
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-6 h-10 rounded-xl cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-[#5B6BBF] font-semibold text-sm px-6 h-12 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90 transition-colors cursor-pointer disabled:opacity-50"
             >
+              {isPublishing && <Loader2 className="w-4 h-4 animate-spin" />}
               {isPublished
                 ? "Sudah Dipublikasikan"
                 : isPublishing
                 ? "Mempublikasikan..."
                 : "Publikasikan Pemenang Resmi"}
-            </Button>
+            </button>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Disabled State Info Card before Calculation */}
       {!hasCalculated && (
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 text-center space-y-3">
-          <p className="text-xs text-text-secondary">
-            Hitung skor dulu sebelum publikasi. Pilih cabang kompetisi dan klik tombol <strong className="text-white">&quot;Hitung Akumulasi Skor Juri&quot;</strong> di atas.
+        <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 text-center space-y-4">
+          <p className="text-sm text-white/40">
+            Hitung skor dulu sebelum publikasi. Pilih cabang kompetisi dan klik
+            tombol <strong className="text-white">&quot;Hitung Akumulasi Skor Juri&quot;</strong> di atas.
           </p>
 
-          <div>
-            <Button
-              disabled
-              className="bg-emerald-600/40 text-white/50 text-xs font-semibold px-6 h-10 rounded-xl cursor-not-allowed"
-            >
-              Publikasikan Pemenang Resmi
-            </Button>
-          </div>
-        </Card>
+          <button
+            type="button"
+            disabled
+            className="bg-white/40 text-white/50 cursor-not-allowed font-semibold text-sm px-6 h-12 rounded-full"
+          >
+            Publikasikan Pemenang Resmi
+          </button>
+        </div>
       )}
     </div>
   );
