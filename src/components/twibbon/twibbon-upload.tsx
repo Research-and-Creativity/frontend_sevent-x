@@ -28,7 +28,7 @@ export default function TwibbonUpload({
 
       <label
         htmlFor="photo-upload"
-        className="group flex flex-col items-center justify-center gap-3 w-full h-44 rounded-xl border border-dashed border-white/20 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/40 transition-colors cursor-pointer"
+        className="group flex flex-col items-center justify-center gap-3 w-full h-44 rounded-xl border border-dashed border-white/20 hover:border-white/40 transition-colors cursor-pointer"
       >
         <Upload className="w-8 h-8 text-white/30 group-hover:text-white transition-colors" />
         <span className="text-sm text-white/50 group-hover:text-white/80 transition-colors">
