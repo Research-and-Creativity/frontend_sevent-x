@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { toast } from "sonner";
-import { LayoutGrid, FileText, CheckCircle2, Image as ImageIcon, Megaphone, Calendar, LogOut } from "lucide-react";
+import { LayoutGrid, FileText, CheckCircle2, Image as ImageIcon, Megaphone, LogOut } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -32,7 +32,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
   const webLinks = [
     { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
-    { href: "/admin/timeline", label: "Timeline", icon: Calendar },
     { href: "/admin/announcement", label: "Announcement", icon: Megaphone },
   ];
 

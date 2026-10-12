@@ -1,53 +1,27 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
-import { useCompetitions } from "@/hooks/use-peserta";
-import { Timeline } from "@/types/api";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const PHASE_LABEL: Record<string, string> = {
-  REGISTRATION: "Registration",
-  UPLOAD_KARYA: "Submission",
-  PENJURIAN: "Judging",
-  FINAL: "Final",
+type TimelineEvent = {
+  date: string;
+  title: string;
+  side: "top" | "bottom";
 };
 
-const monthNames = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
+// Timeline ditulis statis (tidak lagi dari API/admin).
+const EVENTS: TimelineEvent[] = [
+  { date: "08–31 DEC", title: "Registration", side: "top" },
+  { date: "08–10 OCT", title: "Submission", side: "bottom" },
 ];
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  return `${String(date.getDate()).padStart(2, "0")} ${monthNames[date.getMonth()]}`;
-}
-
-function formatRange(start: string, end: string) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const sameDay = startDate.toDateString() === endDate.toDateString();
-  return sameDay
-    ? formatDate(start)
-    : `${String(startDate.getDate()).padStart(2, "0")}–${formatDate(end)}`;
-}
 
 const COLS_CLASS: Record<number, string> = {
   1: "md:grid-cols-1",
@@ -59,28 +33,6 @@ const COLS_CLASS: Record<number, string> = {
 
 export function TimelineSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: competitions = [], isLoading } = useCompetitions();
-
-  const events = useMemo(() => {
-    const unique = new Map<string, Timeline>();
-    for (const competition of competitions) {
-      for (const timeline of competition.timelines ?? []) {
-        const key = `${timeline.phase}|${timeline.stageName ?? ""}|${timeline.startDate}`;
-        if (!unique.has(key)) unique.set(key, timeline);
-      }
-    }
-    return [...unique.values()]
-      .sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      )
-      .slice(0, 5)
-      .map((timeline, i) => ({
-        date: formatRange(timeline.startDate, timeline.endDate),
-        title: timeline.stageName || PHASE_LABEL[timeline.phase] || timeline.phase,
-        side: i % 2 === 0 ? "top" : "bottom",
-      }));
-  }, [competitions]);
 
   useGSAP(
     () => {
@@ -99,10 +51,10 @@ export function TimelineSection() {
         scrollTrigger: { trigger: ".tl-track", start: "top 80%", once: true },
       });
     },
-    { scope: containerRef, dependencies: [events.length] },
+    { scope: containerRef },
   );
 
-  const gridClass = COLS_CLASS[Math.min(events.length, 5)] ?? "md:grid-cols-1";
+  const gridClass = COLS_CLASS[Math.min(EVENTS.length, 5)] ?? "md:grid-cols-1";
 
   return (
     <section
@@ -130,72 +82,57 @@ export function TimelineSection() {
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {Array.from({ length: 5 }).map((_, i) => (
+        <div className="tl-track relative">
+          {/* horizontal line */}
+          <div
+            className="absolute -left-0 right-0 top-1/2 h-[2px] bg-white/25 hidden md:block"
+            style={{ left: "-5vw", width: "110vw" }}
+          />
+
+          <div className={`grid grid-cols-1 ${gridClass} gap-10 md:gap-4`}>
+            {EVENTS.map((e, i) => (
               <div
                 key={i}
-                className="tl-item h-28 rounded-xl border border-white/10 bg-white/[0.03] animate-pulse"
-              />
-            ))}
-          </div>
-        ) : events.length === 0 ? (
-          <p className="text-center text-sm text-white/40">
-            Timeline akan diumumkan segera.
-          </p>
-        ) : (
-          <div className="tl-track relative">
-            {/* horizontal line */}
-            <div
-              className="absolute -left-0 right-0 top-1/2 h-[2px] bg-white/25 hidden md:block"
-              style={{ left: "-5vw", width: "110vw" }}
-            />
-
-            <div className={`grid grid-cols-1 ${gridClass} gap-10 md:gap-4`}>
-              {events.map((e, i) => (
-                <div
-                  key={i}
-                  className="tl-item relative flex flex-col items-center md:h-80"
-                >
-                  {/* dot pinned to the horizontal center line */}
-                  <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] z-10" />
-                  {e.side === "top" ? (
-                    <>
+                className="tl-item relative flex flex-col items-center md:h-80"
+              >
+                {/* dot pinned to the horizontal center line */}
+                <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] z-10" />
+                {e.side === "top" ? (
+                  <>
+                    <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-28 flex flex-col justify-center">
+                      <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                        {e.date}
+                      </p>
+                      <p className="text-base text-white/60 mt-1">{e.title}</p>
+                    </div>
+                    <div className="hidden md:block w-px h-12 bg-white/25" />
+                  </>
+                ) : (
+                  <>
+                    <div className="md:hidden" />
+                    <div className="hidden md:flex md:flex-col md:items-center md:justify-end md:h-full md:w-full">
+                      <div className="w-px h-12 bg-white/25" />
                       <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-28 flex flex-col justify-center">
                         <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                           {e.date}
                         </p>
-                        <p className="text-base text-white/60 mt-1">{e.title}</p>
-                      </div>
-                      <div className="hidden md:block w-px h-12 bg-white/25" />
-                    </>
-                  ) : (
-                    <>
-                      <div className="md:hidden" />
-                      <div className="hidden md:flex md:flex-col md:items-center md:justify-end md:h-full md:w-full">
-                        <div className="w-px h-12 bg-white/25" />
-                        <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-28 flex flex-col justify-center">
-                          <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                            {e.date}
-                          </p>
-                          <p className="text-base text-white/60 mt-1">
-                            {e.title}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="md:hidden w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] flex flex-col justify-center">
-                        <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                          {e.date}
+                        <p className="text-base text-white/60 mt-1">
+                          {e.title}
                         </p>
-                        <p className="text-base text-white/60 mt-1">{e.title}</p>
                       </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+                    </div>
+                    <div className="md:hidden w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] flex flex-col justify-center">
+                      <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                        {e.date}
+                      </p>
+                      <p className="text-base text-white/60 mt-1">{e.title}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
