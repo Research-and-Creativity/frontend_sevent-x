@@ -12,6 +12,39 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const dayFmt = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  timeZone: "Asia/Jakarta",
+});
+const monthFmt = new Intl.DateTimeFormat("en-GB", {
+  month: "short",
+  timeZone: "Asia/Jakarta",
+});
+const yearFmt = new Intl.DateTimeFormat("en-GB", {
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
+// Label dibentuk dari ISO (bukan string tampilan), zona dikunci ke WIB.
+function formatRange(startISO: string, endISO: string) {
+  const start = new Date(startISO);
+  const end = new Date(endISO);
+  const sDay = dayFmt.format(start);
+  const eDay = dayFmt.format(end);
+  const sMonth = monthFmt.format(start).toUpperCase();
+  const eMonth = monthFmt.format(end).toUpperCase();
+  const year = yearFmt.format(end);
+  return sMonth === eMonth
+    ? `${sDay}–${eDay} ${eMonth} ${year}`
+    : `${sDay} ${sMonth} – ${eDay} ${eMonth} ${year}`;
+}
+
+const EVENTS = TIMELINE_EVENTS.map((e, i) => ({
+  date: formatRange(e.start, e.end),
+  title: e.title,
+  side: (i % 2 === 0 ? "top" : "bottom") as "top" | "bottom",
+}));
+
 const COLS_CLASS: Record<number, string> = {
   1: "md:grid-cols-1",
   2: "md:grid-cols-2",
@@ -43,7 +76,7 @@ export function TimelineSection() {
     { scope: containerRef },
   );
 
-  const gridClass = COLS_CLASS[Math.min(TIMELINE_EVENTS.length, 5)] ?? "md:grid-cols-1";
+  const gridClass = COLS_CLASS[Math.min(EVENTS.length, 5)] ?? "md:grid-cols-1";
 
   return (
     <section
@@ -79,7 +112,7 @@ export function TimelineSection() {
           />
 
           <div className={`grid grid-cols-1 ${gridClass} gap-10 md:gap-4`}>
-            {TIMELINE_EVENTS.map((e, i) => (
+            {EVENTS.map((e, i) => (
               <div
                 key={i}
                 className="tl-item relative flex flex-col items-center md:h-80"
