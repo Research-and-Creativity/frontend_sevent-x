@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -9,10 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
-import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 
 const registerSchema = z
@@ -30,11 +28,11 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
 
   const {
     register,
@@ -53,24 +51,28 @@ export default function RegisterPage() {
         password: data.password,
         institution: "SEVENT X",
       };
-      const res = await apiClient.post("/api/auth/register", payload);
-      let user = res.data?.user;
-      let accessToken = res.data?.accessToken;
-      if (!accessToken || !user) {
-        const loginRes = await apiClient.post("/api/auth/login", {
-          username,
-          password: data.password,
-        });
-        user = loginRes.data?.user;
-        accessToken = loginRes.data?.accessToken;
-      }
-      if (user && accessToken) setAuth(user, accessToken);
-      toast.success("Account created successfully!");
-      router.push("/peserta/dashboard");
+      await apiClient.post("/api/auth/register", payload);
+      setRegisteredEmail(data.email);
+      toast.success("Account created! Please check your email to verify.");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Registration failed."));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onResend = async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    try {
+      await apiClient.post("/api/auth/resend-verification", {
+        email: registeredEmail,
+      });
+      toast.success("Verification email sent again.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not send email."));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -126,6 +128,48 @@ export default function RegisterPage() {
           Create your Account and start your journey here!
         </p>
 
+        {registeredEmail ? (
+          <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] text-center">
+            <div className="w-12 h-12 rounded-full bg-green-400/20 border border-green-400/40 flex items-center justify-center mx-auto text-green-400">
+              <MailCheck className="w-6 h-6" />
+            </div>
+            <h3 className="font-display text-lg font-bold text-white mt-4">
+              Check Your Email
+            </h3>
+            <p className="text-xs text-white/60 mt-2">
+              We sent a verification link to{" "}
+              <span className="font-semibold text-white">
+                {registeredEmail}
+              </span>
+              . Please open it to activate your account before logging in.
+            </p>
+            <p className="text-[11px] text-white/40 mt-3">
+              Didn&apos;t receive it? Check your{" "}
+              <span className="text-white/70">Spam</span> or{" "}
+              <span className="text-white/70">Promotions</span> folder.
+            </p>
+            <Link href="/login">
+              <button className="cursor-pointer w-full h-10 mt-6 rounded-full bg-white text-[#7C83BC] font-semibold hover:bg-white/90 transition-all">
+                Go to Login
+              </button>
+            </Link>
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={isResending}
+              className="cursor-pointer mt-4 text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
+            >
+              {isResending ? "Sending..." : "Resend verification email"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRegisteredEmail(null)}
+              className="cursor-pointer mt-3 text-xs font-semibold text-white/50 hover:text-white transition-colors"
+            >
+              Back to register
+            </button>
+          </div>
+        ) : (
         <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             {[
@@ -275,6 +319,7 @@ export default function RegisterPage() {
             </Link>
           </p>
         </div>
+        )}
       </div>
 
       {/* footer */}
