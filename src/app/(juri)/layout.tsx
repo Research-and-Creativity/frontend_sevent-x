@@ -36,7 +36,7 @@ function SidebarContent({
 }) {
   return (
     <>
-      <Link href="/" onClick={onNavigate} className="flex items-center gap-3 mb-10">
+      <Link href="/juri/dashboard" onClick={onNavigate} className="flex items-center gap-3 mb-10">
         <Image src="/assets/image/logo-putih.png" alt="SEVENT X" width={1000} height={1262} className="w-8 h-auto" />
         <span className="font-display text-xl font-extrabold">SEVENT X</span>
       </Link>
