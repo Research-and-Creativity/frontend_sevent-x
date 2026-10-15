@@ -37,10 +37,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Sidebar */}
-      <aside className="relative w-64 shrink-0 border-r border-white/10 p-6 flex flex-col bg-black shadow-[0_0_50px_rgba(125,140,255,0.4)] overflow-hidden">
+      {/* Sidebar ditempel setinggi viewport supaya tidak ikut ter-scroll saat
+          halaman konten panjang. min-h-0 wajib: tanpa itu flex item tidak mau
+          menyusut sehingga nav yang panjang malah terpotong. */}
+      <aside className="sticky top-0 h-screen w-64 shrink-0 border-r border-white/10 p-6 flex flex-col bg-black shadow-[0_0_50px_rgba(125,140,255,0.4)] overflow-hidden">
         <Image src="/assets/image/pattern-landing2.svg" alt="" width={1440} height={1712} className="absolute inset-0 w-full h-full object-cover opacity-[0.12] pointer-events-none" />
-        <div className="relative z-10 flex flex-col flex-1">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
         <Link href="/" className="flex items-center gap-3 mb-10">
           <Image src="/assets/image/logo-putih.png" alt="SEVENT X" width={1000} height={1262} className="w-8 h-auto" />
           <span className="font-display text-xl font-extrabold">SEVENT X</span>
