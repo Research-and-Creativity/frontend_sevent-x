@@ -35,7 +35,11 @@ export default function AdminOverviewDashboardPage() {
   }, []);
 
   const { data: overview } = useAdminOverview();
-  const { data: competitions = [] } = useCompetitions();
+  const {
+    data: competitions = [],
+    isLoading: isCompetitionsLoading,
+    isError: isCompetitionsError,
+  } = useCompetitions();
 
   const {
     data: teams = [],
@@ -129,10 +133,28 @@ export default function AdminOverviewDashboardPage() {
             </span>
             <Clock className="w-5 h-5 text-white/70" />
           </div>
-          <p className="font-display text-5xl font-bold">{remaining ?? "—"}</p>
-          <p className="text-xs text-white/50 mt-2">
-            {deadline ? "Registration" : "No active registration"}
-          </p>
+          {isCompetitionsLoading ? (
+            <Skeleton className="h-12 w-40 rounded-xl bg-white/5" />
+          ) : isCompetitionsError ? (
+            <div className="p-5 space-y-2 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+              <AlertCircle className="w-6 h-6 text-rose-400" />
+              <p className="text-sm font-semibold text-white">
+                Gagal memuat countdown
+              </p>
+              <p className="text-xs text-white/60">
+                Data kompetisi tidak bisa diambil. Muat ulang halaman.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="font-display text-5xl font-bold">
+                {remaining ?? "—"}
+              </p>
+              <p className="text-xs text-white/50 mt-2">
+                {deadline ? "Registration" : "No active registration"}
+              </p>
+            </>
+          )}
         </div>
       </div>
 

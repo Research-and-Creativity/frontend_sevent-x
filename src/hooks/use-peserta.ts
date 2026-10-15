@@ -113,14 +113,13 @@ export function useCompetitionTimeline(slug?: string) {
 export function useCompetitions() {
   return useQuery<Competition[]>({
     queryKey: ["competitionsList"],
+    // Sengaja tidak menangkap error: kalau fetch gagal, isError harus terlihat
+    // (bukan diam-diam jadi [] seperti sebelumnya), supaya pemakai tahu data
+    // yang kosong itu gagal dimuat, bukan memang kosong.
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/competitions");
-        const list = res.data?.data || res.data;
-        return Array.isArray(list) ? list : [];
-      } catch {
-        return [];
-      }
+      const res = await apiClient.get("/api/competitions");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
     },
     staleTime: 5 * 60 * 1000,
   });
