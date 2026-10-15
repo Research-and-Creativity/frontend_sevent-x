@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Camera, ArrowRight } from "lucide-react";
 import type { TransformType } from "./types";
 
@@ -9,6 +10,46 @@ type AdjustProps = {
   onPhotoSelected: (img: HTMLImageElement) => void;
   onGenerate: () => void;
 };
+
+// Nilai di kanan label bisa diketik, bukan cuma dibaca. Draft lokal dipakai
+// supaya React tidak menimpa "-" yang baru diketik dengan nilai lama sebelum
+// angkanya valid (kalau langsung Number(raw), nilai negatif tak bisa diisi).
+function NumberField({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+
+  function handleChange(raw: string) {
+    setDraft(raw);
+    const next = Number(raw);
+    if (raw.trim() === "" || Number.isNaN(next)) return;
+    onChange(Math.min(max ?? Infinity, Math.max(min ?? -Infinity, next)));
+  }
+
+  return (
+    <input
+      type="number"
+      step={1}
+      aria-label={label}
+      value={draft ?? String(Math.round(value))}
+      onFocus={() => setDraft(String(Math.round(value)))}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={() => setDraft(null)}
+      onWheel={(e) => e.currentTarget.blur()}
+      className="w-16 bg-transparent text-right font-mono text-xs text-white border-b border-transparent focus:outline-none focus:border-white/40 transition-colors [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    />
+  );
+}
 
 export default function TwibbonAdjust({
   transform,
@@ -24,9 +65,13 @@ export default function TwibbonAdjust({
     img.src = URL.createObjectURL(file);
   }
 
-  const sliders: { label: string; key: keyof TransformType; min: number; max: number; step: number }[] = [
-    { label: "Ukuran", key: "scale", min: 10, max: 200, step: 1 },
-    { label: "Rotasi", key: "rotate", min: -180, max: 180, step: 1 },
+  // Baris tanpa min/max (Posisi X & Y) tidak dapat slider: kontrol kasarnya
+  // sudah ada lewat drag langsung di kanvas.
+  const fields: { label: string; key: keyof TransformType; min?: number; max?: number }[] = [
+    { label: "Ukuran", key: "scale", min: 10, max: 200 },
+    { label: "Rotasi", key: "rotate", min: -180, max: 180 },
+    { label: "Posisi X", key: "x" },
+    { label: "Posisi Y", key: "y" },
   ];
 
   return (
@@ -41,23 +86,34 @@ export default function TwibbonAdjust({
       </div>
 
       <ul className="flex flex-col gap-4">
-        {sliders.map(({ label, key, min, max, step }) => (
+        {fields.map(({ label, key, min, max }) => (
           <li key={key}>
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-xs tracking-wide text-white/50">{label}</span>
-              <span className="font-mono text-xs text-white">{transform[key]}</span>
+              <NumberField
+                label={label}
+                value={transform[key]}
+                min={min}
+                max={max}
+                onChange={(value) =>
+                  setTransform((prev) => ({ ...prev, [key]: value }))
+                }
+              />
             </div>
-            <input
-              type="range"
-              min={min}
-              max={max}
-              step={step}
-              value={transform[key]}
-              onChange={(e) =>
-                setTransform((prev) => ({ ...prev, [key]: Number(e.target.value) }))
-              }
-              className="w-full h-1 rounded-full appearance-none bg-white/10 accent-white cursor-pointer"
-            />
+            {min !== undefined && max !== undefined && (
+              <input
+                type="range"
+                aria-label={label}
+                min={min}
+                max={max}
+                step={1}
+                value={transform[key]}
+                onChange={(e) =>
+                  setTransform((prev) => ({ ...prev, [key]: Number(e.target.value) }))
+                }
+                className="w-full h-1 rounded-full appearance-none bg-white/10 accent-white cursor-pointer"
+              />
+            )}
           </li>
         ))}
       </ul>
