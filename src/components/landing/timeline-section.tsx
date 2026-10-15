@@ -82,7 +82,7 @@ export function TimelineSection() {
     <section
       id="timeline"
       ref={containerRef}
-      className="relative py-24 px-4 md:px-8 overflow-visible"
+      className="relative py-12 px-4 md:py-24 md:px-8 overflow-visible"
     >
       <Image
         src="/assets/image/logo_putih.svg"
@@ -92,7 +92,7 @@ export function TimelineSection() {
         className="absolute left-[-10%] top-[10%] w-[65vw] max-w-[2000px] h-auto opacity-[0.08] pointer-events-none"
       />
       <div className="max-w-[110rem] mx-auto">
-        <div className="tl-header text-center max-w-3xl mx-auto mb-16">
+        <div className="tl-header text-center max-w-3xl mx-auto mb-8 md:mb-16">
           <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
             TIMELINE
           </h2>

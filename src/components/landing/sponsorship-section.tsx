@@ -37,10 +37,10 @@ export function SponsorshipSection() {
     <section
       id="sponsorship"
       ref={containerRef}
-      className="relative py-24 px-4 md:px-8 overflow-visible"
+      className="relative py-12 px-4 md:py-24 md:px-8 overflow-visible"
     >
       <div className="max-w-5xl mx-auto relative z-10">
-        <div className="sp-header text-center max-w-3xl mx-auto mb-14">
+        <div className="sp-header text-center max-w-3xl mx-auto mb-8 md:mb-14">
           <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
             SPONSORSHIP
           </h2>

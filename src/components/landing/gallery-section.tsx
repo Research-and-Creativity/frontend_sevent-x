@@ -50,11 +50,11 @@ export function GallerySection() {
     <section
       id="gallery"
       ref={containerRef}
-      className="relative py-24 px-4 md:px-8 overflow-visible"
+      className="relative py-12 px-4 md:py-24 md:px-8 overflow-visible"
     >
       <div className="absolute -right-32 top-1/4 w-[800px] h-[800px] rounded-full bg-[#2E5CFF]/25 blur-[140px] pointer-events-none -z-10" />
       <div className="max-w-7xl mx-auto">
-        <div className="gallery-header text-center max-w-5xl mx-auto mb-14">
+        <div className="gallery-header text-center max-w-5xl mx-auto mb-8 md:mb-14">
           <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
             GALLERY
           </h2>

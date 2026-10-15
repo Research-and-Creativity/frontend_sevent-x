@@ -93,7 +93,7 @@ export function CompetitionsSection() {
     <section
       id="competitions"
       ref={containerRef}
-      className="relative py-24 px-4 md:px-8 overflow-visible"
+      className="relative py-12 px-4 md:py-24 md:px-8 overflow-visible"
     >
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none">
         <div className="pattern-sway">
@@ -101,7 +101,7 @@ export function CompetitionsSection() {
         </div>
       </div>
       <div className="max-w-5xl mx-auto relative z-10">
-        <div className="comp-header text-center max-w-7xl mx-auto mb-14">
+        <div className="comp-header text-center max-w-7xl mx-auto mb-8 md:mb-14">
           <h2 className="font-display text-4xl sm:text-5xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
             COMPETITION
           </h2>
@@ -114,7 +114,7 @@ export function CompetitionsSection() {
         </div>
 
         {isLoading ? (
-          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             {Array.from({ length: 2 }).map((_, i) => (
               <div
                 key={i}
@@ -123,14 +123,14 @@ export function CompetitionsSection() {
             ))}
           </div>
         ) : (
-          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => (
               <div
                 key={c.key}
                 className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.08)]"
               >
-                <div className="flex gap-5 items-stretch">
-                  <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
+                <div className="flex flex-col md:flex-row gap-5 items-center md:items-stretch">
+                  <img src={c.image} alt={c.title} className="w-32 md:w-44 shrink-0 rounded-sm md:self-stretch md:min-h-[140px] object-cover" />
                   <div className="flex flex-col justify-center flex-1">
                     <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                       {c.title}

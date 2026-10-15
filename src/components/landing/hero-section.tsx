@@ -137,10 +137,10 @@ export function HeroSection() {
             <p className="text-xs tracking-[0.2em] text-white mb-8">
               LAST REGISTRATION
             </p>
-            <div className="flex items-start justify-center gap-3 sm:gap-5">
+            <div className="flex items-start justify-center gap-2 sm:gap-3 md:gap-5">
               {blocks.map((b, i) => (
-                <div key={b.label} className="flex items-start gap-3 sm:gap-5">
-                  <div className="flex flex-col items-center min-w-[52px]">
+                <div key={b.label} className="flex items-start gap-2 sm:gap-3 md:gap-5">
+                  <div className="flex flex-col items-center min-w-[44px] sm:min-w-[52px]">
                     <span className="font-mono text-3xl sm:text-5xl font-bold text-white tabular-nums">
                       {String(b.value).padStart(2, "0")}
                     </span>

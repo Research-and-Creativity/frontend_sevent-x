@@ -26,7 +26,7 @@ export function CtaSection() {
   );
 
   return (
-    <section ref={containerRef} className="relative py-20 px-4 md:px-8 text-center">
+    <section ref={containerRef} className="relative py-10 px-4 md:py-20 md:px-8 text-center">
       <div className="cta-inner">
         <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">READY TO BE THE WINNER?</h2>
         <p className="text-sm sm:text-base text-white/50 mb-8">Seize the opportunity with SEVENT X and bring your best innovation to life!</p>

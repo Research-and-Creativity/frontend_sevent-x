@@ -53,15 +53,15 @@ export function WhatIsSeventSection() {
     <section
       id="about"
       ref={containerRef}
-      className="relative py-24 px-4 md:px-8 overflow-hidden"
+      className="relative py-12 px-4 md:py-24 md:px-8 overflow-hidden"
     >
-      <div className="max-w-5xl mx-auto text-center mb-16">
+      <div className="max-w-5xl mx-auto text-center mb-8 md:mb-16">
         <h2 className="font-display text-4xl sm:text-5xl font-extrabold tracking-wide text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
           WHAT IS SEVENT
         </h2>
       </div>
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.25fr] gap-12 items-center">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.25fr] gap-4 md:gap-12 items-center">
         <div className="wis-left flex items-center justify-center">
           <Image
             src="/assets/image/logo_biru.svg"
@@ -90,7 +90,7 @@ export function WhatIsSeventSection() {
             </p>
           </div>
 
-          <div className="wis-stats grid grid-cols-3 gap-4 mt-6">
+          <div className="wis-stats grid grid-cols-3 gap-2 md:gap-4 mt-6">
             {stats.map((s) => (
               <div
                 key={s.label}

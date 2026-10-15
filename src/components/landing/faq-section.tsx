@@ -31,9 +31,9 @@ export function FaqSection() {
   );
 
   return (
-    <section id="faq" ref={containerRef} className="relative py-24 px-4 md:px-8">
+    <section id="faq" ref={containerRef} className="relative py-12 px-4 md:py-24 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white text-center mb-14 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">FAQ</h2>
+        <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white text-center mb-8 md:mb-14 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">FAQ</h2>
         <div className="faq-list flex flex-col gap-4">
           {faqs.map((f, i) => (
             <div key={i} className="faq-item border border-white/40 bg-white/[0.06] overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.06)] rounded-[2rem]">
