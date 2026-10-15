@@ -9,10 +9,6 @@ import { useUserMe } from "@/hooks/use-peserta";
 import { toast } from "sonner";
 import {
   LayoutGrid,
-  FileText,
-  CheckCircle2,
-  Image as ImageIcon,
-  Megaphone,
   LogOut,
   Medal,
   SquarePen,
