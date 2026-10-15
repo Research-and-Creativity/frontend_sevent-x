@@ -36,7 +36,10 @@ export default function TwibbonPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#05070D] text-text-primary overflow-x-hidden">
+    <div className="relative min-h-screen flex flex-col bg-[#05070D] text-text-primary overflow-hidden">
+      {/* overflow-hidden, bukan overflow-x-hidden: satu sumbu non-visible membuat
+          overflow-y jadi auto sehingga div ini jadi scroll container, dan gambar
+          hiasan di <main> yang meluber ke bawah memicu scrollbar kedua. */}
       <Navbar />
       <main className="relative flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#1E3A8A]/30 rounded-full blur-[140px] pointer-events-none" />
