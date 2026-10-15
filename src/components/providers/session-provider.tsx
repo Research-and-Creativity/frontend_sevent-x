@@ -44,7 +44,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   if (!isSessionReady) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05070D]">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-[#05070D]">
         {/* Pola background yang sama dengan halaman dashboard peserta/juri/admin */}
         <Image
           src="/assets/image/pattern-landing2.svg"
@@ -55,31 +55,22 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           priority
         />
 
-        <div className="relative z-10 flex flex-col items-center">
-          {/* Logo */}
-          <div className="relative h-12 w-auto animate-[pulse_2s_ease-in-out_infinite]">
-            <Image
-              src="/assets/image/logo-putih.png"
-              alt="SEVENT X"
-              width={1000}
-              height={1262}
-              className="h-full w-auto object-contain drop-shadow-[0_0_24px_rgba(125,140,255,0.45)]"
-              priority
-            />
-          </div>
+        <Image
+          src="/assets/image/logo-putih.png"
+          alt="SEVENT X"
+          width={1000}
+          height={1262}
+          className="relative h-12 w-auto drop-shadow-[0_0_24px_rgba(125,140,255,0.45)]"
+          priority
+        />
 
-          {/* Glass card */}
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.025] px-10 py-7 backdrop-blur-xl">
-            <div className="flex items-center gap-3 text-white/70">
-              <Loader2 className="h-4 w-4 animate-spin text-accent" />
-              <span className="font-display text-sm font-semibold tracking-wide">
-                Verifying your session...
-              </span>
-            </div>
-            <p className="mt-2 text-center text-xs text-text-secondary">
-              Mohon tunggu sebentar
-            </p>
-          </div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="relative flex items-center gap-2.5 text-sm text-text-secondary"
+        >
+          <Loader2 className="h-4 w-4 animate-spin text-accent" aria-hidden />
+          <span>Memverifikasi sesi...</span>
         </div>
       </div>
     );
