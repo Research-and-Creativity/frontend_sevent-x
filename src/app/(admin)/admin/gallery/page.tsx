@@ -20,9 +20,9 @@ export default function AdminGalleryPage() {
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="font-display text-2xl font-bold">Gallery</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
@@ -30,7 +30,7 @@ export default function AdminGalleryPage() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-72 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
+                className="w-full sm:w-72 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
             </div>
             <Link

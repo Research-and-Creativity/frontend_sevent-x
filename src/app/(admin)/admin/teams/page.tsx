@@ -116,9 +116,9 @@ export default function AdminTeamsPage() {
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="font-display text-2xl font-bold">Registered Team</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <select
               value={selectedCompSlug}
               onChange={(e) => setSelectedCompSlug(e.target.value)}
@@ -153,7 +153,7 @@ export default function AdminTeamsPage() {
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
+                className="w-full sm:w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
             </div>
           </div>

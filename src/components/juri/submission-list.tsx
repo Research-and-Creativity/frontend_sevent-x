@@ -110,12 +110,12 @@ export function SubmissionList({ scope, title, subtitle, basePath }: SubmissionL
       </div>
 
       <div className={`${glass} p-6 lg:p-8`}>
-        <div className="flex items-center gap-2 justify-between mb-6">
+        <div className="flex flex-wrap items-center gap-3 justify-between mb-6">
           <h2 className="relative font-display text-2xl font-bold tracking-tight text-white">
             List of Participant
           </h2>
 
-          <div className="relative flex items-center gap-3">
+          <div className="relative flex flex-wrap items-center gap-3">
             <button
               onClick={() => setShowFilters((prev) => !prev)}
               className={`p-2.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors ${
@@ -125,7 +125,7 @@ export function SubmissionList({ scope, title, subtitle, basePath }: SubmissionL
             >
               <Filter className="w-4 h-4" />
             </button>
-            <div className="relative w-64 sm:w-72">
+            <div className="relative w-full sm:w-64 lg:w-72">
               <Input
                 type="text"
                 placeholder="Search"
