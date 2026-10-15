@@ -135,49 +135,51 @@ export default function JuriDashboardPage() {
           <h2 className="relative font-display text-2xl font-bold mb-6">
             Top 3 Highest Score
           </h2>
-          <table className="relative w-full text-left text-sm">
-            <thead>
-              <tr className="text-left text-white/70 border-b border-white/10">
-                <th className="pb-3 font-semibold">Team</th>
-                <th className="pb-3 font-semibold">Product Name</th>
-                <th className="pb-3 font-semibold">Team Leader Name</th>
-                <th className="pb-3 font-semibold">Submitted Date</th>
-                <th className="pb-3 font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {topScores.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-10 text-center text-sm text-white/60">
-                    Belum ada karya yang dinilai.
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="relative w-full text-left text-sm">
+              <thead>
+                <tr className="text-left text-white/70 border-b border-white/10">
+                  <th className="pb-3 font-semibold">Team</th>
+                  <th className="pb-3 font-semibold">Product Name</th>
+                  <th className="pb-3 font-semibold">Team Leader Name</th>
+                  <th className="pb-3 font-semibold">Submitted Date</th>
+                  <th className="pb-3 font-semibold">Action</th>
                 </tr>
-              ) : (
-                topScores.map((t) => (
-                  <tr
-                    key={t.id}
-                    className="hover:bg-white/[0.03] transition-colors"
-                  >
-                    <td className="py-5 pr-4">{t.team?.teamName ?? "-"}</td>
-                    <td className="py-5 pr-4">{t.projectTitle ?? "-"}</td>
-                    <td className="py-5 pr-4">{leaderName(t)}</td>
-                    <td className="py-5 pr-4">
-                      {formatSubmittedDate(t.submittedAt)}
-                    </td>
-                    <td className="py-5">
-                      <Link
-                        href={`/juri/judged/${t.id}`}
-                        className="text-white/60 hover:text-white"
-                        title="View Details"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </Link>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {topScores.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-10 text-center text-sm text-white/60">
+                      Belum ada karya yang dinilai.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  topScores.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="hover:bg-white/[0.03] transition-colors"
+                    >
+                      <td className="py-5 pr-4">{t.team?.teamName ?? "-"}</td>
+                      <td className="py-5 pr-4">{t.projectTitle ?? "-"}</td>
+                      <td className="py-5 pr-4">{leaderName(t)}</td>
+                      <td className="py-5 pr-4">
+                        {formatSubmittedDate(t.submittedAt)}
+                      </td>
+                      <td className="py-5">
+                        <Link
+                          href={`/juri/judged/${t.id}`}
+                          className="text-white/60 hover:text-white"
+                          title="View Details"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <div className="relative flex items-center justify-between pt-5 text-xs text-white/50">
             <span>

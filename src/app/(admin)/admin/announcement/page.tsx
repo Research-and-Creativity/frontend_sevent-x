@@ -201,82 +201,84 @@ export default function AdminAnnouncementPage() {
           </form>
         )}
 
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-white/70 border-b border-white/10">
-              <th className="pb-3 font-semibold">Title</th>
-              <th className="pb-3 font-semibold">Tag</th>
-              <th className="pb-3 font-semibold">Created</th>
-              <th className="pb-3 font-semibold text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <tr key={i} className="border-b border-white/5">
-                  <td className="py-4" colSpan={4}>
-                    <div className="h-6 rounded bg-white/5 animate-pulse" />
-                  </td>
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td className="py-10 text-center text-white/40" colSpan={4}>
-                  {news.length === 0
-                    ? "Belum ada pengumuman."
-                    : "Tidak ada pengumuman yang cocok."}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-white/70 border-b border-white/10">
+                <th className="pb-3 font-semibold">Title</th>
+                <th className="pb-3 font-semibold">Tag</th>
+                <th className="pb-3 font-semibold">Created</th>
+                <th className="pb-3 font-semibold text-right">Action</th>
               </tr>
-            ) : (
-              filtered.map((post) => (
-                <tr key={post.id} className="border-b border-white/5">
-                  <td className="py-4 max-w-md">
-                    <p className="truncate font-medium text-white">
-                      {post.title}
-                    </p>
-                    <p className="truncate text-xs text-white/40">
-                      {post.content}
-                    </p>
-                  </td>
-                  <td className="py-4">
-                    <span
-                      className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${TAG_STYLE[post.tag]}`}
-                    >
-                      {post.tag}
-                    </span>
-                  </td>
-                  <td className="py-4 text-white/60">
-                    {new Date(post.createdAt).toLocaleString("id-ID", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openEdit(post.id)}
-                        className="text-white/60 hover:text-white cursor-pointer"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(post.id, post.title)}
-                        className="text-white/60 hover:text-rose-400 cursor-pointer"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i} className="border-b border-white/5">
+                    <td className="py-4" colSpan={4}>
+                      <div className="h-6 rounded bg-white/5 animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td className="py-10 text-center text-white/40" colSpan={4}>
+                    {news.length === 0
+                      ? "Belum ada pengumuman."
+                      : "Tidak ada pengumuman yang cocok."}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filtered.map((post) => (
+                  <tr key={post.id} className="border-b border-white/5">
+                    <td className="py-4 max-w-md">
+                      <p className="truncate font-medium text-white">
+                        {post.title}
+                      </p>
+                      <p className="truncate text-xs text-white/40">
+                        {post.content}
+                      </p>
+                    </td>
+                    <td className="py-4">
+                      <span
+                        className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${TAG_STYLE[post.tag]}`}
+                      >
+                        {post.tag}
+                      </span>
+                    </td>
+                    <td className="py-4 text-white/60">
+                      {new Date(post.createdAt).toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(post.id)}
+                          className="text-white/60 hover:text-white cursor-pointer"
+                          aria-label="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(post.id, post.title)}
+                          className="text-white/60 hover:text-rose-400 cursor-pointer"
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+           </table>
+        </div>
       </div>
     </div>
   );
