@@ -140,7 +140,7 @@ export default function JuriLayout({
         aria-label="Menu navigasi"
       >
         <div
-          className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-all duration-300 ease-out ${isNavOpen ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 cursor-pointer bg-black/70 backdrop-blur-sm transition-all duration-300 ease-out ${isNavOpen ? "opacity-100" : "opacity-0"}`}
           onClick={() => setIsNavOpen(false)}
         />
         <div
