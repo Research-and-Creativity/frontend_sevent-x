@@ -100,9 +100,12 @@ function VerifyEmailContent() {
         </span>
       </Link>
 
+      {/* my-auto, bukan flex-1: flex-1 memakai flex-basis 0 sehingga anaknya
+          dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
+          dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div
         ref={containerRef}
-        className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6"
+        className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6"
       >
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
           EMAIL VERIFICATION
@@ -149,7 +152,7 @@ function VerifyEmailContent() {
                 Your account is now active. You can log in to continue.
               </p>
               <Link href="/login">
-                <button className="w-full h-10 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
+                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
                   Go to Login
                 </button>
               </Link>

@@ -93,7 +93,10 @@ export default function LoginPage() {
         </span>
       </Link>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6">
+      {/* my-auto, bukan flex-1: flex-1 memakai flex-basis 0 sehingga anaknya
+          dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
+          dan dipotong overflow-hidden tanpa bisa di-scroll. */}
+      <div className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
           WELCOME BACK!
         </h1>
@@ -168,7 +171,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="cursor-pointer w-full h-10 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all disabled:opacity-60"
+              className="cursor-pointer w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all disabled:opacity-60"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -224,7 +227,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center justify-between px-24 pb-6 text-xs text-white/50">
+      <div className="relative z-10 flex items-center justify-between px-8 pb-6 text-xs text-white/50">
         <span>©2026 SEVENT. All Rights Reserved</span>
         <div className="flex items-center gap-3">
           <SocialLinks />
