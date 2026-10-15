@@ -61,7 +61,7 @@ export default function TwibbonPage() {
         </div>
 
         <div className="relative w-full max-w-4xl border border-white/15 rounded-xl bg-white/[0.02] p-6 md:p-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 lg:gap-16 items-center">
             <div className="flex justify-center md:justify-end">
               <TwibbonCanvas
                 isEditMode={step === "adjust"}

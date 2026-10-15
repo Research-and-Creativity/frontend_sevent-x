@@ -95,7 +95,7 @@ export default function FinalistDetailPage() {
 
       {/* Header: Competition */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white">
+        <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white break-words">
           Competition
           <span className="mx-3 text-white/70">•</span>
           {competitionName(submission)}

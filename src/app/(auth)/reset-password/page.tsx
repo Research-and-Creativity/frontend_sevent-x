@@ -187,7 +187,7 @@ function ResetPasswordFormContent() {
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center justify-between px-8 pb-6 text-xs text-white/50">
+      <div className="relative z-10 flex items-center justify-between px-4 md:px-8 pb-6 text-xs text-white/50">
         <span>©2026 SEVENT. All Rights Reserved</span>
         <div className="flex items-center gap-3">
           <SocialLinks />
