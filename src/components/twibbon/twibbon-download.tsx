@@ -25,12 +25,21 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
   const filledCaption = fillCaption(caption, captionValues);
 
   function handleDownload() {
-    if (!canvasRef.current) return;
-    const dataUrl = canvasRef.current.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = "twibbon-seventx.png";
-    link.click();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // toBlob, bukan toDataURL: kanvas diekspor 2000x2000 sehingga string base64
+    // hasil toDataURL bisa beberapa MB dan boros memori.
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "twibbon-seventx.png";
+      link.click();
+      // Revoke setelah unduhan mulai; kalau langsung, sebagian browser
+      // membatalkan unduhannya.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, "image/png");
   }
 
   function handleCopy() {

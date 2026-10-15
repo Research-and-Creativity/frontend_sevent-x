@@ -14,7 +14,14 @@ type CanvasProps = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 };
 
+// Ruang koordinat transform (nilai x/y/scale selalu dalam satuan ini). Jangan
+// diubah tanpa menyesuaikan slider & input di panel "Atur Posisi".
 const CANVAS_SIZE = 500;
+// Resolusi bitmap: 500 x 4 = 2000 px. Ini yang menentukan ketajaman hasil
+// unduhan; geometri di layar tidak terpengaruh karena semua digambar lewat
+// ctx.scale(EXPORT_SCALE). Samakan dengan resolusi frame resmi kalau nanti
+// frame SVG ini diganti PNG beresolusi tetap.
+const EXPORT_SCALE = 4;
 
 export default function TwibbonCanvas({
   userPhoto,
@@ -30,10 +37,11 @@ export default function TwibbonCanvas({
     const canvas = canvasRef?.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    ctx?.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
     if (userPhoto) {
       ctx?.save();
+      ctx?.scale(EXPORT_SCALE, EXPORT_SCALE);
       ctx?.translate(
         CANVAS_SIZE / 2 + transform.x,
         CANVAS_SIZE / 2 + transform.y,
@@ -52,7 +60,7 @@ export default function TwibbonCanvas({
 
     const frame = frameRef.current;
     if (frame.complete && frame.src) {
-      ctx?.drawImage(frame, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      ctx?.drawImage(frame, 0, 0, canvas.width, canvas.height);
     }
   }
 
@@ -110,8 +118,8 @@ export default function TwibbonCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={CANVAS_SIZE}
-      height={CANVAS_SIZE}
+      width={CANVAS_SIZE * EXPORT_SCALE}
+      height={CANVAS_SIZE * EXPORT_SCALE}
       className={`w-full max-w-[360px] aspect-square rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
     />
   );
