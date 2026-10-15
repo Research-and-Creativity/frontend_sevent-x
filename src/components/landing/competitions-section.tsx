@@ -86,7 +86,7 @@ export function CompetitionsSection() {
         scrollTrigger: { trigger: ".comp-grid", start: "top 80%", once: true },
       });
     },
-    { scope: containerRef, dependencies: [competitions, isLoading] },
+    { scope: containerRef, dependencies: [isLoading] },
   );
 
   return (
