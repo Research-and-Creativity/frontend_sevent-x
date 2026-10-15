@@ -76,6 +76,11 @@ h1, h2, h3, h4, .font-display {
   100% { width: 100%; }
 }
 
+@keyframes text-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 .pattern-animated {
   animation: pattern-drift 24s ease-in-out infinite;
 }

@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { REGISTRATION_DEADLINE } from "@/config/site";
+import { onWelcomeDone } from "@/components/landing/welcome-overlay";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -57,13 +58,20 @@ export function HeroSection() {
         return;
       }
       gsap.set(".hero-anim", { opacity: 0, y: 30 });
-      gsap.to(".hero-anim", {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        stagger: 0.15,
-        ease: "expo.out",
-      });
+
+      // Intro welcome menutup layar ±3 detik, jadi animasi masuk hero
+      // ditunda sampai overlay selesai memudar.
+      const playIntro = () => {
+        gsap.to(".hero-anim", {
+          opacity: 1,
+          y: 0,
+          duration: 1.1,
+          stagger: 0.15,
+          ease: "power3.out",
+        });
+      };
+      const stopWaiting = onWelcomeDone(playIntro);
+
       gsap.to(contentRef.current, {
         y: -80,
         opacity: 0,
@@ -75,6 +83,8 @@ export function HeroSection() {
           scrub: true,
         },
       });
+
+      return stopWaiting;
     },
     { scope: containerRef },
   );
