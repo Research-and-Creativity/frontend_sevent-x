@@ -18,12 +18,23 @@ export function GallerySection() {
   useGSAP(
     () => {
       if (prefersReducedMotion() || typeof window === "undefined") return;
+      // Tunggu data selesai dimuat: tween menempel ke kartu asli, dan animasi
+      // hanya dibuat sekali. Kalau dibuat ulang tiap jumlah item berubah, tween
+      // "from" menumpuk dan nilai akhirnya ikut jadi opacity 0 sehingga header
+      // galeri bisa hilang permanen.
+      if (isLoading) return;
+
       gsap.from(".gallery-header", {
         opacity: 0,
         y: 30,
         duration: 0.8,
         scrollTrigger: { trigger: ".gallery-header", start: "top 85%", once: true },
       });
+
+      // Galeri kosong tidak punya .gallery-cell; tanpa penjagaan ini GSAP
+      // mencetak peringatan "target not found".
+      if (!containerRef.current?.querySelector(".gallery-cell")) return;
+
       gsap.from(".gallery-cell", {
         opacity: 0,
         scale: 0.92,
@@ -32,7 +43,7 @@ export function GallerySection() {
         scrollTrigger: { trigger: ".gallery-grid", start: "top 80%", once: true },
       });
     },
-    { scope: containerRef, dependencies: [items.length] },
+    { scope: containerRef, dependencies: [isLoading] },
   );
 
   return (
@@ -74,11 +85,13 @@ export function GallerySection() {
                 key={item.id}
                 className="gallery-cell relative aspect-[16/10] rounded-lg overflow-hidden border border-white/10 bg-white/[0.03]"
               >
+                {/* no-referrer wajib: Google membalas 429 bila permintaan membawa Referer. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.imageUrl}
                   alt={item.title}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                   className="h-full w-full object-cover"
                 />
               </div>

@@ -124,10 +124,12 @@ export default function AdminGalleryDetailPage() {
               <label className="text-sm text-white/70">Upload Image</label>
               <div className="mt-2 w-full aspect-video bg-neutral-200/90 rounded-lg overflow-hidden flex items-center justify-center">
                 {displayUrl ? (
+                  // no-referrer wajib: Google membalas 429 bila permintaan membawa Referer.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={displayUrl}
                     alt="Preview"
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-contain"
                   />
                 ) : (

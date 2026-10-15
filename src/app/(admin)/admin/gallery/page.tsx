@@ -66,11 +66,13 @@ export default function AdminGalleryPage() {
                 className="group block overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"
               >
                 <div className="relative aspect-[16/10] bg-black/40">
+                  {/* no-referrer wajib: Google membalas 429 bila permintaan membawa Referer. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.imageUrl}
                     alt={item.title}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
                   />
                 </div>
