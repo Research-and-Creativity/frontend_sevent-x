@@ -108,59 +108,75 @@ function VerifyEmailContent() {
         className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6"
       >
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
-          EMAIL VERIFICATION
+          {isInvalid || status === "error"
+            ? "VERIFIKASI GAGAL"
+            : status === "success"
+              ? "EMAIL TERVERIFIKASI"
+              : "VERIFIKASI EMAIL"}
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
-          Confirming your SEVENT X account
+          {isInvalid || status === "error"
+            ? "Link verifikasinya tidak bisa dipakai."
+            : status === "success"
+              ? "Akunmu sudah aktif."
+              : "Sebentar, link verifikasimu sedang diperiksa."}
         </p>
 
         <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] text-center auth-anim">
           {isInvalid || status === "error" ? (
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-full bg-red-400/20 border border-red-400/40 flex items-center justify-center mx-auto text-red-400">
-                <XCircle className="w-6 h-6" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-danger/40 bg-danger/10 text-danger">
+                <XCircle className="h-6 w-6" aria-hidden />
               </div>
-              <h3 className="font-display text-lg font-bold text-white">
-                Verification Failed
-              </h3>
+              <h2 className="font-display text-lg font-bold text-white">
+                Verifikasi gagal
+              </h2>
               <p className="text-xs text-white/60">{shownError}</p>
               <p className="text-[11px] text-white/40">
-                The link may have expired. You can request a new one from the
-                register page, and remember to check your Spam/Promotions
-                folder.
+                Link verifikasi cuma bisa dipakai sekali dan punya masa
+                berlaku. Minta link baru dari halaman daftar, dan cek juga
+                folder Spam atau Promosi.
               </p>
               <Link href="/login">
-                <button className="w-full h-10 rounded-full border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
-                  Back to Login
+                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
+                  Masuk ke Login
                 </button>
               </Link>
-              <Link href="/register">
-                <button className="w-full h-10 rounded-full text-white/50 text-xs font-semibold hover:text-white transition-colors">
-                  Request new link
-                </button>
+              <Link
+                href="/register"
+                className="block text-xs font-semibold text-white/50 hover:text-white transition-colors"
+              >
+                Kirim ulang link verifikasi
               </Link>
             </div>
           ) : status === "success" ? (
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-full bg-green-400/20 border border-green-400/40 flex items-center justify-center mx-auto text-green-400">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-success/40 bg-success/10 text-success">
+                <CheckCircle2 className="h-6 w-6" aria-hidden />
               </div>
-              <h3 className="font-display text-lg font-bold text-white">
-                Email Verified!
-              </h3>
+              <h2 className="font-display text-lg font-bold text-white">
+                Email terverifikasi
+              </h2>
               <p className="text-xs text-white/60">
-                Your account is now active. You can log in to continue.
+                Akunmu sudah aktif. Silakan masuk untuk lanjut ke dashboard.
               </p>
               <Link href="/login">
                 <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
-                  Go to Login
+                  Masuk ke Login
                 </button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-4 py-4">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-white/70" />
-              <p className="text-sm text-white/60">Verifying your email...</p>
+            <div
+              className="space-y-4 py-4"
+              role="status"
+              aria-live="polite"
+            >
+              <Loader2
+                className="mx-auto h-8 w-8 animate-spin text-accent"
+                aria-hidden
+              />
+              <p className="text-sm text-white/60">Memverifikasi email kamu…</p>
             </div>
           )}
         </div>
@@ -180,8 +196,13 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0B1021] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#00E5FF]" />
+        <div
+          className="flex min-h-screen items-center justify-center bg-black"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
+          <span className="sr-only">Memuat halaman verifikasi…</span>
         </div>
       }
     >

@@ -125,35 +125,33 @@ export default function RegisterPage() {
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.9)]">
-          CREATE YOUR ACCOUNT
+          {registeredEmail ? "CEK EMAIL KAMU" : "CREATE YOUR ACCOUNT"}
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
-          Create your Account and start your journey here!
+          {registeredEmail
+            ? "Satu langkah lagi untuk mengaktifkan akunmu."
+            : "Create your Account and start your journey here!"}
         </p>
 
         {registeredEmail ? (
           <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] text-center">
-            <div className="w-12 h-12 rounded-full bg-green-400/20 border border-green-400/40 flex items-center justify-center mx-auto text-green-400">
-              <MailCheck className="w-6 h-6" />
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-accent/40 bg-accent/10 text-accent">
+              <MailCheck className="h-6 w-6" aria-hidden />
             </div>
-            <h3 className="font-display text-lg font-bold text-white mt-4">
-              Check Your Email
-            </h3>
-            <p className="text-xs text-white/60 mt-2">
-              We sent a verification link to{" "}
-              <span className="font-semibold text-white">
-                {registeredEmail}
-              </span>
-              . Please open it to activate your account before logging in.
+            <h2 className="mt-4 font-display text-lg font-bold text-white">
+              Link verifikasi sudah dikirim
+            </h2>
+            <p className="mx-auto mt-4 w-fit max-w-full truncate rounded-full border border-border bg-surface px-4 py-2 font-mono text-xs text-accent">
+              {registeredEmail}
             </p>
-            <p className="text-[11px] text-white/40 mt-3">
-              Didn&apos;t receive it? Check your{" "}
-              <span className="text-white/70">Spam</span> or{" "}
-              <span className="text-white/70">Promotions</span> folder.
+            <p className="mt-3 text-xs text-white/60">
+              Buka emailnya dan klik link di dalamnya untuk mengaktifkan akun —
+              sebelum itu akunmu belum aktif. Kalau emailnya tidak ada, cek
+              folder Spam atau Promosi.
             </p>
-            <Link href="/login">
-              <button className="cursor-pointer w-full h-10 mt-6 rounded-full bg-white text-background font-semibold hover:bg-white/90 transition-all">
-                Go to Login
+            <Link href="/login" className="mt-6 block">
+              <button className="cursor-pointer w-full h-10 rounded-full bg-white text-background font-semibold hover:bg-white/90 transition-all">
+                Masuk ke Login
               </button>
             </Link>
             <button
@@ -162,14 +160,14 @@ export default function RegisterPage() {
               disabled={isResending}
               className="cursor-pointer mt-4 text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
             >
-              {isResending ? "Sending..." : "Resend verification email"}
+              {isResending ? "Mengirim ulang..." : "Kirim ulang email verifikasi"}
             </button>
             <button
               type="button"
               onClick={() => setRegisteredEmail(null)}
               className="cursor-pointer mt-3 text-xs font-semibold text-white/50 hover:text-white transition-colors"
             >
-              Back to register
+              Ganti alamat email
             </button>
           </div>
         ) : (

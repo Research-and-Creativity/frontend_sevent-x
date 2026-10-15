@@ -10,7 +10,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -86,27 +86,56 @@ function ResetPasswordFormContent() {
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div ref={containerRef} className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
-          CREATE NEW PASSWORD
+          {!token
+            ? "LINK TIDAK VALID"
+            : isSuccess
+              ? "PASSWORD TERSIMPAN"
+              : "CREATE NEW PASSWORD"}
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
-          Create your new password and make sure you remember it
+          {!token
+            ? "Link reset password ini tidak bisa dipakai."
+            : isSuccess
+              ? "Kamu akan diarahkan ke halaman login."
+              : "Create your new password and make sure you remember it"}
         </p>
 
         <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
           {!token ? (
-            <div className="border border-red-400/30 rounded-xl p-6 space-y-4 text-center auth-anim">
-              <p className="text-sm text-red-400 font-medium">Invalid or missing reset token.</p>
-              <Link href="/forgot-password">
-                <button className="border border-white/20 text-white text-xs px-6 py-2 rounded-full mt-2 hover:bg-white/10 transition-colors">Request New Link</button>
+            <div className="space-y-4 text-center auth-anim">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-danger/40 bg-danger/10 text-danger">
+                <XCircle className="h-6 w-6" aria-hidden />
+              </div>
+              <h2 className="font-display text-lg font-bold text-white">
+                Link reset tidak valid
+              </h2>
+              <p className="text-xs text-white/60">
+                Token reset tidak ada atau sudah kedaluwarsa. Minta link baru
+                dari halaman lupa password.
+              </p>
+              <Link href="/forgot-password" className="block">
+                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold hover:bg-white/90 transition-all">
+                  Minta link baru
+                </button>
               </Link>
             </div>
           ) : isSuccess ? (
-            <div className="border border-green-400/30 rounded-xl p-6 space-y-4 text-center auth-anim">
-              <div className="w-12 h-12 rounded-full bg-green-400/20 border border-green-400/40 flex items-center justify-center mx-auto text-green-400">
-                <CheckCircle2 className="w-6 h-6" />
+            <div className="space-y-4 text-center auth-anim">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-success/40 bg-success/10 text-success">
+                <CheckCircle2 className="h-6 w-6" aria-hidden />
               </div>
-              <h3 className="font-display text-lg font-bold text-white">Reset Complete!</h3>
-              <p className="text-xs text-white/60">Redirecting to login page...</p>
+              <h2 className="font-display text-lg font-bold text-white">
+                Password berhasil diganti
+              </h2>
+              <p className="text-xs text-white/60">
+                Kamu akan diarahkan ke halaman login. Kalau tidak pindah, klik
+                tombol di bawah.
+              </p>
+              <Link href="/login" className="block">
+                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold hover:bg-white/90 transition-all">
+                  Masuk sekarang
+                </button>
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -170,7 +199,18 @@ function ResetPasswordFormContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0B1021] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#00E5FF]" /></div>}>
+    <Suspense
+      fallback={
+        <div
+          className="flex min-h-screen items-center justify-center bg-black"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
+          <span className="sr-only">Memuat halaman reset password…</span>
+        </div>
+      }
+    >
       <ResetPasswordFormContent />
     </Suspense>
   );
