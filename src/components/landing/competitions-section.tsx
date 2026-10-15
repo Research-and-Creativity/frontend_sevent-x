@@ -127,7 +127,7 @@ export function CompetitionsSection() {
             {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => (
               <div
                 key={c.key}
-                className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm"
+                className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.08)]"
               >
                 <div className="flex gap-5 items-stretch">
                   <img src={c.image} alt={c.title} className="w-32 sm:w-44 shrink-0 rounded-sm self-stretch min-h-[140px] object-cover" />
