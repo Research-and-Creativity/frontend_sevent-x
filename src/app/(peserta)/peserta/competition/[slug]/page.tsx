@@ -32,7 +32,7 @@ const glassInput =
 // Rekening tujuan. Backend tidak memodelkan data ini di database, jadi nilainya
 // ditahan di frontend sebagai konfigurasi organisasi sampai ada endpoint resmi.
 const PAYMENT_ACCOUNT = {
-  amount: "Rp60.000,-",
+  amount: "Rp80.000,-",
   bank: "BNI",
   accountNumber: "0010293810",
   accountName: "Salumita Ardiana",
@@ -295,7 +295,7 @@ export default function CompetitionRegistrationPage() {
               Product Information
             </h2>
             <p className="relative mt-2 text-sm text-text-secondary">
-              You can filled this form with the Product Title and Description
+              You can fill this form with the Product Title and Description
             </p>
 
             <div className="relative mt-6 space-y-5">

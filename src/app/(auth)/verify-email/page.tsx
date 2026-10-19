@@ -81,7 +81,7 @@ function VerifyEmailContent() {
         alt=""
         width={1000}
         height={1262}
-        className="absolute -right-40 top-[-10%] w-[620px] h-auto opacity-[0.08] pointer-events-none"
+        className="absolute -right-50 top-[-50%] w-[620px] h-auto opacity-[0.08] pointer-events-none"
       />
 
       <Link

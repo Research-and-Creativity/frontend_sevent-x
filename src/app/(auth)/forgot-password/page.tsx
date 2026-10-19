@@ -3,11 +3,13 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
+import { prefersReducedMotion } from "@/lib/accessibility";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
@@ -29,6 +31,12 @@ export default function ForgotPasswordPage() {
 
   // Cukup Fade in Form (Kena lemparan efek transisi memudar dari halaman sebelumnya)
   useGSAP(() => {
+    if (typeof window === "undefined" || prefersReducedMotion()) {
+      // Class `opacity-0` di JSX hanya ditimpa oleh inline style GSAP, jadi kalau
+      // animasi dilewati form harus di-set opacity 1 atau tetap tak terlihat.
+      gsap.set(formRef.current, { opacity: 1, y: 0 });
+      return;
+    }
     gsap.fromTo(
       formRef.current,
       { opacity: 0, y: 20 },
@@ -61,9 +69,13 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative min-h-screen bg-black text-white flex flex-col overflow-hidden">
-      <div className="absolute inset-0 opacity-40 pointer-events-none"><img src="/assets/image/pattern-landing2.svg" alt="" className="w-full h-full object-cover" /></div>
+      {/* background pattern */}
+      <Image src="/assets/image/pattern-landing2.svg" alt="" width={1440} height={1712} className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
+      {/* big watermark logos */}
+      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -left-40 bottom-[-15%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
+      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -right-50 top-[-50%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
       <Link href="/" className="absolute top-8 left-8 z-50 flex items-center gap-3">
-        <img src="/assets/image/logo-putih.png" alt="SEVENT X" className="w-8 h-auto" />
+        <Image src="/assets/image/logo-putih.png" alt="SEVENT X" width={1000} height={1262} className="w-8 h-auto" />
         <span className="font-display text-xl font-extrabold tracking-wide">SEVENT X</span>
       </Link>
       {/* my-auto, bukan flex-1: flex-1 memakai flex-basis 0 sehingga anaknya

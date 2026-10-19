@@ -74,7 +74,7 @@ function ResetPasswordFormContent() {
     <div className="relative min-h-screen bg-black text-white flex flex-col overflow-hidden">
       <Image src="/assets/image/pattern-landing2.svg" alt="" width={1440} height={1712} className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none" />
       <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -left-40 bottom-[-15%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
-      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -right-40 top-[-10%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
+      <Image src="/assets/image/logo-putih.png" alt="" width={1000} height={1262} className="absolute -right-50 top-[-50%] w-[620px] h-auto opacity-[0.08] pointer-events-none" />
 
       <Link href="/" className="absolute top-8 left-8 z-50 flex items-center gap-3">
         <Image src="/assets/image/logo-putih.png" alt="SEVENT X" width={1000} height={1262} className="w-8 h-auto" />
