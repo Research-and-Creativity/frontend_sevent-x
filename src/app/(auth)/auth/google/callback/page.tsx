@@ -2,12 +2,20 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessageWithDefault } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+// Style glass yang sama dengan halaman auth lainnya
+const glass =
+  "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] " +
+  "backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] " +
+  "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl " +
+  "before:bg-gradient-to-br before:from-white/[0.04] before:to-transparent";
 
 function GoogleCallbackContent() {
   const router = useRouter();
@@ -63,86 +71,109 @@ function GoogleCallbackContent() {
   }, [code, router, setAuth]);
 
   return (
-    <div className="h-screen flex bg-background overflow-hidden relative">
-      {/* Left Content Area */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 z-50 relative">
-        <div className="max-w-md w-full mx-auto space-y-6">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-white mb-2">
-            Verifikasi <span className="text-accent">Akun Google</span>
+    <div className={`${glass} mx-auto w-full max-w-md p-8 text-center`}>
+      {status === "loading" && (
+        <div className="relative space-y-4">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">
+            Verifikasi Akun Google
           </h1>
-
-          {status === "loading" && (
-            <div className="space-y-4">
-              <p className="text-sm text-text-secondary">
-                Menghubungkan dan memverifikasi kredensial akun Google kamu...
-              </p>
-              <div className="flex items-center gap-3 p-4 bg-surface border border-border rounded-xl text-xs text-text-secondary">
-                <Loader2 className="w-4 h-4 animate-spin text-accent shrink-0" />
-                <span className="font-mono">Memproses autentikasi...</span>
-              </div>
-            </div>
-          )}
-
-          {status === "success" && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Autentikasi berhasil! Mengalihkan ke dashboard...</span>
-              </div>
-            </div>
-          )}
-
-          {status === "error" && (
-            <div className="space-y-5">
-              <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400 space-y-1.5">
-                <div className="flex items-center gap-2 font-semibold">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Autentikasi Gagal</span>
-                </div>
-                <p className="text-text-secondary text-[11px]">{errorMessage}</p>
-              </div>
-
-              <Button
-                onClick={() => router.push("/login")}
-                className="w-full bg-primary hover:bg-primary-hover text-white font-medium h-12 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Kembali ke Halaman Login</span>
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center justify-center gap-2.5 text-sm text-text-secondary">
+            <Loader2 className="h-4 w-4 animate-spin text-[#7D8CFF]" aria-hidden />
+            <span>Menghubungkan dan memverifikasi kredensial...</span>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Decorative Right Circle */}
-      <div className="hidden lg:flex w-1/2 h-full items-center justify-end relative z-0">
-        <div className="w-[110vh] h-[110vh] rounded-full overflow-hidden translate-x-[28%] shrink-0">
-          <img
-            src="/images/auth-collage.jpg"
-            className="w-full h-full object-cover"
-            alt="Collage"
-          />
+      {status === "success" && (
+        <div className="relative space-y-4">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+            <CheckCircle2 className="h-6 w-6" />
+          </span>
+          <p className="text-sm text-white">
+            Autentikasi berhasil! Mengalihkan ke dashboard...
+          </p>
         </div>
-      </div>
+      )}
+
+      {status === "error" && (
+        <div className="relative space-y-5">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/15 text-rose-400">
+            <AlertCircle className="h-6 w-6" />
+          </span>
+          <div className="space-y-1.5">
+            <p className="font-semibold text-rose-400">Autentikasi Gagal</p>
+            <p className="text-xs text-text-secondary">{errorMessage}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[_0_0_30px_rgba(255,255,255,0.3)] transition-colors hover:bg-white/90"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke Halaman Login
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function GoogleCallbackPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen bg-background flex items-center justify-center">
-          <div className="flex items-center gap-3 text-white/70">
-            <Loader2 className="w-4 h-4 animate-spin text-accent" />
-            <span className="font-mono text-xs tracking-wider uppercase">
-              Memuat...
-            </span>
+    <div className="relative min-h-screen bg-black text-white flex flex-col overflow-hidden">
+      <Image
+        src="/assets/image/pattern-landing2.svg"
+        alt=""
+        width={1440}
+        height={1712}
+        className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+      />
+      <Image
+        src="/assets/image/logo-putih.png"
+        alt=""
+        width={1000}
+        height={1262}
+        className="absolute -left-40 bottom-[-15%] w-[620px] h-auto opacity-[0.08] pointer-events-none"
+      />
+      <Image
+        src="/assets/image/logo-putih.png"
+        alt=""
+        width={1000}
+        height={1262}
+        className="absolute -right-50 top-[-50%] w-[620px] h-auto opacity-[0.08] pointer-events-none"
+      />
+      <Link
+        href="/"
+        className="absolute top-8 left-8 z-50 flex items-center gap-3"
+      >
+        <Image
+          src="/assets/image/logo-putih.png"
+          alt="SEVENT X"
+          width={1000}
+          height={1262}
+          className="w-8 h-auto"
+        />
+        <span className="font-display text-xl font-extrabold tracking-wide">
+          SEVENT X
+        </span>
+      </Link>
+
+      <Suspense
+        fallback={
+          <div className="flex flex-1 items-center justify-center px-4">
+            <div className="flex items-center gap-3 text-white/70">
+              <Loader2 className="h-4 w-4 animate-spin text-[#7D8CFF]" />
+              <span className="font-mono text-xs tracking-wider uppercase">
+                Memuat...
+              </span>
+            </div>
           </div>
+        }
+      >
+        <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
+          <GoogleCallbackContent />
         </div>
-      }
-    >
-      <GoogleCallbackContent />
-    </Suspense>
+      </Suspense>
+    </div>
   );
 }
