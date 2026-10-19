@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessageWithDefault } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 // Style glass yang sama dengan halaman auth lainnya
 const glass =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] " +
-  "backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] " +
+  "shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] " +
   "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl " +
   "before:bg-gradient-to-br before:from-white/[0.04] before:to-transparent";
 
@@ -86,9 +86,6 @@ function GoogleCallbackContent() {
 
       {status === "success" && (
         <div className="relative space-y-4">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-            <CheckCircle2 className="h-6 w-6" />
-          </span>
           <p className="text-sm text-white">
             Autentikasi berhasil! Mengalihkan ke dashboard...
           </p>
@@ -97,9 +94,6 @@ function GoogleCallbackContent() {
 
       {status === "error" && (
         <div className="relative space-y-5">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/15 text-rose-400">
-            <AlertCircle className="h-6 w-6" />
-          </span>
           <div className="space-y-1.5">
             <p className="font-semibold text-rose-400">Autentikasi Gagal</p>
             <p className="text-xs text-text-secondary">{errorMessage}</p>
@@ -107,7 +101,7 @@ function GoogleCallbackContent() {
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[_0_0_30px_rgba(255,255,255,0.3)] transition-colors hover:bg-white/90"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 h-10 text-xs font-semibold text-black transition-colors hover:bg-white/90"
           >
             <ArrowLeft className="h-4 w-4" />
             Kembali ke Halaman Login

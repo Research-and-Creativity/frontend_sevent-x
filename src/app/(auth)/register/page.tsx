@@ -10,7 +10,7 @@ import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 
 const registerSchema = z
@@ -124,7 +124,7 @@ export default function RegisterPage() {
           dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.9)]">
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center">
           {registeredEmail ? "CEK EMAIL KAMU" : "CREATE YOUR ACCOUNT"}
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
@@ -134,11 +134,8 @@ export default function RegisterPage() {
         </p>
 
         {registeredEmail ? (
-          <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-accent/40 bg-accent/10 text-accent">
-              <MailCheck className="h-6 w-6" aria-hidden />
-            </div>
-            <h2 className="mt-4 font-display text-lg font-bold text-white">
+          <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8 text-center">
+            <h2 className="font-display text-lg font-bold text-white">
               Link verifikasi sudah dikirim
             </h2>
             <p className="mx-auto mt-4 w-fit max-w-full truncate rounded-full border border-border bg-surface px-4 py-2 font-mono text-xs text-accent">
@@ -171,7 +168,7 @@ export default function RegisterPage() {
             </button>
           </div>
         ) : (
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             {[
               { id: "fullName", label: "Name", type: "text" },
@@ -266,7 +263,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="cursor-pointer w-full h-10 mt-2 rounded-full bg-white text-background font-semibold  hover:bg-white/90 shadow-[0_0_20px_rgba(36,72,217,0.5)] transition-all disabled:opacity-60"
+              className="cursor-pointer w-full h-10 mt-2 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-60"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -287,7 +284,7 @@ export default function RegisterPage() {
           <button
             type="button"
             onClick={initiateGoogleLogin}
-            className="cursor-pointer w-full h-10 rounded-full bg-[#2E5CFF] shadow-[0_0_20px_rgba(255,255,255,0.5)] hover:bg-[rgb(36,72,217)] text-white font-semibold flex items-center justify-center gap-2 transition-colors "
+            className="cursor-pointer w-full h-10 rounded-full bg-[#2E5CFF] hover:bg-[#3648D9] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

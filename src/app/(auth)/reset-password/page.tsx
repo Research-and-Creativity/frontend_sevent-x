@@ -10,7 +10,7 @@ import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -85,7 +85,7 @@ function ResetPasswordFormContent() {
           dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div ref={containerRef} className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center">
           {!token
             ? "LINK TIDAK VALID"
             : isSuccess
@@ -100,12 +100,9 @@ function ResetPasswordFormContent() {
               : "Create your new password and make sure you remember it"}
         </p>
 
-        <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
+        <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
           {!token ? (
             <div className="space-y-4 text-center auth-anim">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-danger/40 bg-danger/10 text-danger">
-                <XCircle className="h-6 w-6" aria-hidden />
-              </div>
               <h2 className="font-display text-lg font-bold text-white">
                 Link reset tidak valid
               </h2>
@@ -114,16 +111,13 @@ function ResetPasswordFormContent() {
                 dari halaman lupa password.
               </p>
               <Link href="/forgot-password" className="block">
-                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold hover:bg-white/90 transition-all">
+                <button className="w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                   Minta link baru
                 </button>
               </Link>
             </div>
           ) : isSuccess ? (
             <div className="space-y-4 text-center auth-anim">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-success/40 bg-success/10 text-success">
-                <CheckCircle2 className="h-6 w-6" aria-hidden />
-              </div>
               <h2 className="font-display text-lg font-bold text-white">
                 Password berhasil diganti
               </h2>
@@ -132,7 +126,7 @@ function ResetPasswordFormContent() {
                 tombol di bawah.
               </p>
               <Link href="/login" className="block">
-                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold hover:bg-white/90 transition-all">
+                <button className="w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                   Masuk sekarang
                 </button>
               </Link>
@@ -173,7 +167,7 @@ function ResetPasswordFormContent() {
                 {errors.confirmNewPassword && <p className="text-xs text-red-400 mt-1">{errors.confirmNewPassword.message}</p>}
               </div>
 
-              <button type="submit" disabled={isLoading} className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all auth-anim disabled:opacity-60">
+              <button type="submit" disabled={isLoading} className="w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors auth-anim disabled:opacity-60">
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Save and Login"}
               </button>
             </form>

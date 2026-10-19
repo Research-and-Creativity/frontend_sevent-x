@@ -82,15 +82,15 @@ export default function ForgotPasswordPage() {
           dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div ref={formRef} className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6 opacity-0">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">RESET PASSWORD</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center">RESET PASSWORD</h1>
         <p className="text-center text-[0.8rem] text-white/60 mt-1 mb-4">Enter the email associated with your account and we&apos;ll send you instructions to reset your password.</p>
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             <div>
               <label className="text-xs text-white/70">Email</label>
               <input type="email" placeholder="Email" className="mt-1 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors" {...register("email")} />
             </div>
-            <button type="submit" disabled={isLoading} className="cursor-pointer w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all disabled:opacity-60">
+            <button type="submit" disabled={isLoading} className="cursor-pointer w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors disabled:opacity-60">
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Send Reset Link"}
             </button>
           </form>

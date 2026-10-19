@@ -106,7 +106,7 @@ function VerifyEmailContent() {
         ref={containerRef}
         className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6"
       >
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center">
           {isInvalid || status === "error"
             ? "VERIFIKASI GAGAL"
             : status === "success"
@@ -121,12 +121,12 @@ function VerifyEmailContent() {
               : "Sebentar, link verifikasimu sedang diperiksa."}
         </p>
 
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] auth-anim">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8 auth-anim">
           {isInvalid || status === "error" ? (
             <div className="space-y-4 text-center">
               <p className="text-sm text-white/70">{shownError}</p>
               <Link href="/login">
-                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
+                <button className="w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                   Masuk ke Login
                 </button>
               </Link>
@@ -143,7 +143,7 @@ function VerifyEmailContent() {
                 Akunmu sudah aktif. Silakan masuk untuk lanjut ke dashboard.
               </p>
               <Link href="/login">
-                <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
+                <button className="w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                   Masuk ke Login
                 </button>
               </Link>
@@ -155,7 +155,7 @@ function VerifyEmailContent() {
               aria-live="polite"
             >
               <Loader2
-                className="h-4 w-4 animate-spin text-accent"
+                className="h-4 w-4 animate-spin text-white/60"
                 aria-hidden
               />
               <span>Memverifikasi email kamu...</span>
@@ -176,7 +176,7 @@ export default function VerifyEmailPage() {
           role="status"
           aria-live="polite"
         >
-          <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
+          <Loader2 className="h-8 w-8 animate-spin text-white/60" aria-hidden />
           <span className="sr-only">Memuat halaman verifikasi...</span>
         </div>
       }

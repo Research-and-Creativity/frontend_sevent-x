@@ -97,14 +97,14 @@ export default function LoginPage() {
           dipatok setinggi viewport — kalau isinya lebih tinggi, isinya meluber
           dan dipotong overflow-hidden tanpa bisa di-scroll. */}
       <div className="relative z-10 my-auto flex flex-col items-center justify-center px-4 py-6">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">
+        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-center">
           WELCOME BACK!
         </h1>
         <p className="text-center text-xs text-white/60 mt-1 mb-4">
           Input your email and password, let&apos;s continue your journey!
         </p>
 
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)]">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             <div>
               <label htmlFor="email" className="text-xs text-white/70">
@@ -171,7 +171,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="cursor-pointer w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all disabled:opacity-60"
+              className="cursor-pointer w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors disabled:opacity-60"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
