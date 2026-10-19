@@ -162,7 +162,10 @@ export default function PesertaCompetitionPage() {
       return (
         <Button
           type="button"
-          onClick={() => router.push("/peserta/profile")}
+          onClick={() => {
+            toast.warning("Lengkapi profil dulu sebelum daftar kompetisi.");
+            router.push("/peserta/profile");
+          }}
           className={`${pillButton} border border-white/20 bg-white/[0.05] text-white hover:bg-white/[0.1]`}
         >
           Complete Profile First

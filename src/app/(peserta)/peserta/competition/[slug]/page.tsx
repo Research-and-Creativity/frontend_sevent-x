@@ -115,6 +115,13 @@ export default function CompetitionRegistrationPage() {
   }, [teamLoading, team, slug, router]);
 
   const paymentApproved = eligibility?.requirements.paymentApproved ?? false;
+  const paymentStatus = team?.paymentProof?.status ?? null;
+
+  const requirements = eligibility?.requirements;
+  const isEligible =
+    (requirements?.teamApproved ?? false) &&
+    (requirements?.paymentApproved ?? false) &&
+    (requirements?.allMembersDocumentsApproved ?? false);
 
   const members = useMemo(
     () =>
@@ -252,43 +259,96 @@ export default function CompetitionRegistrationPage() {
         </div>
 
         <div className="relative space-y-3">
-          {/* Leader full width */}
-          <div className="flex h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-5">
-            <span className="text-sm text-white">{leaderName || "..."}</span>
-            <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
-              Leader
-            </span>
-          </div>
-
-          {/* Anggota lain, 2 kolom */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {otherMembers.map((member) => (
+          {/* Semua anggota memakai container full-width yang sama, ketua
+              tampil lebih dulu. */}
+          {members.map((member) => {
+            const isMemberLeader = member.role === "LEADER";
+            return (
               <div
                 key={member.id}
                 className="flex h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-5"
               >
                 <span className="text-sm text-white">{member.name}</span>
-                {/* Hanya ketua yang boleh mengeluarkan anggota, dan backend
-                    menolak mengeluarkan diri sendiri. */}
-                {isLeader && (
-                  <button
-                    type="button"
-                    disabled
-                    aria-label={`Remove ${member.name}`}
-                    title="Keluarkan anggota belum tersedia di halaman ini"
-                    className="cursor-not-allowed text-rose-500/30"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                {isMemberLeader ? (
+                  <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+                    Leader
+                  </span>
+                ) : (
+                  /* Hanya ketua yang boleh mengeluarkan anggota, dan backend
+                     menolak mengeluarkan diri sendiri. */
+                  isLeader && (
+                    <button
+                      type="button"
+                      disabled
+                      aria-label={`Remove ${member.name}`}
+                      title="Keluarkan anggota belum tersedia di halaman ini"
+                      className="cursor-not-allowed text-rose-500/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )
                 )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
       {paymentApproved ? (
         <>
+          {/* Submission Requirements checklist */}
+          <div className={`${glass} p-6 lg:p-8`}>
+            <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
+              Submission Requirements
+            </h2>
+            <ul className="relative space-y-2.5 text-sm">
+              <li className="flex items-center gap-2.5">
+                {requirements?.teamApproved ? (
+                  <span className="text-emerald-400">✓</span>
+                ) : (
+                  <span className="text-white/30">✗</span>
+                )}
+                <span className={requirements?.teamApproved ? "text-white" : "text-text-secondary"}>
+                  Tim disetujui
+                </span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                {requirements?.paymentApproved ? (
+                  <span className="text-emerald-400">✓</span>
+                ) : (
+                  <span className="text-white/30">✗</span>
+                )}
+                <span className={requirements?.paymentApproved ? "text-white" : "text-text-secondary"}>
+                  Pembayaran disetujui
+                </span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                {requirements?.allMembersDocumentsApproved ? (
+                  <span className="text-emerald-400">✓</span>
+                ) : (
+                  <span className="text-white/30">✗</span>
+                )}
+                <span className={requirements?.allMembersDocumentsApproved ? "text-white" : "text-text-secondary"}>
+                  Semua dokumen anggota disetujui
+                </span>
+              </li>
+            </ul>
+            {!isEligible && (
+              <div className="relative mt-5">
+                <p className="text-xs text-text-secondary mb-3">
+                  Lengkapi semua syarat di atas sebelum mengirim karya.
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => router.push("/peserta/profile")}
+                  className="rounded-full border border-white/20 bg-white/[0.05] px-5 h-9 text-xs font-semibold text-white hover:bg-white/[0.1]"
+                >
+                  Lengkapi di Profile
+                </Button>
+              </div>
+            )}
+          </div>
+
           {/* Product Information */}
           <div className={`${glass} p-6 lg:p-8`}>
             <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
@@ -460,6 +520,19 @@ export default function CompetitionRegistrationPage() {
             </div>
           </div>
         </>
+      ) : paymentStatus === "REVIEW" ? (
+        /* Payment Information — sudah dikirim, menunggu review admin */
+        <div className={`${glass} p-6 lg:p-8`}>
+          <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
+            Payment Information
+          </h2>
+          <p className="relative mt-2 text-sm text-text-secondary">
+            Bukti pembayaran sudah dikirim dan sedang ditinjau oleh admin.
+          </p>
+          <span className="mt-5 inline-flex items-center rounded-full border border-amber-500/60 px-4 py-1.5 text-xs font-semibold text-amber-500">
+            Menunggu Review
+          </span>
+        </div>
       ) : (
         /* Payment Information */
         <div className={`${glass} p-6 lg:p-8`}>
