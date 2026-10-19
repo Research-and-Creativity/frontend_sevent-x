@@ -7,8 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
-import { SocialLinks } from "@/components/social-links";
+import { Loader2 } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/accessibility";
@@ -114,29 +113,18 @@ function VerifyEmailContent() {
               ? "EMAIL TERVERIFIKASI"
               : "VERIFIKASI EMAIL"}
         </h1>
-        <p className="text-center text-xs text-white/60 mt-1 mb-4">
+        <p className="text-center text-[0.8rem] text-white/60 mt-1 mb-4">
           {isInvalid || status === "error"
             ? "Link verifikasinya tidak bisa dipakai."
             : status === "success"
-              ? "Akunmu sudah aktif."
+              ? "Akunmu sudah aktif. Silakan masuk untuk lanjut."
               : "Sebentar, link verifikasimu sedang diperiksa."}
         </p>
 
-        <div className="w-full max-w-2xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] text-center auth-anim">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-8 shadow-[0_0_60px_rgba(255,255,255,0.08)] auth-anim">
           {isInvalid || status === "error" ? (
-            <div className="space-y-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-danger/40 bg-danger/10 text-danger">
-                <XCircle className="h-6 w-6" aria-hidden />
-              </div>
-              <h2 className="font-display text-lg font-bold text-white">
-                Verifikasi gagal
-              </h2>
-              <p className="text-xs text-white/60">{shownError}</p>
-              <p className="text-[11px] text-white/40">
-                Link verifikasi cuma bisa dipakai sekali dan punya masa
-                berlaku. Minta link baru dari halaman daftar, dan cek juga
-                folder Spam atau Promosi.
-              </p>
+            <div className="space-y-4 text-center">
+              <p className="text-sm text-white/70">{shownError}</p>
               <Link href="/login">
                 <button className="w-full h-10 rounded-full bg-white text-background text-sm font-semibold shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-white/90 transition-all">
                   Masuk ke Login
@@ -150,14 +138,8 @@ function VerifyEmailContent() {
               </Link>
             </div>
           ) : status === "success" ? (
-            <div className="space-y-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-success/40 bg-success/10 text-success">
-                <CheckCircle2 className="h-6 w-6" aria-hidden />
-              </div>
-              <h2 className="font-display text-lg font-bold text-white">
-                Email terverifikasi
-              </h2>
-              <p className="text-xs text-white/60">
+            <div className="space-y-4 text-center">
+              <p className="text-sm text-white/70">
                 Akunmu sudah aktif. Silakan masuk untuk lanjut ke dashboard.
               </p>
               <Link href="/login">
@@ -168,24 +150,17 @@ function VerifyEmailContent() {
             </div>
           ) : (
             <div
-              className="space-y-4 py-4"
+              className="flex items-center justify-center gap-2.5 py-4 text-sm text-white/60"
               role="status"
               aria-live="polite"
             >
               <Loader2
-                className="mx-auto h-8 w-8 animate-spin text-accent"
+                className="h-4 w-4 animate-spin text-accent"
                 aria-hidden
               />
-              <p className="text-sm text-white/60">Memverifikasi email kamu…</p>
+              <span>Memverifikasi email kamu...</span>
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="relative z-10 flex items-center justify-between px-4 md:px-8 pb-6 text-xs text-white/50">
-        <span>©2026 SEVENT. All Rights Reserved</span>
-        <div className="flex items-center gap-3">
-          <SocialLinks />
         </div>
       </div>
     </div>
@@ -202,7 +177,7 @@ export default function VerifyEmailPage() {
           aria-live="polite"
         >
           <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden />
-          <span className="sr-only">Memuat halaman verifikasi…</span>
+          <span className="sr-only">Memuat halaman verifikasi...</span>
         </div>
       }
     >
