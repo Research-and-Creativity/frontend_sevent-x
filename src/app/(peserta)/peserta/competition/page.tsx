@@ -39,8 +39,8 @@ const modalSubmit =
 // Backend tidak menyimpan logo kompetisi, jadi dipetakan dari slug.
 // Slug yang tidak dikenali memakai logo generik.
 const COMPETITION_LOGOS: Record<string, string> = {
-  softdev: "/assets/image/logo_softdev.svg",
-  uiux: "/assets/image/logo_uiux.svg",
+  "software-development": "/assets/image/logo_softdev.svg",
+  "ui-ux": "/assets/image/logo_uiux.svg",
 };
 const FALLBACK_LOGO = "/assets/image/logo_biru.svg";
 
