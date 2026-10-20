@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
+import { useAdminReviewCounts } from "@/hooks/use-admin";
 import { toast } from "sonner";
 import {
   LayoutGrid,
@@ -16,6 +17,7 @@ import {
   LogOut,
   Menu,
   X,
+  ListChecks,
 } from "lucide-react";
 
 const mainLinks = [
@@ -27,6 +29,7 @@ const mainLinks = [
 const webLinks = [
   { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
   { href: "/admin/announcement", label: "Announcement", icon: Megaphone },
+  { href: "/admin/criteria", label: "Kriteria", icon: ListChecks },
 ];
 
 // Navigasi sidebar yang dipakai dua kali: sidebar desktop (sticky) dan drawer
@@ -35,10 +38,12 @@ function SidebarContent({
   pathname,
   onNavigate,
   onLogout,
+  reviewCounts = { paymentReview: 0, docReview: 0 },
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
+  reviewCounts?: { paymentReview: number; docReview: number };
 }) {
   return (
     <>
@@ -48,17 +53,30 @@ function SidebarContent({
       </Link>
 
       <nav className="space-y-1">
-        {mainLinks.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            onClick={onNavigate}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-          >
-            <l.icon className="w-5 h-5" />
-            {l.label}
-          </Link>
-        ))}
+        {mainLinks.map((l) => {
+          const badge =
+            l.href === "/admin/teams"
+              ? reviewCounts.paymentReview
+              : l.href === "/admin/documents"
+              ? reviewCounts.docReview
+              : 0;
+          return (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={onNavigate}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+            >
+              <l.icon className="w-5 h-5" />
+              <span className="flex-1">{l.label}</span>
+              {badge > 0 && (
+                <span className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       <p className="mt-8 mb-2 text-[10px] tracking-widest text-white/40">
@@ -96,6 +114,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
+
+  const reviewCounts = useAdminReviewCounts();
+
+  // Toast saat jumlah review meningkat (init-guard: tidak fire saat load awal).
+  const prevCountsRef = useRef<{ paymentReview: number; docReview: number } | null>(null);
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      prevCountsRef.current = { ...reviewCounts };
+      return;
+    }
+    const prev = prevCountsRef.current;
+    if (!prev) {
+      prevCountsRef.current = { ...reviewCounts };
+      return;
+    }
+    const increased =
+      reviewCounts.paymentReview > prev.paymentReview ||
+      reviewCounts.docReview > prev.docReview;
+    if (increased) {
+      const total =
+        reviewCounts.paymentReview + reviewCounts.docReview - (prev.paymentReview + prev.docReview);
+      toast.info(
+        `📋 Ada ${total > 0 ? total : 1} pembayaran/dokumen baru menunggu review`
+      );
+    }
+    prevCountsRef.current = { ...reviewCounts };
+  }, [reviewCounts.paymentReview, reviewCounts.docReview]);
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
@@ -143,6 +190,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
                 onLogout={() => router.push("/login")}
+                reviewCounts={reviewCounts}
               />
             </div>
           </div>
@@ -157,6 +205,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <SidebarContent
             pathname={pathname}
             onLogout={() => router.push("/login")}
+            reviewCounts={reviewCounts}
           />
         </div>
       </aside>

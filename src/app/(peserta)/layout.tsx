@@ -7,12 +7,14 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { toast } from "sonner";
-import { LayoutGrid, LogOut, Medal, User, Menu, X } from "lucide-react";
+import { LayoutGrid, LogOut, Medal, User, Menu, X, Megaphone } from "lucide-react";
+import { useAnnouncementNotifications } from "@/hooks/use-peserta";
 
 const mainLinks = [
   { href: "/peserta/dashboard", label: "Overview", icon: LayoutGrid },
   { href: "/peserta/profile", label: "Profile", icon: User },
   { href: "/peserta/competition", label: "Competition", icon: Medal },
+  { href: "/peserta/announcements", label: "Announcements", icon: Megaphone },
 ];
 
 // Navigasi sidebar yang dipakai dua kali: sidebar desktop (sticky) dan drawer
@@ -21,10 +23,12 @@ function SidebarContent({
   pathname,
   onNavigate,
   onLogout,
+  unreadAnnouncements = 0,
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
+  unreadAnnouncements?: number;
 }) {
   return (
     <>
@@ -34,17 +38,26 @@ function SidebarContent({
       </Link>
       <div className="flex flex-col justify-between h-full">
         <nav className="space-y-1">
-          {mainLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={onNavigate}
-              className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-            >
-              <l.icon className="w-5 h-5" />
-              {l.label}
-            </Link>
-          ))}
+          {mainLinks.map((l) => {
+            const isAnnouncements = l.href === "/peserta/announcements";
+            const badge = isAnnouncements ? unreadAnnouncements : 0;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={onNavigate}
+                className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+              >
+                <l.icon className="w-5 h-5" />
+                <span className="flex-1">{l.label}</span>
+                {badge > 0 && (
+                  <span className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <button
@@ -68,6 +81,7 @@ export default function PesertaLayout({
   const pathname = usePathname();
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
+  const { unreadCount: unreadAnnouncements } = useAnnouncementNotifications();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
 
@@ -123,6 +137,7 @@ export default function PesertaLayout({
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
                 onLogout={() => router.push("/login")}
+                unreadAnnouncements={unreadAnnouncements}
               />
             </div>
           </div>
@@ -143,6 +158,7 @@ export default function PesertaLayout({
           <SidebarContent
             pathname={pathname}
             onLogout={() => router.push("/login")}
+            unreadAnnouncements={unreadAnnouncements}
           />
         </div>
       </aside>

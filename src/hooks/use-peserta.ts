@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
+import { useAnnouncementStore } from "@/store/announcement-store";
+import { toast } from "sonner";
 import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse, GalleryItem } from "@/types/api";
 
 export interface TimelineStage {
@@ -387,6 +390,69 @@ export function useMyAnnouncements() {
   });
 }
 
+// Hook 15b: Notifikasi announcement baru di sidebar peserta (badge unread + toast).
+// Tidak memanggil useNewsFeed/useMyAnnouncements di sini? — dipanggil di dalam,
+// jadi hook ini juga memicu polling 30s untuk badge.
+export function useAnnouncementNotifications() {
+  const { data: myAnnouncementsData } = useMyAnnouncements();
+  const { data: newsFeedData } = useNewsFeed({ page: 1, limit: 10 });
+
+  const lastSeen = useAnnouncementStore((s) => s.lastSeen);
+  const markSeen = useAnnouncementStore((s) => s.markSeen);
+
+  // Inisialisasi lastSeen saat pertama kali ada data (hindari spam badge di kunjungan pertama).
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current) return;
+    if (!lastSeen && (myAnnouncementsData || newsFeedData)) {
+      markSeen();
+      initializedRef.current = true;
+    } else {
+      initializedRef.current = true;
+    }
+  }, [lastSeen, myAnnouncementsData, newsFeedData, markSeen]);
+
+  // Kumpulkan item announcement yang published + news posts, dengan timestamp.
+  const publishedTeamAnns = (myAnnouncementsData?.announcements || []).filter(
+    (a) => a.publishedAt
+  );
+  const newsItems = newsFeedData?.news || [];
+
+  const threshold = lastSeen ? new Date(lastSeen).getTime() : Infinity;
+
+  const unreadTeam = publishedTeamAnns.filter((a) => {
+    const t = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    return Number.isFinite(t) && t > threshold;
+  });
+  const unreadNews = newsItems.filter((n) => {
+    const t = new Date(n.createdAt).getTime();
+    return Number.isFinite(t) && t > threshold;
+  });
+  const unreadCount = unreadTeam.length + unreadNews.length;
+
+  // Toast saat item baru muncul setelah load awal (ref-based, tidak fire di load pertama).
+  const prevIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const ids = new Set<string>([
+      ...publishedTeamAnns.map((a) => `t:${a.id}`),
+      ...newsItems.map((n) => `n:${n.id}`),
+    ]);
+
+    if (prevIdsRef.current === null) {
+      prevIdsRef.current = ids;
+      return;
+    }
+    const prev = prevIdsRef.current;
+    const newCount = Array.from(ids).filter((id) => !prev.has(id)).length;
+    if (newCount > 0) {
+      toast.success(`📢 Ada ${newCount} announcement baru`);
+    }
+    prevIdsRef.current = ids;
+  }, [publishedTeamAnns, newsItems]);
+
+  return { unreadCount };
+}
+
 export interface NewsPagination {
   page: number;
   limit: number;
@@ -453,6 +519,9 @@ export function useNewsFeed(params?: { tag?: string; page?: number; limit?: numb
       };
     },
     staleTime: 30 * 1000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 

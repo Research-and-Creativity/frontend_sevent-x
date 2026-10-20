@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { User, UserRole, NewsPost, NewsTag, GalleryItem } from "@/types/api";
+import { User, UserRole, NewsPost, NewsTag, GalleryItem, Team } from "@/types/api";
+import { payStatusInfo, docStatusInfo } from "@/lib/admin-team-status";
 
 // Hook 1: Fetch Users list for Admin with search & role filter
 export function useAdminUsers(search?: string, role?: UserRole | string) {
@@ -137,7 +138,40 @@ export function useAdminOverview() {
       return res.data?.data || res.data;
     },
     staleTime: 30 * 1000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
+}
+
+// Hook 6b: Hitung jumlah tim yang menunggu review pembayaran & dokumen,
+// untuk badge di sidebar admin. Reuse queryKey ["adminTeams", ""] agar share
+// cache dengan halaman dashboard (tidak dobel request).
+export function useAdminReviewCounts() {
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ["adminTeams", ""],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/teams");
+        const list = res.data?.data || res.data;
+        return Array.isArray(list) ? list : [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+
+  let paymentReview = 0;
+  let docReview = 0;
+  for (const t of teams) {
+    if (payStatusInfo(t).label === "Need Review") paymentReview += 1;
+    if (docStatusInfo(t).label === "Need Review") docReview += 1;
+  }
+  return { paymentReview, docReview };
 }
 
 export interface AdminUserDocumentItem {

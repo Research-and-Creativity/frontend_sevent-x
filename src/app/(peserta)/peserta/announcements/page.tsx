@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,8 +17,13 @@ import {
   Clock,
 } from "lucide-react";
 import { useMyAnnouncements, useNewsFeed } from "@/hooks/use-peserta";
+import { useAnnouncementStore } from "@/store/announcement-store";
 
 export default function PesertaAnnouncementsPage() {
+  const markSeen = useAnnouncementStore((s) => s.markSeen);
+  useEffect(() => {
+    markSeen();
+  }, [markSeen]);
   // 1. Fetch Team Announcement (Results / Finalist)
   const { data: myAnnouncementsData, isLoading: isAnnouncementsLoading } =
     useMyAnnouncements();
