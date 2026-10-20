@@ -34,6 +34,10 @@ function formatRange(startISO: string, endISO: string) {
   const sMonth = monthFmt.format(start).toUpperCase();
   const eMonth = monthFmt.format(end).toUpperCase();
   const year = yearFmt.format(end);
+  // Event tunggal (satu hari): tampilkan satu tanggal, tanpa range "05–05".
+  if (sDay === eDay && sMonth === eMonth) {
+    return `${sDay} ${sMonth} ${year}`;
+  }
   return sMonth === eMonth
     ? `${sDay}–${eDay} ${eMonth} ${year}`
     : `${sDay} ${sMonth} – ${eDay} ${eMonth} ${year}`;
