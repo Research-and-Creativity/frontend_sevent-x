@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { TIMELINE_EVENTS } from "@/config/site";
+import { buildLandingTimeline } from "@/lib/timeline-events";
+import { useCompetitions } from "@/hooks/use-peserta";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,12 +45,6 @@ function formatRange(startISO: string, endISO: string) {
     : `${sDay} ${sMonth} – ${eDay} ${eMonth} ${year}`;
 }
 
-const EVENTS = TIMELINE_EVENTS.map((e, i) => ({
-  date: formatRange(e.start, e.end),
-  title: e.title,
-  side: (i % 2 === 0 ? "top" : "bottom") as "top" | "bottom",
-}));
-
 const COLS_CLASS: Record<number, string> = {
   1: "md:grid-cols-1",
   2: "md:grid-cols-2",
@@ -59,6 +55,19 @@ const COLS_CLASS: Record<number, string> = {
 
 export function TimelineSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sumber kebenaran jadwal = database (lewatan API). site.ts hanya cadangan
+  // bila backend belum jalan / belum punya data timeline.
+  const { data: competitions } = useCompetitions();
+  const events = useMemo(() => {
+    const fromApi = buildLandingTimeline(competitions);
+    const source = fromApi.length > 0 ? fromApi : TIMELINE_EVENTS;
+    return source.map((e, i) => ({
+      date: formatRange(e.start, e.end),
+      title: e.title,
+      side: (i % 2 === 0 ? "top" : "bottom") as "top" | "bottom",
+    }));
+  }, [competitions]);
 
   useGSAP(
     () => {
@@ -80,7 +89,7 @@ export function TimelineSection() {
     { scope: containerRef },
   );
 
-  const gridClass = COLS_CLASS[Math.min(EVENTS.length, 5)] ?? "md:grid-cols-1";
+  const gridClass = COLS_CLASS[Math.min(events.length, 5)] ?? "md:grid-cols-1";
 
   return (
     <section
@@ -116,7 +125,7 @@ export function TimelineSection() {
           />
 
           <div className={`grid grid-cols-1 ${gridClass} gap-10 md:gap-4`}>
-            {EVENTS.map((e, i) => (
+            {events.map((e, i) => (
               <div
                 key={i}
                 className="tl-item relative flex flex-col items-center md:h-80"

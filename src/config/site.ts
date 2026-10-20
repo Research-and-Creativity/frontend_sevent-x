@@ -8,7 +8,7 @@ export type TimelineEvent = {
 
 export const TIMELINE_EVENTS: TimelineEvent[] = [
   {
-    start: "2026-11-01T00:00:00+07:00",
+    start: "2026-10-01T00:00:00+07:00",
     end: "2026-11-30T23:59:59+07:00",
     title: "Pendaftaran & Submission Lomba",
   },

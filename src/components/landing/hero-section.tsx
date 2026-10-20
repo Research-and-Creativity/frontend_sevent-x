@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { REGISTRATION_DEADLINE } from "@/config/site";
+import { useCompetitions } from "@/hooks/use-peserta";
 import { onWelcomeDone } from "@/components/landing/welcome-overlay";
 
 if (typeof window !== "undefined") {
@@ -48,7 +49,16 @@ export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const time = useCountdown(REGISTRATION_DEADLINE);
+  // Deadline ikut fase REGISTRATION di database; site.ts hanya cadangan.
+  const { data: competitions } = useCompetitions();
+  const registrationDeadline = useMemo(() => {
+    const fromApi = (competitions ?? [])
+      .flatMap((c) => c.timelines ?? [])
+      .find((t) => t.phase === "REGISTRATION");
+    return fromApi?.endDate ?? REGISTRATION_DEADLINE;
+  }, [competitions]);
+
+  const time = useCountdown(registrationDeadline);
 
   useGSAP(
     () => {
