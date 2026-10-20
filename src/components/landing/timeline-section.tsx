@@ -7,7 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { TIMELINE_EVENTS } from "@/config/site";
-import { buildLandingTimeline } from "@/lib/timeline-events";
+import { buildLandingTimeline, mergeLandingEvents } from "@/lib/timeline-events";
 import { useCompetitions } from "@/hooks/use-peserta";
 
 if (typeof window !== "undefined") {
@@ -56,12 +56,15 @@ const COLS_CLASS: Record<number, string> = {
 export function TimelineSection() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sumber kebenaran jadwal = database (lewatan API). site.ts hanya cadangan
-  // bila backend belum jalan / belum punya data timeline.
+  // Sumber kebenaran jadwal = site.ts, disinkronkan ke DB lewat
+  // `npm run timeline:sync` (backend). Data API dipakai bila sudah ada;
+  // kalau belum, fallback ke site.ts — keduanya melewati merge yang sama
+  // supaya REGISTRATION + UPLOAD_KARYA tetap satu kartu.
   const { data: competitions } = useCompetitions();
   const events = useMemo(() => {
     const fromApi = buildLandingTimeline(competitions);
-    const source = fromApi.length > 0 ? fromApi : TIMELINE_EVENTS;
+    const source =
+      fromApi.length > 0 ? fromApi : mergeLandingEvents(TIMELINE_EVENTS);
     return source.map((e, i) => ({
       date: formatRange(e.start, e.end),
       title: e.title,
