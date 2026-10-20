@@ -7,6 +7,7 @@ type Criteria = Array<{
   name: string;
   maxScore: number;
   order: number;
+  weight?: number;
 }>;
 
 interface ScoreSummaryProps {
@@ -31,7 +32,13 @@ export function ScoreSummary({
   }
 
   const byCriteria = new Map(scores.map((s) => [s.criteriaId, s.score]));
-  const total = scores.reduce((acc, s) => acc + s.score, 0);
+  const criteriaById = new Map(criteriaList.map((c) => [c.id, c]));
+  const total = scores.reduce((acc, s) => {
+    const c = criteriaById.get(s.criteriaId);
+    const maxScore = c?.maxScore ?? 1;
+    const weight = c?.weight ?? 0;
+    return acc + (s.score / maxScore) * weight;
+  }, 0);
   const columns = `repeat(${Math.max(criteriaList.length, 1) + 1}, minmax(0, 1fr))`;
 
   return (

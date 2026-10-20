@@ -121,11 +121,14 @@ export interface Submission {
 export interface ScoreCriteria {
   id: string;
   competitionId: string;
+  round: "PENYISIHAN" | "FINAL";
   name: string;
   description?: string | null;
+  group?: string | null;
   weight: number;
   maxScore: number;
-  createdAt: string;
+  order: number;
+  createdAt?: string;
 }
 
 export interface CriteriaScore {

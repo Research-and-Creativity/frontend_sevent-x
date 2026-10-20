@@ -47,6 +47,8 @@ interface ScoringFormProps {
   existingScores: JudgeSubmissionScore[];
   feedback: string | null;
   isLocked: boolean;
+  round: "PENYISIHAN" | "FINAL";
+  rubric: { totalWeight: number; isValid: boolean; criteriaCount: number };
 }
 
 // Dipisah dari halaman agar state form bisa diinisialisasi sekali dari data
@@ -58,6 +60,8 @@ function ScoringForm({
   existingScores,
   feedback,
   isLocked,
+  round,
+  rubric,
 }: ScoringFormProps) {
   const router = useRouter();
   const submitScore = useSubmitJudgeScore(submissionId);
@@ -90,8 +94,35 @@ function ScoringForm({
     [criteriaList, scores]
   );
 
+  const weightedTotal = useMemo(() => {
+    let total = 0;
+    for (const c of criteriaList) {
+      const raw = scores[c.id];
+      if (raw === undefined || raw === "") continue;
+      const n = Number(raw);
+      if (Number.isNaN(n)) continue;
+      const maxScore = c.maxScore || 1;
+      const weight = c.weight || 0;
+      total += (n / maxScore) * weight;
+    }
+    return parseFloat(total.toFixed(2));
+  }, [criteriaList, scores]);
+
+  const groups = useMemo(() => {
+    const map = new Map<string, Criteria>();
+    for (const c of criteriaList) {
+      const key = c.group || "";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    }
+    return Array.from(map.entries());
+  }, [criteriaList]);
+
   const canSubmit =
-    criteriaList.length > 0 && missing.length === 0 && outOfRange.length === 0;
+    criteriaList.length > 0 &&
+    rubric.isValid &&
+    missing.length === 0 &&
+    outOfRange.length === 0;
 
   const handleConfirmSubmit = async () => {
     if (!canSubmit) return;
@@ -120,45 +151,83 @@ function ScoringForm({
           Judgement Preliminary
         </h2>
 
+        <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-6 flex items-center gap-3">
+          Judgement {round === "FINAL" ? "Final" : "Preliminary"}
+          <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border border-white/20 text-white/70">
+            {round}
+          </span>
+        </h2>
+
+        {!rubric.isValid && criteriaList.length > 0 && (
+          <div className="relative mb-5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-300">
+            Rubrik penilaian belum sah (total bobot {rubric.totalWeight}%, wajib 100%).
+            Hubungi panitia sebelum mengirim penilaian.
+          </div>
+        )}
+
         {criteriaList.length === 0 ? (
           <p className="text-sm text-white/60">
             Kriteria penilaian belum disiapkan panitia.
           </p>
         ) : (
-          <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-            {criteriaList.map((c) => {
-              const invalid =
-                scores[c.id] !== undefined &&
-                scores[c.id] !== "" &&
-                (Number(scores[c.id]) < 0 || Number(scores[c.id]) > c.maxScore);
-              return (
-                <div key={c.id} className="space-y-2">
-                  <label htmlFor={c.id} className="block text-sm text-white/60">
-                    {c.name} <span className="text-white/40">(0-{c.maxScore})</span>
-                  </label>
-                  <Input
-                    id={c.id}
-                    type="number"
-                    min={0}
-                    max={c.maxScore}
-                    disabled={isLocked || submitScore.isPending}
-                    value={scores[c.id] ?? ""}
-                    onChange={(e) =>
-                      setScores((prev) => ({ ...prev, [c.id]: e.target.value }))
-                    }
-                    placeholder="0"
-                    className={`${glassInput} ${invalid ? "border-rose-400/70" : ""}`}
-                  />
-                  {invalid && (
-                    <p className="text-xs text-rose-400">
-                      Nilai maksimal {c.maxScore}
-                    </p>
-                  )}
+          <div className="relative space-y-6">
+            {groups.map(([group, items]) => (
+              <div key={group || "default"} className="space-y-4">
+                {group && (
+                  <div className="text-xs font-semibold uppercase tracking-wider text-white/50">
+                    {group}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                  {items.map((c) => {
+                    const invalid =
+                      scores[c.id] !== undefined &&
+                      scores[c.id] !== "" &&
+                      (Number(scores[c.id]) < 0 || Number(scores[c.id]) > c.maxScore);
+                    return (
+                      <div key={c.id} className="space-y-2">
+                        <label htmlFor={c.id} className="block text-sm text-white/60">
+                          <span className="text-white">{c.name}</span>{" "}
+                          <span className="text-white/40">
+                            (0-{c.maxScore}) · {c.weight}%
+                          </span>
+                          {c.description && (
+                            <span className="block text-xs text-white/40 mt-0.5 whitespace-pre-line">
+                              {c.description}
+                            </span>
+                          )}
+                        </label>
+                        <Input
+                          id={c.id}
+                          type="number"
+                          min={0}
+                          max={c.maxScore}
+                          disabled={isLocked || submitScore.isPending}
+                          value={scores[c.id] ?? ""}
+                          onChange={(e) =>
+                            setScores((prev) => ({ ...prev, [c.id]: e.target.value }))
+                          }
+                          placeholder="0"
+                          className={`${glassInput} ${invalid ? "border-rose-400/70" : ""}`}
+                        />
+                        {invalid && (
+                          <p className="text-xs text-rose-400">
+                            Nilai maksimal {c.maxScore}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
+
+        <div className="relative mt-5 flex items-center justify-between text-sm text-white/60">
+          <span>Skor berbobot (0–100)</span>
+          <span className="font-bold text-white">{weightedTotal}</span>
+        </div>
 
         <div className="relative mt-5 space-y-2">
           <label htmlFor="notes" className="block text-sm text-white/60">
@@ -302,6 +371,8 @@ export default function AlreadySubmittedDetailPage() {
         existingScores={existingScores}
         feedback={feedback}
         isLocked={isLocked}
+        round={data?.round ?? "PENYISIHAN"}
+        rubric={data?.rubric ?? { totalWeight: 0, isValid: false, criteriaCount: 0 }}
       />
     </div>
   );

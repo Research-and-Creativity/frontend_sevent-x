@@ -12,6 +12,10 @@ export interface JudgeSubmissionScore {
     name: string;
     maxScore: number;
     order: number;
+    weight: number;
+    group?: string | null;
+    description?: string | null;
+    round: "PENYISIHAN" | "FINAL";
   };
 }
 
@@ -66,6 +70,10 @@ export interface JudgeSubmissionDetailResponse {
     name: string;
     maxScore: number;
     order: number;
+    weight: number;
+    group?: string | null;
+    description?: string | null;
+    round: "PENYISIHAN" | "FINAL";
   }>;
   existingScores: JudgeSubmissionScore[];
   /** Catatan tim & rekomendasi milik juri ini (null bila belum pernah menilai). */
@@ -74,6 +82,12 @@ export interface JudgeSubmissionDetailResponse {
     isEvaluated: boolean;
     isLocked: boolean;
     totalScore: number;
+  };
+  round: "PENYISIHAN" | "FINAL";
+  rubric: {
+    totalWeight: number;
+    isValid: boolean;
+    criteriaCount: number;
   };
 }
 
