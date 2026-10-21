@@ -214,11 +214,10 @@ export default function PesertaProfilePage() {
               {isProfileComplete ? "Profil sudah lengkap" : "Profil belum lengkap"}
             </h2>
             <span
-              className={`rounded-full border px-3 py-0.5 text-xs font-semibold ${
-                isProfileComplete
-                  ? "border-success/40 bg-success/10 text-success"
-                  : "border-white/15 bg-white/[0.05] text-white/70"
-              }`}
+              className={`rounded-full border px-3 py-0.5 text-xs font-semibold ${isProfileComplete
+                ? "border-success/40 bg-success/10 text-success"
+                : "border-white/15 bg-white/[0.05] text-white/70"
+                }`}
             >
               {PROFILE_REQUIRED_FIELDS.length - missingFields.length}/
               {PROFILE_REQUIRED_FIELDS.length} terisi
@@ -289,7 +288,7 @@ export default function PesertaProfilePage() {
               type="date"
               value={form.birthDate}
               onChange={(e) => updateField("birthDate", e.target.value)}
-              className={glassInput}
+              className={`${glassInput} text-white`}
             />
           </div>
 
@@ -478,9 +477,8 @@ export default function PesertaProfilePage() {
                 </label>
                 <div className="flex h-12 items-center rounded-full border border-white/25 bg-white/[0.03] pl-5 pr-1.5 backdrop-blur-md transition-colors focus-within:border-[#7D8CFF]/70">
                   <span
-                    className={`flex-1 truncate text-sm ${
-                      uploaded ? "text-white" : "text-white/40"
-                    }`}
+                    className={`flex-1 truncate text-sm ${uploaded ? "text-white" : "text-white/40"
+                      }`}
                   >
                     {uploaded
                       ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
