@@ -32,7 +32,8 @@ export function statusBadge(status: SubmissionStatus): string {
     : "text-[#3B5BFF] border-[#3B5BFF]/60";
 }
 
-// Hanya tampilkan tautan yang benar-benar diisi peserta.
+// Hanya tampilkan tautan yang benar-benar diisi peserta — kompetisi Software
+// Development mengisi GitHub/Demo Video, UI/UX mengisi Figma/Prototype.
 export function externalLinks(sub: JudgeSubmissionItem) {
   const links: { label: string; url: string }[] = [];
   if (sub.githubUrl) links.push({ label: "Github Repository", url: sub.githubUrl });
@@ -40,6 +41,8 @@ export function externalLinks(sub: JudgeSubmissionItem) {
     links.push({ label: "Live Deployment", url: sub.deploymentUrl });
   if (sub.demoVideoUrl)
     links.push({ label: "Demonstration Video", url: sub.demoVideoUrl });
+  if (sub.figmaUrl) links.push({ label: "Figma Design", url: sub.figmaUrl });
+  if (sub.prototypeUrl) links.push({ label: "Prototype", url: sub.prototypeUrl });
   return links;
 }
 

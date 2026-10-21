@@ -108,12 +108,17 @@ export interface Submission {
   };
   projectTitle?: string;
   description?: string;
-  githubUrl?: string;
-  demoVideoUrl?: string;
+  githubUrl?: string | null;
+  demoVideoUrl?: string | null;
   deploymentUrl?: string | null;
+  figmaUrl?: string | null;
+  prototypeUrl?: string | null;
   fileUrl?: string | null;
   linkUrl?: string | null;
-  submittedAt: string;
+  /** DRAFT = masih disimpan sebagai draf, SUBMITTED = sudah dikirim dan dikunci. */
+  status: "DRAFT" | "SUBMITTED";
+  /** Baru terisi ketika leader menekan Submit All. */
+  submittedAt: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

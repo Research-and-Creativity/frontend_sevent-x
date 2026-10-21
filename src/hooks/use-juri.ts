@@ -24,9 +24,13 @@ export interface JudgeSubmissionItem {
   teamId: string;
   projectTitle: string;
   description: string;
-  githubUrl: string;
-  demoVideoUrl: string;
+  // Nullable: kompetisi UI/UX tidak mengisi GitHub/Demo Video, melainkan
+  // figmaUrl dan prototypeUrl di bawah.
+  githubUrl: string | null;
+  demoVideoUrl: string | null;
   deploymentUrl?: string | null;
+  figmaUrl?: string | null;
+  prototypeUrl?: string | null;
   fileUrl?: string | null;
   submittedAt: string;
   updatedAt: string;

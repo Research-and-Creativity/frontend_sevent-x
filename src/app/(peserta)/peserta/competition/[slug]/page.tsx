@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/confirm-modal";
 import {
   useCompetition,
   useCreateOrUpdateSubmission,
@@ -68,6 +69,8 @@ interface SubmissionForm {
   githubUrl: string;
   demoVideoUrl: string;
   deploymentUrl: string;
+  figmaUrl: string;
+  prototypeUrl: string;
 }
 
 const EMPTY_FORM: SubmissionForm = {
@@ -76,6 +79,24 @@ const EMPTY_FORM: SubmissionForm = {
   githubUrl: "",
   demoVideoUrl: "",
   deploymentUrl: "",
+  figmaUrl: "",
+  prototypeUrl: "",
+};
+
+// Tautan yang diminta berbeda per kompetisi — aturan yang sama persis dengan
+// requireCompleteSubmission di backend. Bintang menandai isian wajib.
+type LinkFieldName = keyof Omit<SubmissionForm, "projectTitle" | "description">;
+
+const LINK_FIELDS: Record<string, Array<{ name: LinkFieldName; label: string; required: boolean }>> = {
+  "software-development": [
+    { name: "githubUrl", label: "Github Repository", required: true },
+    { name: "demoVideoUrl", label: "Demonstration Video", required: true },
+    { name: "deploymentUrl", label: "Live Deployment", required: false },
+  ],
+  "ui-ux": [
+    { name: "figmaUrl", label: "Figma Design", required: true },
+    { name: "prototypeUrl", label: "Prototype", required: true },
+  ],
 };
 
 export default function CompetitionRegistrationPage() {
@@ -97,6 +118,7 @@ export default function CompetitionRegistrationPage() {
   const [deliverableFile, setDeliverableFile] = useState<File | null>(null);
   const [form, setForm] = useState<SubmissionForm>(EMPTY_FORM);
   const [formSourceId, setFormSourceId] = useState<string | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Isi form dari submission yang sudah pernah dikirim. Penyesuaian dilakukan
   // saat render (bukan effect) supaya tidak ada flash form kosong dan tidak
@@ -109,8 +131,16 @@ export default function CompetitionRegistrationPage() {
       githubUrl: existingSubmission.githubUrl ?? "",
       demoVideoUrl: existingSubmission.demoVideoUrl ?? "",
       deploymentUrl: existingSubmission.deploymentUrl ?? "",
+      figmaUrl: existingSubmission.figmaUrl ?? "",
+      prototypeUrl: existingSubmission.prototypeUrl ?? "",
     });
   }
+
+  // Karya berstatus SUBMITTED sudah dikunci: tidak ada yang boleh mengeditnya
+  // lagi, baik lewat formulir maupun lewat API (dicek ulang di backend).
+  const isLocked = existingSubmission?.status === "SUBMITTED";
+
+  const linkFields = LINK_FIELDS[slug] ?? LINK_FIELDS["software-development"];
 
   // Proposal yang sudah tersimpan di server. Ditampilkan kembali di kotak
   // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
@@ -195,13 +225,16 @@ export default function CompetitionRegistrationPage() {
     setDeliverableFile(file);
   };
 
-  const handleSubmitWork = async () => {
+  // Satu payload untuk dua aksi; yang membedakan hanya status yang dikirim.
+  const saveWork = async (status: "DRAFT" | "SUBMITTED") => {
     // Proposal yang sudah terlampir tidak wajib diunggah ulang: backend
     // mempertahankan fileUrl lama selama tidak ada file baru yang dikirim.
-    if (!deliverableFile && !existingFileUrl) {
+    // Hanya pengiriman final yang mewajibkannya, Simpan Draft memang longgar.
+    if (status === "SUBMITTED" && !deliverableFile && !existingFileUrl) {
       toast.error("Lampirkan proposal karya terlebih dahulu.");
       return;
     }
+
     const payload = new FormData();
     if (deliverableFile) payload.append("file", deliverableFile);
     payload.append("projectTitle", form.projectTitle.trim());
@@ -209,15 +242,37 @@ export default function CompetitionRegistrationPage() {
     payload.append("githubUrl", form.githubUrl.trim());
     payload.append("demoVideoUrl", form.demoVideoUrl.trim());
     payload.append("deploymentUrl", form.deploymentUrl.trim());
+    payload.append("figmaUrl", form.figmaUrl.trim());
+    payload.append("prototypeUrl", form.prototypeUrl.trim());
+    payload.append("status", status);
 
     try {
       await submissionMutation.mutateAsync(payload);
       // Lepas file lokal; nilai yang tampil kini diambil dari server.
       setDeliverableFile(null);
-      toast.success("Karya berhasil dikirim.");
+      toast.success(
+        status === "SUBMITTED"
+          ? "Karya berhasil dikirim dan tidak bisa diubah lagi."
+          : "Draft tersimpan. Kamu bisa melanjutkannya kapan saja."
+      );
     } catch (err) {
-      toast.error(getErrorMessage(err, "Gagal mengirim karya."));
+      toast.error(
+        getErrorMessage(
+          err,
+          status === "SUBMITTED" ? "Gagal mengirim karya." : "Gagal menyimpan draft."
+        )
+      );
     }
+  };
+
+  const handleSaveDraft = () => void saveWork("DRAFT");
+
+  const handleSubmitAll = () => {
+    if (!isLeader) {
+      toast.error("Hanya leader yang boleh mengirim karya tim.");
+      return;
+    }
+    void saveWork("SUBMITTED");
   };
 
   const renderEmptyState = (message: string) => (
@@ -463,6 +518,7 @@ export default function CompetitionRegistrationPage() {
                   type="text"
                   placeholder="Product Title"
                   maxLength={100}
+                  disabled={isLocked}
                   value={form.projectTitle}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, projectTitle: e.target.value }))
@@ -482,11 +538,12 @@ export default function CompetitionRegistrationPage() {
                   id="product-description"
                   rows={5}
                   placeholder="Description"
+                  disabled={isLocked}
                   value={form.description}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, description: e.target.value }))
                   }
-                  className="w-full rounded-2xl border border-white/25 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/70 transition-colors resize-none"
+                  className="w-full rounded-2xl border border-white/25 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/70 transition-colors resize-none disabled:opacity-60"
                 />
               </div>
             </div>
@@ -511,7 +568,8 @@ export default function CompetitionRegistrationPage() {
                 <button
                   type="button"
                   onClick={handlePickDeliverable}
-                  className="relative mt-4 flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/[0.02] px-6 py-10 text-center transition-colors hover:bg-white/[0.04]"
+                  disabled={isLocked}
+                  className="relative mt-4 flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/[0.02] px-6 py-10 text-center transition-colors hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white/[0.02]"
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#7D8CFF]/20 text-[#7D8CFF]">
                     <UploadCloud className="h-5 w-5" />
@@ -550,17 +608,63 @@ export default function CompetitionRegistrationPage() {
                 <h2 className="relative font-display text-lg font-bold tracking-tight text-white">
                   Action Button
                 </h2>
-                <div className="relative mt-4 flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    onClick={handleSubmitWork}
-                    disabled={submissionMutation.isPending}
-                    className="rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90 disabled:opacity-60"
-                  >
-                    {submissionMutation.isPending ? "Submitting..." : "Submit All"}
-                  </Button>
-                </div>
+
+                {isLocked ? (
+                  <div className="relative mt-4 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+                    <p className="text-sm font-semibold text-white">
+                      Karya sudah dikirim
+                    </p>
+                    <p className="mt-1 text-xs text-text-secondary">
+                      {existingSubmission?.submittedAt
+                        ? `Dikirim pada ${new Date(
+                            existingSubmission.submittedAt
+                          ).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}. `
+                        : ""}
+                      Karya ini sudah terkunci dan tidak bisa diubah lagi.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative mt-4 flex flex-wrap gap-3">
+                      <Button
+                        type="button"
+                        onClick={handleSaveDraft}
+                        disabled={submissionMutation.isPending}
+                        className="rounded-full border border-white/25 bg-white/[0.03] px-6 h-10 text-xs font-semibold text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white disabled:opacity-60"
+                      >
+                        {submissionMutation.isPending ? "Saving..." : "Save Progress"}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setShowSubmitConfirm(true)}
+                        disabled={!isLeader || submissionMutation.isPending}
+                        className="rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90 disabled:opacity-60"
+                      >
+                        Submit All
+                      </Button>
+                    </div>
+                    <p className="relative mt-3 text-xs text-text-secondary">
+                      {isLeader
+                        ? "Save Progress boleh dilakukan semua anggota. Submit All hanya leader, dan begitu dikirim karya ditutup dari perubahan."
+                        : "Kamu boleh menyimpan draf. Pengiriman final (Submit All) dilakukan oleh leader."}
+                    </p>
+                  </>
+                )}
               </div>
+
+              <ConfirmModal
+                open={showSubmitConfirm}
+                onOpenChange={setShowSubmitConfirm}
+                title="Kirim karya sekarang?"
+                description="Submit All akan mengirim karya tim ke panitia dan menutupnya dari perubahan. Pastikan seluruh isian dan lampiran sudah benar."
+                confirmText="Submit All"
+                cancelText="Batal"
+                onConfirm={handleSubmitAll}
+              />
             </div>
 
             {/* External Links */}
@@ -569,64 +673,43 @@ export default function CompetitionRegistrationPage() {
                 External Links
               </h2>
               <p className="relative mt-2 text-sm text-text-secondary">
-                Please make sure this link is open public so we can access it
+                Please make sure this link is open public so we can access it.
+                Required fields are marked with{" "}
+                <span className="text-[#7D8CFF]">*</span>.
               </p>
 
               <div className="relative mt-6 space-y-5">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="external-github"
-                    className="block text-sm text-text-secondary"
-                  >
-                    Github Repository
-                  </label>
-                  <input
-                    id="external-github"
-                    type="url"
-                    placeholder="https://"
-                    value={form.githubUrl}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, githubUrl: e.target.value }))
-                    }
-                    className={glassInput}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="external-live"
-                    className="block text-sm text-text-secondary"
-                  >
-                    Live Deployment
-                  </label>
-                  <input
-                    id="external-live"
-                    type="url"
-                    placeholder="https://"
-                    value={form.deploymentUrl}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, deploymentUrl: e.target.value }))
-                    }
-                    className={glassInput}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="external-video"
-                    className="block text-sm text-text-secondary"
-                  >
-                    Demonstration Video
-                  </label>
-                  <input
-                    id="external-video"
-                    type="url"
-                    placeholder="https://"
-                    value={form.demoVideoUrl}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, demoVideoUrl: e.target.value }))
-                    }
-                    className={glassInput}
-                  />
-                </div>
+                {linkFields.map((field) => (
+                  <div key={field.name} className="space-y-1.5">
+                    <label
+                      htmlFor={`external-${field.name}`}
+                      className="block text-sm text-text-secondary"
+                    >
+                      {field.label}
+                      {field.required ? (
+                        <span className="ml-1 text-[#7D8CFF]">*</span>
+                      ) : (
+                        <span className="ml-1 text-xs font-normal text-text-secondary/70">
+                          (optional)
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      id={`external-${field.name}`}
+                      type="url"
+                      placeholder="https://"
+                      disabled={isLocked}
+                      value={form[field.name]}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          [field.name]: e.target.value,
+                        }))
+                      }
+                      className={glassInput}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
