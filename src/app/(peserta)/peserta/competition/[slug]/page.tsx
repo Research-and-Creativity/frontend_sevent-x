@@ -149,9 +149,15 @@ export default function CompetitionRegistrationPage() {
   // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
   // hilang setelah halaman dimuat ulang.
   const existingFileUrl = existingSubmission?.fileUrl ?? null;
-  const existingFileName = existingFileUrl
-    ? existingFileUrl.split("/").pop() || "Proposal terlampir"
-    : null;
+  const rawName = existingFileUrl ? existingFileUrl.split("/").pop() : null;
+  // URL Google Drive berakhir dengan "/view", jadi pakai nama generik agar
+  // peserta tetap melihat bahwa proposal sudah terlampir.
+  const existingFileName =
+    rawName && rawName !== "view" && rawName.length > 0
+      ? rawName
+      : existingFileUrl
+      ? "Proposal terlampir"
+      : null;
 
   // Satu peserta hanya boleh punya satu tim, jadi halaman ini harus milik
   // kompetisi tempat timnya terdaftar.
