@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
+import { passwordSchema } from "@/lib/password";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
@@ -17,7 +18,7 @@ import gsap from "gsap";
 import { prefersReducedMotion } from "@/lib/accessibility";
 
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  newPassword: passwordSchema,
   confirmNewPassword: z.string().min(1, "Please confirm your new password"),
 }).refine((data) => data.newPassword === data.confirmNewPassword, {
   message: "Passwords do not match",

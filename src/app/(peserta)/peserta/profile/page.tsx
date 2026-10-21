@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { isPasswordStrong } from "@/lib/password";
 import {
   PROFILE_REQUIRED_FIELDS,
   useChangePassword,
@@ -147,8 +148,10 @@ export default function PesertaProfilePage() {
       toast.error("Isi password lama dan password baru.");
       return;
     }
-    if (passwords.next.length < 6) {
-      toast.error("Password baru minimal 6 karakter.");
+    if (!isPasswordStrong(passwords.next)) {
+      toast.error(
+        "Password baru minimal 8 karakter dan harus memuat huruf besar, huruf kecil, serta angka.",
+      );
       return;
     }
     try {
