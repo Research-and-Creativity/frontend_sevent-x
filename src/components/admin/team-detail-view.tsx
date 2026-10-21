@@ -21,6 +21,7 @@ import {
   useUpdatePaymentProofStatus,
   useUpdateUserDocumentStatus,
   type TeamDetailMember,
+  type TeamDetailMemberDocument,
 } from "@/hooks/use-admin";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -38,11 +39,20 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
   const updatePay = useUpdatePaymentProofStatus();
 
   const [openMember, setOpenMember] = useState<number | null>(0);
-  const [reviseTarget, setReviseTarget] = useState<TeamDetailMember | null>(null);
+  const [reviseTarget, setReviseTarget] = useState<{
+    member: TeamDetailMember;
+    doc: TeamDetailMemberDocument;
+  } | null>(null);
   const [reviseNote, setReviseNote] = useState("");
   const [confirmRevise, setConfirmRevise] = useState(false);
-  const [verifyDocTarget, setVerifyDocTarget] = useState<TeamDetailMember | null>(null);
+  const [verifyDocTarget, setVerifyDocTarget] = useState<{
+    member: TeamDetailMember;
+    doc: TeamDetailMemberDocument;
+  } | null>(null);
   const [verifyPay, setVerifyPay] = useState(false);
+  // Dokumen yang sedang diproses, supaya spinner menempel di barisnya sendiri
+  // dan baris lain tetap terbaca.
+  const [actingDocId, setActingDocId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -89,41 +99,52 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
 
   const backHref = mode === "registered" ? "/admin/teams" : "/admin/documents";
 
-  // Hanya dokumen yang masih menunggu review yang bisa diputuskan.
-  const pendingDocs = (m: TeamDetailMember) => m.user.documents.filter((d) => d.status === "REVIEW");
+  const docTypeLabel = (type: string) =>
+    REQUIRED_DOC_LABELS.find((d) => d.type === type)?.label ?? type;
 
-  const runAction = async (fn: () => Promise<unknown>, successMsg: string) => {
+  const runAction = async (
+    fn: () => Promise<unknown>,
+    successMsg: string,
+    docId?: string,
+  ) => {
+    if (docId) setActingDocId(docId);
     try {
       await fn();
       toast.success(successMsg);
     } catch (err) {
       toast.error(getErrorMessage(err, "Gagal menyimpan perubahan status."));
+    } finally {
+      if (docId) setActingDocId(null);
     }
   };
 
-  const handleVerifyDocs = (member: TeamDetailMember) => {
-    const pending = pendingDocs(member);
-    if (pending.length === 0) return;
+  const handleVerifyDoc = (doc: TeamDetailMemberDocument) => {
     setVerifyDocTarget(null);
-    void runAction(async () => {
-      for (const doc of pending) {
-        await updateDoc.mutateAsync({ documentId: doc.id, status: "APPROVE" });
-      }
-    }, `Dokumen ${member.user.fullName} diverifikasi.`);
+    void runAction(
+      () => updateDoc.mutateAsync({ documentId: doc.id, status: "APPROVE" }),
+      `Dokumen ${docTypeLabel(doc.type)} diverifikasi.`,
+      doc.id,
+    );
   };
 
-  const handleReviseDocs = () => {
-    const member = reviseTarget;
+  const handleReviseDoc = () => {
+    const target = reviseTarget;
     const note = reviseNote.trim();
     setConfirmRevise(false);
-    if (!member || !note) return;
+    if (!target || !note) return;
     setReviseTarget(null);
-    void runAction(async () => {
-      for (const doc of pendingDocs(member)) {
-        await updateDoc.mutateAsync({ documentId: doc.id, status: "REJECT", reason: note });
-      }
-      setReviseNote("");
-    }, `Catatan revisi dikirim ke ${member.user.fullName}.`);
+    void runAction(
+      async () => {
+        await updateDoc.mutateAsync({
+          documentId: target.doc.id,
+          status: "REJECT",
+          reason: note,
+        });
+        setReviseNote("");
+      },
+      `Catatan revisi ${docTypeLabel(target.doc.type)} dikirim ke ${target.member.user.fullName}.`,
+      target.doc.id,
+    );
   };
 
   const handleVerifyPayment = () => {
@@ -270,29 +291,34 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
                               Catatan: {doc.rejectionReason}
                             </p>
                           )}
+                          {mode === "registered" && doc.status === "REVIEW" && (
+                            <div className="mt-2 flex gap-2">
+                              <button
+                                disabled={updateDoc.isPending}
+                                onClick={() => setReviseTarget({ member, doc })}
+                                className="cursor-pointer flex-1 rounded-full border border-[#3B5BFF] px-3 py-1.5 text-xs font-semibold text-[#7D8CFF] transition-colors hover:bg-[#3B5BFF]/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Revise
+                              </button>
+                              <button
+                                disabled={updateDoc.isPending}
+                                onClick={() => setVerifyDocTarget({ member, doc })}
+                                className="cursor-pointer flex-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#7C83BC] shadow-[0_0_20px_rgba(180,190,255,0.5)] transition-colors hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Verify
+                              </button>
+                            </div>
+                          )}
+                          {actingDocId === doc.id && (
+                            <p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-white/60">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Menyimpan...
+                            </p>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-
-                  {mode === "registered" && (
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button
-                        disabled={pendingDocs(member).length === 0 || updateDoc.isPending}
-                        onClick={() => setReviseTarget(member)}
-                        className="cursor-pointer px-8 py-2.5 rounded-full border border-[#3B5BFF] text-[#7D8CFF] text-sm font-semibold hover:bg-[#3B5BFF]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Revise
-                      </button>
-                      <button
-                        disabled={pendingDocs(member).length === 0 || updateDoc.isPending}
-                        onClick={() => setVerifyDocTarget(member)}
-                        className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Verification
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -331,7 +357,14 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
               onClick={() => setVerifyPay(true)}
               className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Verification
+              {updatePay.isPending ? (
+                <>
+                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                "Verification"
+              )}
             </button>
           </div>
         )}
@@ -344,8 +377,8 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
             Revise Notes
           </DialogTitle>
           <DialogDescription className="text-white/60 text-sm">
-            Catatan revisi dikirim ke {reviseTarget?.user.fullName} untuk dokumen yang masih
-            menunggu review.
+            Catatan revisi {reviseTarget && docTypeLabel(reviseTarget.doc.type)} dikirim ke{" "}
+            {reviseTarget?.member.user.fullName}.
           </DialogDescription>
           <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
           <Textarea
@@ -376,20 +409,24 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         open={confirmRevise}
         onOpenChange={setConfirmRevise}
         title="Submit revision note?"
-        description="Dokumen akan ditandai Revise dan catatan dikirim ke peserta."
+        description={`Dokumen ${
+          reviseTarget ? docTypeLabel(reviseTarget.doc.type) : ""
+        } akan ditandai Revise dan catatan dikirim ke peserta.`}
         confirmText="Submit"
         cancelText="Cancel"
-        onConfirm={handleReviseDocs}
+        onConfirm={handleReviseDoc}
       />
 
       <ConfirmModal
         open={!!verifyDocTarget}
         onOpenChange={(open) => !open && setVerifyDocTarget(null)}
         title="Verify document?"
-        description={`Seluruh dokumen ${verifyDocTarget?.user.fullName} yang menunggu review akan ditandai Approved.`}
+        description={`Dokumen ${
+          verifyDocTarget ? docTypeLabel(verifyDocTarget.doc.type) : ""
+        } milik ${verifyDocTarget?.member.user.fullName} akan ditandai Approved.`}
         confirmText="Verify"
         cancelText="Cancel"
-        onConfirm={() => verifyDocTarget && handleVerifyDocs(verifyDocTarget)}
+        onConfirm={() => verifyDocTarget && handleVerifyDoc(verifyDocTarget.doc)}
       />
 
       <ConfirmModal
