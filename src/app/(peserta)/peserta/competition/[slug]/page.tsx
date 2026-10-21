@@ -360,16 +360,22 @@ export default function CompetitionRegistrationPage() {
 
             <div className="relative mt-6 space-y-5">
               <div className="space-y-1.5">
-                <label
-                  htmlFor="product-title"
-                  className="block text-sm text-text-secondary"
-                >
-                  Product Title
-                </label>
+                <div className="flex items-baseline justify-between gap-3">
+                  <label
+                    htmlFor="product-title"
+                    className="block text-sm text-text-secondary"
+                  >
+                    Product Title
+                  </label>
+                  <span className="font-mono text-[11px] text-text-secondary/70">
+                    {form.projectTitle.length}/100
+                  </span>
+                </div>
                 <input
                   id="product-title"
                   type="text"
                   placeholder="Product Title"
+                  maxLength={100}
                   value={form.projectTitle}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, projectTitle: e.target.value }))
