@@ -13,13 +13,12 @@ import {
   payStatusInfo,
   teamLeaderName,
   formatRegistrationDate,
+  isVerifiedTeam,
 } from "@/lib/admin-team-status";
 
 export default function AdminDocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [docFilter, setDocFilter] = useState("all");
-  const [payFilter, setPayFilter] = useState("all");
   const [timeSort, setTimeSort] = useState("newest");
   const [nameSort, setNameSort] = useState("az");
 
@@ -33,29 +32,17 @@ export default function AdminDocumentsPage() {
     },
   });
 
-  const filtered = teams
+  // Arsip: hanya tim yang SUDAH verified (dokumen anggota Approved + pembayaran
+  // Paid). Antrean yang belum beres ada di halaman Registered Team.
+  const verifiedTeams = teams.filter(isVerifiedTeam);
+
+  const filtered = verifiedTeams
     .filter((t) => {
       const leader = teamLeaderName(t);
       return (
         t.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         leader.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    })
-    .filter((t) => {
-      if (docFilter === "all") return true;
-      const s = docStatusInfo(t).label.toLowerCase();
-      if (docFilter === "approved") return s === "approved";
-      if (docFilter === "revise") return s === "revise";
-      if (docFilter === "review") return s === "need review";
-      return true;
-    })
-    .filter((t) => {
-      if (payFilter === "all") return true;
-      const s = payStatusInfo(t).label.toLowerCase();
-      if (payFilter === "paid") return s === "paid";
-      if (payFilter === "not_paid") return s === "not paid";
-      if (payFilter === "review") return s === "need review";
-      return true;
     })
     .sort((a, b) => {
       if (nameSort === "az") return a.teamName.localeCompare(b.teamName);
@@ -78,7 +65,12 @@ export default function AdminDocumentsPage() {
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h2 className="font-display text-2xl font-bold">Registered Team</h2>
+          <div>
+            <h2 className="font-display text-2xl font-bold">Verified Team</h2>
+            <p className="text-xs text-white/40 mt-1">
+              Arsip tim yang sudah lolos verifikasi dokumen &amp; pembayaran
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <button onClick={() => setShowFilters(!showFilters)} className="cursor-pointer w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-white/5" title="Filter">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>
@@ -91,19 +83,7 @@ export default function AdminDocumentsPage() {
         </div>
 
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? "max-h-96 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
-            <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
-              <option value="all" className="bg-[#15161A]">Status Document: All</option>
-              <option value="review" className="bg-[#15161A]">Need Review</option>
-              <option value="revise" className="bg-[#15161A]">Revise</option>
-              <option value="approved" className="bg-[#15161A]">Approved</option>
-            </select>
-            <select value={payFilter} onChange={(e) => setPayFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
-              <option value="all" className="bg-[#15161A]">Status Payment: All</option>
-              <option value="review" className="bg-[#15161A]">Need Review</option>
-              <option value="not_paid" className="bg-[#15161A]">Not Paid</option>
-              <option value="paid" className="bg-[#15161A]">Paid</option>
-            </select>
+          <div className="grid grid-cols-2 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
             <select value={timeSort} onChange={(e) => setTimeSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="newest" className="bg-[#15161A]">Time Regist: Newest</option>
               <option value="oldest" className="bg-[#15161A]">Time Regist: Oldest</option>
@@ -129,7 +109,16 @@ export default function AdminDocumentsPage() {
             <p className="text-sm font-semibold text-white">
               {teams.length === 0
                 ? "Belum ada tim yang terdaftar"
-                : "Tidak ada tim yang cocok dengan filter"}
+                : verifiedTeams.length === 0
+                  ? "Belum ada tim yang lolos verifikasi"
+                  : "Tidak ada tim yang cocok"}
+            </p>
+            <p className="text-xs text-white/40">
+              {teams.length === 0
+                ? "Tim yang dibuat peserta akan muncul di sini setelah lolos verifikasi."
+                : verifiedTeams.length === 0
+                  ? "Tim yang sedang menunggu verifikasi ada di menu Registered Team."
+                  : "Coba ubah kata kunci pencarian."}
             </p>
           </div>
         ) : (
@@ -166,7 +155,7 @@ export default function AdminDocumentsPage() {
         )}
 
         <div className="flex items-center justify-between pt-5 text-xs text-white/50">
-          <span>Showing {filtered.length} data out of {teams.length}</span>
+          <span>Showing {filtered.length} data out of {verifiedTeams.length} verified</span>
           <div className="flex items-center gap-3">
             <span>Show</span>
             <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1" defaultValue="10" disabled>

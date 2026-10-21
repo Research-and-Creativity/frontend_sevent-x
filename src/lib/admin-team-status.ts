@@ -26,6 +26,25 @@ export function payStatusInfo(t: Team): StatusInfo {
   return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
 }
 
+/**
+ * Tim dianggap "sudah verified" bila SEMUA syarat berikut terpenuhi:
+ *   1. Dokumen seluruh anggota berstatus Approved (keempat dokumen wajib), DAN
+ *   2. Bukti pembayaran tim berstatus Paid.
+ *
+ * Dua syarat ini persis yang ditampilkan di kolom Status Document & Status
+ * Payment, sehingga filter tidak pernah bertentangan dengan badge di layar.
+ *
+ * Dipakai untuk memisahkan dua halaman admin:
+ *   /admin/teams      -> tim yang BELUM verified (antrean kerja: tombol Revise &
+ *                        Verification tersedia)
+ *   /admin/documents  -> tim yang SUDAH verified (arsip, read-only)
+ */
+export function isVerifiedTeam(t: Team): boolean {
+  return (
+    docStatusInfo(t).label === "Approved" && payStatusInfo(t).label === "Paid"
+  );
+}
+
 export function formatRegistrationDate(iso?: string | null): string {
   if (!iso) return "-";
   const date = new Date(iso);

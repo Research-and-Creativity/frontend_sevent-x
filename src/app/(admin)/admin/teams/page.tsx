@@ -18,6 +18,7 @@ import {
   payStatusInfo,
   teamLeaderName,
   formatRegistrationDate,
+  isVerifiedTeam,
 } from "@/lib/admin-team-status";
 import { Team } from "@/types/api";
 import { useCompetitions } from "@/hooks/use-peserta";
@@ -69,7 +70,11 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const filteredTeams = teams
+  // Antrean kerja admin: hanya tim yang BELUM verified. Tim yang sudah lolos
+  // berpindah ke halaman Verified Team (/admin/documents) sebagai arsip.
+  const queueTeams = teams.filter((t) => !isVerifiedTeam(t));
+
+  const filteredTeams = queueTeams
     .filter((t) => {
       const leader = teamLeaderName(t);
       const matchSearch =
@@ -117,7 +122,12 @@ export default function AdminTeamsPage() {
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h2 className="font-display text-2xl font-bold">Registered Team</h2>
+          <div>
+            <h2 className="font-display text-2xl font-bold">Registered Team</h2>
+            <p className="text-xs text-white/40 mt-1">
+              Antrean tim yang menunggu verifikasi dokumen &amp; pembayaran
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={selectedCompSlug}
@@ -199,8 +209,20 @@ export default function AdminTeamsPage() {
         ) : filteredTeams.length === 0 ? (
           <div className="p-12 text-center space-y-2 bg-white/5 border border-dashed border-white/10 rounded-xl">
             <Users className="w-8 h-8 text-white/40 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-white">Belum ada data tim yang terdaftar</p>
-            <p className="text-xs text-white/40">{searchQuery || selectedCompSlug ? "Tidak ada tim yang cocok dengan filter pencarian." : "Tim yang dibuat oleh peserta akan muncul di antrean ini."}</p>
+            <p className="text-sm font-semibold text-white">
+              {teams.length === 0
+                ? "Belum ada tim yang terdaftar"
+                : queueTeams.length === 0
+                  ? "Antrean kosong"
+                  : "Tidak ada tim yang cocok"}
+            </p>
+            <p className="text-xs text-white/40">
+              {teams.length === 0
+                ? "Tim yang dibuat peserta akan muncul di sini untuk diverifikasi."
+                : queueTeams.length === 0
+                  ? "Semua tim sudah lolos verifikasi. Arsipnya ada di menu Verified Team."
+                  : "Coba ubah kata kunci pencarian."}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -243,7 +265,7 @@ export default function AdminTeamsPage() {
         )}
 
         <div className="flex items-center justify-between pt-5 text-xs text-white/50">
-          <span>Showing {filteredTeams.length} data out of {teams.length}</span>
+          <span>Showing {filteredTeams.length} data out of {queueTeams.length} in antrean</span>
           <div className="flex items-center gap-3">
             <span>Show</span>
             <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1"><option>10</option></select>
