@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { User, UserRole, NewsPost, NewsTag, GalleryItem, Team } from "@/types/api";
-import { payStatusInfo, docStatusInfo } from "@/lib/admin-team-status";
+import { isVerifiedTeam } from "@/lib/admin-team-status";
 
 // Hook 1: Fetch Users list for Admin with search & role filter
 export function useAdminUsers(search?: string, role?: UserRole | string) {
@@ -144,11 +144,17 @@ export function useAdminOverview() {
   });
 }
 
-// Hook 6b: Hitung jumlah tim yang menunggu review pembayaran & dokumen,
-// untuk badge di sidebar admin. Reuse queryKey ["adminTeams", ""] agar share
-// cache dengan halaman dashboard (tidak dobel request).
+// Hook 6b: Hitung jumlah tim dalam antrean kerja admin (BELUM verified) untuk
+// badge di sidebar. Memakai isVerifiedTeam yang sama persis dengan halaman
+// Registered Team, supaya angka badge dan tabel "Showing X out of Y" tidak
+// akan pernah berbeda — satu sumber kebenaran.
+//
+// `isLoading` ikut dikembalikan agar layout dapat membedakan "data belum
+// masuk" dari "antrean benar-benar bertambah" (lihat toast di admin layout).
+// Reuse queryKey ["adminTeams", ""] agar share cache dengan halaman
+// dashboard (tidak dobel request).
 export function useAdminReviewCounts() {
-  const { data: teams = [] } = useQuery<Team[]>({
+  const { data: teams = [], isLoading } = useQuery<Team[]>({
     queryKey: ["adminTeams", ""],
     queryFn: async () => {
       try {
@@ -165,13 +171,12 @@ export function useAdminReviewCounts() {
     refetchOnWindowFocus: true,
   });
 
-  let paymentReview = 0;
-  let docReview = 0;
-  for (const t of teams) {
-    if (payStatusInfo(t).label === "Need Review") paymentReview += 1;
-    if (docStatusInfo(t).label === "Need Review") docReview += 1;
-  }
-  return { paymentReview, docReview };
+  // Satu angka saja: tiap tim dihitung SEKALI, walau dokumen dan pembayarannya
+  // sama-sama menunggu review (itulah yang membuat toast lama menampilkan 6
+  // untuk 3 tim).
+  const pendingReview = teams.filter((t) => !isVerifiedTeam(t)).length;
+
+  return { pendingReview, isLoading };
 }
 
 export interface AdminUserDocumentItem {

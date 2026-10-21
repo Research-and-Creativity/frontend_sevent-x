@@ -38,12 +38,12 @@ function SidebarContent({
   pathname,
   onNavigate,
   onLogout,
-  reviewCounts = { paymentReview: 0, docReview: 0 },
+  reviewCounts = { pendingReview: 0 },
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
-  reviewCounts?: { paymentReview: number; docReview: number };
+  reviewCounts?: { pendingReview: number };
 }) {
   return (
     <>
@@ -54,12 +54,9 @@ function SidebarContent({
 
       <nav className="space-y-1">
         {mainLinks.map((l) => {
-          const badge =
-            l.href === "/admin/teams"
-              ? reviewCounts.paymentReview
-              : l.href === "/admin/documents"
-              ? reviewCounts.docReview
-              : 0;
+          // Hanya Registered Team (antrean kerja) yang diberi badge. Verified
+          // Team adalah arsip read-only — tidak ada yang menunggu review di sana.
+          const badge = l.href === "/admin/teams" ? reviewCounts.pendingReview : 0;
           return (
             <Link
               key={l.href}
@@ -115,34 +112,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
 
-  const reviewCounts = useAdminReviewCounts();
+  const { pendingReview, isLoading } = useAdminReviewCounts();
 
-  // Toast saat jumlah review meningkat (init-guard: tidak fire saat load awal).
-  const prevCountsRef = useRef<{ paymentReview: number; docReview: number } | null>(null);
-  const initializedRef = useRef(false);
+  // Toast hanya saat antrean benar-benar BERTAMBAH. Transisi load awal (data
+  // masih kosong lalu terisi) harus dijadikan baseline, bukan dihitung sebagai
+  // "ada yang baru" — tanpa itu setiap pembukaan area admin memunculkan toast
+  // padahal tidak ada yang masuk.
+  const prevReviewRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      prevCountsRef.current = { ...reviewCounts };
+    if (isLoading) return; // data belum masuk, belum ada yang bisa dibandingkan
+    if (prevReviewRef.current === null) {
+      prevReviewRef.current = pendingReview; // baseline dari data pertama
       return;
     }
-    const prev = prevCountsRef.current;
-    if (!prev) {
-      prevCountsRef.current = { ...reviewCounts };
-      return;
+    const added = pendingReview - prevReviewRef.current;
+    if (added > 0) {
+      toast.info(`📋 ${added} tim baru menunggu verifikasi dokumen & pembayaran`);
     }
-    const increased =
-      reviewCounts.paymentReview > prev.paymentReview ||
-      reviewCounts.docReview > prev.docReview;
-    if (increased) {
-      const total =
-        reviewCounts.paymentReview + reviewCounts.docReview - (prev.paymentReview + prev.docReview);
-      toast.info(
-        `📋 Ada ${total > 0 ? total : 1} pembayaran/dokumen baru menunggu review`
-      );
-    }
-    prevCountsRef.current = { ...reviewCounts };
-  }, [reviewCounts.paymentReview, reviewCounts.docReview]);
+    prevReviewRef.current = pendingReview;
+  }, [isLoading, pendingReview]);
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
@@ -190,7 +178,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
                 onLogout={() => router.push("/login")}
-                reviewCounts={reviewCounts}
+                reviewCounts={{ pendingReview }}
               />
             </div>
           </div>
@@ -205,7 +193,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <SidebarContent
             pathname={pathname}
             onLogout={() => router.push("/login")}
-            reviewCounts={reviewCounts}
+            reviewCounts={{ pendingReview }}
           />
         </div>
       </aside>
