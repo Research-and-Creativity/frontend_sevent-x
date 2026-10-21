@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Circle, UploadCloud } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { isPasswordStrong } from "@/lib/password";
@@ -173,11 +173,14 @@ export default function PesertaProfilePage() {
 
   const handleDocumentSelected = async (file: File | undefined) => {
     const type = activeDocType;
-    setActiveDocType(null);
-    if (!file || !type) return;
+    if (!file || !type) {
+      setActiveDocType(null);
+      return;
+    }
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error(`Ukuran file maksimal ${formatBytes(5 * 1024 * 1024)}.`);
+      setActiveDocType(null);
       return;
     }
 
@@ -189,6 +192,10 @@ export default function PesertaProfilePage() {
       toast.success("Dokumen terkirim dan menunggu review.");
     } catch (err) {
       toast.error(getErrorMessage(err, "Gagal mengunggah dokumen."));
+    } finally {
+      // Baru dilepas setelah permintaan selesai, supaya baris yang sedang
+      // diunggah sempat menampilkan indikator loading alih-alih status lama.
+      setActiveDocType(null);
     }
   };
 
@@ -472,6 +479,10 @@ export default function PesertaProfilePage() {
           {VERIFICATION_DOCS.map((doc) => {
             const uploaded = documentsByType.get(doc.type);
             const status = uploaded?.status;
+            // Indikator hanya menempel di baris yang sedang diunggah, bukan
+            // mematikan tampilan seluruh daftar dokumen sekaligus.
+            const isUploading =
+              uploadDocumentMutation.isPending && activeDocType === doc.type;
 
             return (
               <div key={doc.type} className="space-y-1.5">
@@ -480,12 +491,14 @@ export default function PesertaProfilePage() {
                 </label>
                 <div className="flex h-12 items-center rounded-full border border-white/25 bg-white/[0.03] pl-5 pr-1.5 backdrop-blur-md transition-colors focus-within:border-[#7D8CFF]/70">
                   <span
-                    className={`flex-1 truncate text-sm ${uploaded ? "text-white" : "text-white/40"
+                    className={`flex-1 truncate text-sm ${isUploading || uploaded ? "text-white" : "text-white/40"
                       }`}
                   >
-                    {uploaded
-                      ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
-                      : "Upload File"}
+                    {isUploading
+                      ? "Mengunggah..."
+                      : uploaded
+                        ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
+                        : "Upload File"}
                   </span>
                   <button
                     type="button"
@@ -494,7 +507,11 @@ export default function PesertaProfilePage() {
                     disabled={uploadDocumentMutation.isPending}
                     className="cursor-pointer flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#7D8CFF] transition-colors hover:bg-white/80 disabled:opacity-60"
                   >
-                    <UploadCloud className="h-4 w-4" />
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UploadCloud className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {uploaded?.status === "REJECT" && uploaded.rejectionReason && (
