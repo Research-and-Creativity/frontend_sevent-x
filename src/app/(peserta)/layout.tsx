@@ -7,14 +7,13 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { toast } from "sonner";
-import { LayoutGrid, LogOut, Medal, User, Menu, X, Megaphone } from "lucide-react";
+import { LayoutGrid, LogOut, Medal, User, Menu, X } from "lucide-react";
 import { useAnnouncementNotifications } from "@/hooks/use-peserta";
 
 const mainLinks = [
   { href: "/peserta/dashboard", label: "Overview", icon: LayoutGrid },
   { href: "/peserta/profile", label: "Profile", icon: User },
   { href: "/peserta/competition", label: "Competition", icon: Medal },
-  { href: "/peserta/announcements", label: "Announcements", icon: Megaphone },
 ];
 
 // Navigasi sidebar yang dipakai dua kali: sidebar desktop (sticky) dan drawer
@@ -39,8 +38,10 @@ function SidebarContent({
       <div className="flex flex-col justify-between h-full">
         <nav className="space-y-1">
           {mainLinks.map((l) => {
-            const isAnnouncements = l.href === "/peserta/announcements";
-            const badge = isAnnouncements ? unreadAnnouncements : 0;
+            // Pengumuman kini digabung ke Overview (menu Announcements sudah
+            // dihapus), jadi badge unread menempel di menu Overview.
+            const badge =
+              l.href === "/peserta/dashboard" ? unreadAnnouncements : 0;
             return (
               <Link
                 key={l.href}
