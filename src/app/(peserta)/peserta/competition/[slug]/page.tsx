@@ -103,6 +103,14 @@ export default function CompetitionRegistrationPage() {
     });
   }
 
+  // Proposal yang sudah tersimpan di server. Ditampilkan kembali di kotak
+  // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
+  // hilang setelah halaman dimuat ulang.
+  const existingFileUrl = existingSubmission?.fileUrl ?? null;
+  const existingFileName = existingFileUrl
+    ? existingFileUrl.split("/").pop() || "Proposal terlampir"
+    : null;
+
   // Satu peserta hanya boleh punya satu tim, jadi halaman ini harus milik
   // kompetisi tempat timnya terdaftar.
   const teamBelongsHere = team?.competition?.slug === slug;
@@ -179,12 +187,14 @@ export default function CompetitionRegistrationPage() {
   };
 
   const handleSubmitWork = async () => {
-    if (!deliverableFile) {
+    // Proposal yang sudah terlampir tidak wajib diunggah ulang: backend
+    // mempertahankan fileUrl lama selama tidak ada file baru yang dikirim.
+    if (!deliverableFile && !existingFileUrl) {
       toast.error("Lampirkan proposal karya terlebih dahulu.");
       return;
     }
     const payload = new FormData();
-    payload.append("file", deliverableFile);
+    if (deliverableFile) payload.append("file", deliverableFile);
     payload.append("projectTitle", form.projectTitle.trim());
     payload.append("description", form.description.trim());
     payload.append("githubUrl", form.githubUrl.trim());
@@ -193,6 +203,8 @@ export default function CompetitionRegistrationPage() {
 
     try {
       await submissionMutation.mutateAsync(payload);
+      // Lepas file lokal; nilai yang tampil kini diambil dari server.
+      setDeliverableFile(null);
       toast.success("Karya berhasil dikirim.");
     } catch (err) {
       toast.error(getErrorMessage(err, "Gagal mengirim karya."));
@@ -430,12 +442,30 @@ export default function CompetitionRegistrationPage() {
                     <UploadCloud className="h-5 w-5" />
                   </span>
                   <span className="text-sm text-white">
-                    {deliverableFile ? deliverableFile.name : "Drag or Upload your files here"}
+                    {deliverableFile
+                      ? deliverableFile.name
+                      : existingFileName ?? "Drag or Upload your files here"}
                   </span>
                   <span className="text-xs text-text-secondary">
-                    Upload your project proposal.
-                    <br />
-                    (Max 1 File and {formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)})
+                    {deliverableFile ? (
+                      <>
+                        A new file is ready to replace the previous proposal.
+                        <br />
+                        (Max 1 File and {formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)})
+                      </>
+                    ) : existingFileName ? (
+                      <>
+                        Proposal already attached and will be sent along.
+                        <br />
+                        Pick a new file only if you want to replace it.
+                      </>
+                    ) : (
+                      <>
+                        Upload your project proposal.
+                        <br />
+                        (Max 1 File and {formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)})
+                      </>
+                    )}
                   </span>
                 </button>
               </div>
