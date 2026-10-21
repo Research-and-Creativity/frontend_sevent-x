@@ -6,6 +6,7 @@ import { Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
+import type { Submission } from "@/types/api";
 import {
   useCompetition,
   useCreateOrUpdateSubmission,
@@ -83,24 +84,50 @@ const EMPTY_FORM: SubmissionForm = {
   prototypeUrl: "",
 };
 
-// Semua tautan selalu ditampilkan agar data yang sudah tersimpan (termasuk
-// data lama dari form sebelumnya) tidak hilang dari tampilan. Yang wajib
-// ditandai dengan bintang bergantung pada kompetisi — aturan yang sama persis
-// dengan requireCompleteSubmission di backend.
+// Tautan yang diminta berbeda per kompetisi (aturan sama dengan
+// requireCompleteSubmission di backend). Demonstration Video dipakai oleh
+// kedua bidang lomba.
 type LinkFieldName = keyof Omit<SubmissionForm, "projectTitle" | "description">;
 
-const ALL_LINK_FIELDS: Array<{ name: LinkFieldName; label: string }> = [
-  { name: "githubUrl", label: "Github Repository" },
-  { name: "demoVideoUrl", label: "Demonstration Video" },
-  { name: "deploymentUrl", label: "Live Deployment" },
-  { name: "figmaUrl", label: "Figma Design" },
-  { name: "prototypeUrl", label: "Prototype" },
-];
-
-const REQUIRED_LINKS: Record<string, Set<LinkFieldName>> = {
-  "software-development": new Set<LinkFieldName>(["githubUrl", "demoVideoUrl"]),
-  "ui-ux": new Set<LinkFieldName>(["figmaUrl", "prototypeUrl"]),
+const LINK_FIELDS_BY_COMPETITION: Record<
+  string,
+  Array<{ name: LinkFieldName; label: string; required: boolean }>
+> = {
+  "software-development": [
+    { name: "githubUrl", label: "Github Repository", required: true },
+    { name: "demoVideoUrl", label: "Demonstration Video", required: true },
+    { name: "deploymentUrl", label: "Live Deployment", required: false },
+  ],
+  "ui-ux": [
+    { name: "figmaUrl", label: "Figma Design", required: true },
+    { name: "prototypeUrl", label: "Prototype", required: true },
+    { name: "demoVideoUrl", label: "Demonstration Video", required: true },
+  ],
 };
+
+// Tambahkan tautan yang sudah terisi di submission lama (mis. github/demo/
+// deployment pada submission ui-ux dari form versi sebelumnya) agar data tidak
+// hilang dari tampilan, meski bukan bagian dari spesifikasi kompetisi ini.
+function linkFieldsFor(slug: string, existing: Submission | null | undefined) {
+  const base =
+    LINK_FIELDS_BY_COMPETITION[slug] ??
+    LINK_FIELDS_BY_COMPETITION["software-development"];
+  const names = new Set(base.map((f) => f.name));
+  const labels: Record<LinkFieldName, string> = {
+    githubUrl: "Github Repository",
+    demoVideoUrl: "Demonstration Video",
+    deploymentUrl: "Live Deployment",
+    figmaUrl: "Figma Design",
+    prototypeUrl: "Prototype",
+  };
+  const extra: Array<{ name: LinkFieldName; label: string; required: boolean }> = [];
+  (Object.keys(labels) as LinkFieldName[]).forEach((name) => {
+    if (!names.has(name) && existing?.[name]) {
+      extra.push({ name, label: labels[name], required: false });
+    }
+  });
+  return [...base, ...extra];
+}
 
 export default function CompetitionRegistrationPage() {
   const params = useParams();
@@ -143,7 +170,7 @@ export default function CompetitionRegistrationPage() {
   // lagi, baik lewat formulir maupun lewat API (dicek ulang di backend).
   const isLocked = existingSubmission?.status === "SUBMITTED";
 
-  const requiredLinks = REQUIRED_LINKS[slug] ?? REQUIRED_LINKS["software-development"];
+  const linkFields = linkFieldsFor(slug, existingSubmission);
 
   // Proposal yang sudah tersimpan di server. Ditampilkan kembali di kotak
   // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
@@ -688,8 +715,8 @@ export default function CompetitionRegistrationPage() {
               </p>
 
               <div className="relative mt-6 space-y-5">
-                {ALL_LINK_FIELDS.map((field) => {
-                  const required = requiredLinks.has(field.name);
+                {linkFields.map((field) => {
+                  const required = field.required;
                   return (
                     <div key={field.name} className="space-y-1.5">
                       <label
