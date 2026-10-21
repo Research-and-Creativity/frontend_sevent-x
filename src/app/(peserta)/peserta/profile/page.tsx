@@ -288,7 +288,7 @@ export default function PesertaProfilePage() {
               type="date"
               value={form.birthDate}
               onChange={(e) => updateField("birthDate", e.target.value)}
-              className={`${glassInput} text-white`}
+              className={`${glassInput} text-white accent-white [color-scheme:dark]`}
             />
           </div>
 

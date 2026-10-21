@@ -155,14 +155,14 @@ export default function RegisterPage() {
               type="button"
               onClick={onResend}
               disabled={isResending}
-              className="cursor-pointer mt-4 text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
+              className="cursor-pointer mt-4 block mx-auto w-fit text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
             >
               {isResending ? "Mengirim ulang..." : "Kirim ulang email verifikasi"}
             </button>
             <button
               type="button"
               onClick={() => setRegisteredEmail(null)}
-              className="cursor-pointer mt-3 text-xs font-semibold text-white/50 hover:text-white transition-colors"
+              className="cursor-pointer mt-4 block mx-auto w-fit text-xs font-semibold text-white/50 hover:text-white transition-colors"
             >
               Ganti alamat email
             </button>
