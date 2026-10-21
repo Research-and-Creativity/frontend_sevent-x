@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   useUserMe,
   useUserTeam,
@@ -1190,7 +1191,15 @@ export default function PesertaTeamPage() {
               </h3>
               <p className="text-xs text-text-secondary mt-1">
                 Masukkan tautan/URL publik postingan Twibbon Instagram dan bukti
-                unggah Story Anda.
+                unggah Story Anda. Dua dokumen lain — Student ID (KTM) dan
+                Follow Instagram Sevent.tup — diunggah lewat halaman{" "}
+                <Link
+                  href="/peserta/profile"
+                  className="font-medium text-[#7D8CFF] transition-colors hover:text-white"
+                >
+                  Profile
+                </Link>
+                .
               </p>
             </div>
 

@@ -24,6 +24,7 @@ import {
   useMyAnnouncements,
   useNewsFeed,
   useProfileComplete,
+  useSubmissionEligibility,
   useUserMe,
   useUserSubmission,
   useUserTeam,
@@ -109,6 +110,14 @@ export default function PesertaDashboardPage() {
   const teamInfo = myAnnouncementsData?.team;
 
   const hasJoined = Boolean(team);
+
+  // Status dokumen verifikasi per anggota. Selama ini data eligibility tidak
+  // pernah ditampilkan di mana pun, padahal peserta baru tahu mereka harus
+  // unggah Twibbon/KTM/dsb setelah membaca halaman kompetisi.
+  const { data: eligibility } = useSubmissionEligibility();
+  const teamMembers = eligibility?.requirements.members ?? [];
+  const docsAllApproved =
+    eligibility?.requirements.allMembersDocumentsApproved ?? false;
 
   const memberCount = team?.members?.length ?? 0;
   const maxMembers = team?.competition?.maxMember ?? 0;
@@ -271,6 +280,54 @@ export default function PesertaDashboardPage() {
           <Link href="/peserta/competition">
             <Button className={pillButton}>Join Now!</Button>
           </Link>
+        </div>
+      )}
+
+      {/* Dokumen verifikasi — arahan singkat begitu tim terbentuk. Rincian
+          per dokumen dan per anggota ada di halaman Competition. */}
+      {hasJoined && teamMembers.length > 0 && (
+        <div className={`${glass} p-6 lg:p-8`}>
+          <h2 className="relative mb-1 font-display text-xl font-bold tracking-tight text-white">
+            Dokumen Verifikasi
+          </h2>
+          <p className="relative text-sm text-text-secondary">
+            {docsAllApproved
+              ? "Semua dokumen anggota sudah disetujui. Kamu siap mengirim karya."
+              : "Masih ada dokumen anggota yang belum disetujui. Lengkapi lewat halaman Profile."}
+          </p>
+
+          <ul className="relative mt-4 space-y-2">
+            {teamMembers.map((member) => (
+              <li
+                key={member.userId}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3"
+              >
+                <span className="text-sm text-white">
+                  {member.fullName}
+                  <span className="ml-2 text-xs font-normal text-text-secondary">
+                    {member.role === "LEADER" ? "Leader" : "Anggota"}
+                  </span>
+                </span>
+                <span
+                  className={
+                    member.allDocumentsApproved
+                      ? "text-xs font-medium text-emerald-400"
+                      : "text-xs font-medium text-amber-300"
+                  }
+                >
+                  {member.allDocumentsApproved
+                    ? "Semua dokumen disetujui"
+                    : "Menunggu kelengkapan"}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="relative mt-5">
+            <Link href="/peserta/competition">
+              <Button className={pillButton}>Lihat Rincian Dokumen</Button>
+            </Link>
+          </div>
         </div>
       )}
 
