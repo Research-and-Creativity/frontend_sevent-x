@@ -83,20 +83,23 @@ const EMPTY_FORM: SubmissionForm = {
   prototypeUrl: "",
 };
 
-// Tautan yang diminta berbeda per kompetisi — aturan yang sama persis dengan
-// requireCompleteSubmission di backend. Bintang menandai isian wajib.
+// Semua tautan selalu ditampilkan agar data yang sudah tersimpan (termasuk
+// data lama dari form sebelumnya) tidak hilang dari tampilan. Yang wajib
+// ditandai dengan bintang bergantung pada kompetisi — aturan yang sama persis
+// dengan requireCompleteSubmission di backend.
 type LinkFieldName = keyof Omit<SubmissionForm, "projectTitle" | "description">;
 
-const LINK_FIELDS: Record<string, Array<{ name: LinkFieldName; label: string; required: boolean }>> = {
-  "software-development": [
-    { name: "githubUrl", label: "Github Repository", required: true },
-    { name: "demoVideoUrl", label: "Demonstration Video", required: true },
-    { name: "deploymentUrl", label: "Live Deployment", required: false },
-  ],
-  "ui-ux": [
-    { name: "figmaUrl", label: "Figma Design", required: true },
-    { name: "prototypeUrl", label: "Prototype", required: true },
-  ],
+const ALL_LINK_FIELDS: Array<{ name: LinkFieldName; label: string }> = [
+  { name: "githubUrl", label: "Github Repository" },
+  { name: "demoVideoUrl", label: "Demonstration Video" },
+  { name: "deploymentUrl", label: "Live Deployment" },
+  { name: "figmaUrl", label: "Figma Design" },
+  { name: "prototypeUrl", label: "Prototype" },
+];
+
+const REQUIRED_LINKS: Record<string, Set<LinkFieldName>> = {
+  "software-development": new Set<LinkFieldName>(["githubUrl", "demoVideoUrl"]),
+  "ui-ux": new Set<LinkFieldName>(["figmaUrl", "prototypeUrl"]),
 };
 
 export default function CompetitionRegistrationPage() {
@@ -140,7 +143,7 @@ export default function CompetitionRegistrationPage() {
   // lagi, baik lewat formulir maupun lewat API (dicek ulang di backend).
   const isLocked = existingSubmission?.status === "SUBMITTED";
 
-  const linkFields = LINK_FIELDS[slug] ?? LINK_FIELDS["software-development"];
+  const requiredLinks = REQUIRED_LINKS[slug] ?? REQUIRED_LINKS["software-development"];
 
   // Proposal yang sudah tersimpan di server. Ditampilkan kembali di kotak
   // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
@@ -679,37 +682,40 @@ export default function CompetitionRegistrationPage() {
               </p>
 
               <div className="relative mt-6 space-y-5">
-                {linkFields.map((field) => (
-                  <div key={field.name} className="space-y-1.5">
-                    <label
-                      htmlFor={`external-${field.name}`}
-                      className="block text-sm text-text-secondary"
-                    >
-                      {field.label}
-                      {field.required ? (
-                        <span className="ml-1 text-[#7D8CFF]">*</span>
-                      ) : (
-                        <span className="ml-1 text-xs font-normal text-text-secondary/70">
-                          (optional)
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      id={`external-${field.name}`}
-                      type="url"
-                      placeholder="https://"
-                      disabled={isLocked}
-                      value={form[field.name]}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          [field.name]: e.target.value,
-                        }))
-                      }
-                      className={glassInput}
-                    />
-                  </div>
-                ))}
+                {ALL_LINK_FIELDS.map((field) => {
+                  const required = requiredLinks.has(field.name);
+                  return (
+                    <div key={field.name} className="space-y-1.5">
+                      <label
+                        htmlFor={`external-${field.name}`}
+                        className="block text-sm text-text-secondary"
+                      >
+                        {field.label}
+                        {required ? (
+                          <span className="ml-1 text-[#7D8CFF]">*</span>
+                        ) : (
+                          <span className="ml-1 text-xs font-normal text-text-secondary/70">
+                            (optional)
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        id={`external-${field.name}`}
+                        type="url"
+                        placeholder="https://"
+                        disabled={isLocked}
+                        value={form[field.name]}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            [field.name]: e.target.value,
+                          }))
+                        }
+                        className={glassInput}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
