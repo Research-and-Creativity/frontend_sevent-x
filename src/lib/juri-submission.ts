@@ -60,12 +60,11 @@ export function competitionName(sub: JudgeSubmissionItem): string {
   return sub.team?.competition?.name || "Competition";
 }
 
-// 1-3 mendapat gelar podium, sisanya urutan biasa.
+// Juara 1 dan 2 mendapat gelar, sisanya urutan biasa.
 export function podiumLabel(rank: number): string {
-  if (rank === 1) return "Winner";
-  if (rank === 2) return "1st Runner Up";
-  if (rank === 3) return "2nd Runner Up";
-  return `Rank ${rank}`;
+  if (rank === 1) return "Juara 1";
+  if (rank === 2) return "Juara 2";
+  return `Peringkat ${rank}`;
 }
 
 export function formatScore(score: number): string {

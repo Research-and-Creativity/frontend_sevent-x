@@ -191,6 +191,9 @@ export interface TeamAnnouncementItem {
   competitionId: string;
   teamId: string;
   isFinalist: boolean;
+  // Peringkat pemenang pada babak final: 1 = Juara 1, 2 = Juara 2. Null untuk
+  // babak penyisihan dan tim non-podium.
+  rank: number | null;
   round: string;
   publishedAt: string | null;
   createdAt: string;

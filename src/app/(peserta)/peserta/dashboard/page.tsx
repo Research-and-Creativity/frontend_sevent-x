@@ -336,6 +336,8 @@ export default function PesertaDashboardPage() {
         <div className={`${glass} space-y-4 p-6 lg:p-8`}>
           {publishedTeamAnnouncements.map((announcement) => {
             const isFinalist = Boolean(announcement.isFinalist);
+            const winnerRank = announcement.rank;
+            const isWinner = winnerRank === 1 || winnerRank === 2;
             const competitionName =
               announcement.competition?.name ||
               teamInfo?.competition?.name ||
@@ -369,7 +371,12 @@ export default function PesertaDashboardPage() {
                   {/* Top Badge & Published Date */}
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      {isFinalist ? (
+                      {isWinner ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                          <span>JUARA {winnerRank}</span>
+                        </span>
+                      ) : isFinalist ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
                           <Trophy className="w-3.5 h-3.5 text-amber-400" />
                           <span>LOLOS SEBAGAI FINALIS</span>
@@ -397,7 +404,14 @@ export default function PesertaDashboardPage() {
                   {/* Main Announcement Message */}
                   <div className="space-y-2">
                     <h2 className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-white">
-                      {isFinalist ? (
+                      {isWinner ? (
+                        <>
+                          <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
+                          <span>
+                            Selamat! Tim {teamName} Meraih Juara {winnerRank}
+                          </span>
+                        </>
+                      ) : isFinalist ? (
                         <>
                           <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
                           <span>
@@ -413,7 +427,9 @@ export default function PesertaDashboardPage() {
                     </h2>
 
                     <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-2xl">
-                      {isFinalist
+                      {isWinner
+                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih Juara ${winnerRank} pada babak ${roundName}. Terima kasih atas dedikasi dan kerja keras seluruh anggota tim.`
+                        : isFinalist
                         ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih nilai unggul dan dinyatakan lolos untuk melaju ke tahap ${roundName}. Persiapkan diri Anda untuk tahapan berikutnya sesuai jadwal yang ditentukan oleh panitia.`
                         : `Terima kasih atas partisipasi dan dedikasi tim ${teamName} (${competitionName}) pada babak ${roundName}. Tim Anda belum berhasil melaju ke babak selanjutnya pada kesempatan ini. Tetap semangat dan terus berkarya!`}
                     </p>

@@ -37,7 +37,7 @@ export default function AdminResultsPage() {
   const [selectedCompSlug, setSelectedCompSlug] = useState("");
   const activeSlug = selectedCompSlug || competitions[0]?.slug || "";
 
-  const [roundName, setRoundName] = useState("Final Round");
+  const [roundName, setRoundName] = useState("PENYISIHAN");
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -152,9 +152,8 @@ export default function AdminResultsPage() {
               }}
               className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
             >
-              <option value="Final Round">Final Round</option>
-              <option value="Phase 1 Preliminary">Phase 1 Preliminary</option>
-              <option value="Phase 2 Finalist">Phase 2 Finalist</option>
+              <option value="PENYISIHAN">Penyisihan (Finalis)</option>
+              <option value="FINAL">Final (Pemenang)</option>
             </select>
           </div>
 
