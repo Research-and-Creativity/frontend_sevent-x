@@ -61,9 +61,9 @@ export default function TwibbonCanvas({
 
     const frame = frameRef.current;
     if (frame.complete && frame.src && frame.naturalWidth > 0) {
-      // Gambar frame dengan rasio aslinya (contain) supaya tidak terdistorsi
-      // meski rasio frame berbeda dari kanvas.
-      const scale = Math.min(
+      // Gambar frame memenuhi kanvas (cover) supaya tidak ada ruang kosong.
+      // Jika rasio frame berbeda dari kanvas, bagian yang meluber akan terpotong.
+      const scale = Math.max(
         canvas.width / frame.naturalWidth,
         canvas.height / frame.naturalHeight,
       );
