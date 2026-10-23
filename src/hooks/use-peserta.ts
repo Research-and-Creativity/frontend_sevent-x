@@ -445,7 +445,7 @@ export function useAnnouncementNotifications() {
     const prev = prevIdsRef.current;
     const newCount = Array.from(ids).filter((id) => !prev.has(id)).length;
     if (newCount > 0) {
-      toast.success(`📢 Ada ${newCount} announcement baru`);
+      toast.success(`Ada ${newCount} announcement baru`);
     }
     prevIdsRef.current = ids;
   }, [publishedTeamAnns, newsItems]);
