@@ -2,7 +2,7 @@
 
 // Adaptasi dari freebbonize (github.com/GithubFarelAlghazali/freebbonize)
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TransformType } from "./types";
 
 type CanvasProps = {
@@ -14,14 +14,7 @@ type CanvasProps = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 };
 
-// Ruang koordinat transform (nilai x/y/scale selalu dalam satuan ini). Jangan
-// diubah tanpa menyesuaikan slider & input di panel "Atur Posisi".
-const CANVAS_WIDTH= 1600;
-const CANVAS_HEIGHT= 1200;
-// Resolusi bitmap: 500 x 4 = 2000 px. Ini yang menentukan ketajaman hasil
-// unduhan; geometri di layar tidak terpengaruh karena semua digambar lewat
-// ctx.scale(EXPORT_SCALE). Samakan dengan resolusi frame resmi kalau nanti
-// frame SVG ini diganti PNG beresolusi tetap.
+// Resolusi bitmap: 4x. Ini yang menentukan ketajaman hasil unduhan.
 const EXPORT_SCALE = 4;
 
 export default function TwibbonCanvas({
@@ -33,6 +26,9 @@ export default function TwibbonCanvas({
   canvasRef,
 }: CanvasProps) {
   const frameRef = useRef(new Image());
+  // Dimensi kanvas mengikuti dimensi asli frame, supaya tidak ada ruang kosong
+  // maupun pemotongan. Default 4:3 sampai frame ter-load.
+  const [dims, setDims] = useState({ w: 1600, h: 1200 });
 
   function draw() {
     const canvas = canvasRef?.current;
@@ -43,10 +39,7 @@ export default function TwibbonCanvas({
     if (userPhoto) {
       ctx?.save();
       ctx?.scale(EXPORT_SCALE, EXPORT_SCALE);
-      ctx?.translate(
-        CANVAS_WIDTH / 2 + transform.x,
-        CANVAS_HEIGHT / 2 + transform.y,
-      );
+      ctx?.translate(dims.w / 2 + transform.x, dims.h / 2 + transform.y);
       ctx?.rotate((transform.rotate * Math.PI) / 180);
       ctx?.scale(transform.scale / 100, transform.scale / 100);
       ctx?.drawImage(
@@ -61,33 +54,34 @@ export default function TwibbonCanvas({
 
     const frame = frameRef.current;
     if (frame.complete && frame.src && frame.naturalWidth > 0) {
-      // Gambar frame memenuhi kanvas (cover) supaya tidak ada ruang kosong.
-      // Jika rasio frame berbeda dari kanvas, bagian yang meluber akan terpotong.
-      const scale = Math.max(
-        canvas.width / frame.naturalWidth,
-        canvas.height / frame.naturalHeight,
-      );
-      const w = frame.naturalWidth * scale;
-      const h = frame.naturalHeight * scale;
-      const x = (canvas.width - w) / 2;
-      const y = (canvas.height - h) / 2;
-      ctx?.drawImage(frame, x, y, w, h);
+      // Frame dan kanvas punya rasio yang sama, jadi cukup digambar penuh.
+      ctx?.drawImage(frame, 0, 0, canvas.width, canvas.height);
     }
   }
 
-  // Load frame image
+  // Load frame image; set dimensi kanvas sesuai frame.
   useEffect(() => {
     const frame = frameRef.current;
-    frame.onload = draw;
+    const onLoad = () => {
+      if (frame.naturalWidth > 0 && frame.naturalHeight > 0) {
+        setDims({ w: frame.naturalWidth, h: frame.naturalHeight });
+      }
+      draw();
+    };
+    frame.onload = onLoad;
     frame.src = frameSrc;
+    // Jika frame sudah ter-cache, onload mungkin tidak terpicu.
+    if (frame.complete && frame.naturalWidth > 0) {
+      onLoad();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frameSrc]);
 
-  // Redraw whenever photo or transform changes
+  // Redraw whenever photo, transform, or dims change
   useEffect(() => {
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPhoto, transform]);
+  }, [userPhoto, transform, dims]);
 
   // Drag-to-reposition (only in edit mode)
   useEffect(() => {
@@ -129,10 +123,10 @@ export default function TwibbonCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={CANVAS_WIDTH * EXPORT_SCALE}
-      height={CANVAS_HEIGHT * EXPORT_SCALE}
+      width={dims.w * EXPORT_SCALE}
+      height={dims.h * EXPORT_SCALE}
       className={`w-full max-w-[360px] rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
-      style={{ aspectRatio: "4 / 3", height: "auto" }}
+      style={{ aspectRatio: `${dims.w} / ${dims.h}`, height: "auto" }}
     />
   );
 }
