@@ -50,6 +50,8 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
     doc: TeamDetailMemberDocument;
   } | null>(null);
   const [verifyPay, setVerifyPay] = useState(false);
+  const [revisePay, setRevisePay] = useState(false);
+  const [revisePayNote, setRevisePayNote] = useState("");
   // Dokumen yang sedang diproses, supaya spinner menempel di barisnya sendiri
   // dan baris lain tetap terbaca.
   const [actingDocId, setActingDocId] = useState<string | null>(null);
@@ -154,6 +156,22 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
       () => updatePay.mutateAsync({ teamId: team.id, status: "APPROVE" }),
       "Bukti pembayaran tim berhasil diverifikasi."
     );
+  };
+
+  const handleRevisePayment = () => {
+    if (!revisePayNote.trim()) return;
+    setRevisePay(false);
+    if (!team.paymentProof) return;
+    void runAction(
+      () =>
+        updatePay.mutateAsync({
+          teamId: team.id,
+          status: "REJECT",
+          reason: revisePayNote.trim(),
+        }),
+      "Catatan revisi bukti pembayaran dikirim ke tim."
+    );
+    setRevisePayNote("");
   };
 
   return (
@@ -351,7 +369,14 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         )}
 
         {mode === "registered" && (
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
+              onClick={() => setRevisePay(true)}
+              className="cursor-pointer px-8 py-2.5 rounded-full border border-[#F0C969] text-[#F0C969] text-sm font-semibold hover:bg-[#F0C969]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Revise
+            </button>
             <button
               disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
               onClick={() => setVerifyPay(true)}
@@ -438,6 +463,39 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         cancelText="Cancel"
         onConfirm={handleVerifyPayment}
       />
+
+      <Dialog open={revisePay} onOpenChange={(open) => !open && setRevisePay(false)}>
+        <DialogContent className="bg-[#1A1D24]/80 backdrop-blur-xl border border-white/20 text-white max-w-lg rounded-2xl p-8">
+          <DialogTitle className="text-white text-2xl font-extrabold tracking-tight">
+            Revise Payment
+          </DialogTitle>
+          <DialogDescription className="text-white/60 text-sm">
+            Catatan revisi dikirim ke tim untuk bukti pembayaran.
+          </DialogDescription>
+          <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
+          <Textarea
+            value={revisePayNote}
+            onChange={(e) => setRevisePayNote(e.target.value)}
+            placeholder="Contoh: Bukti pembayaran tidak jelas, mohon upload ulang."
+            className="w-full h-32 rounded-2xl border border-white/30 bg-transparent p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 resize-none"
+          />
+          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/10">
+            <button
+              onClick={() => setRevisePay(false)}
+              className="cursor-pointer px-8 py-3 rounded-full border border-white/20 text-white/70 text-sm font-semibold hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={!revisePayNote.trim() || updatePay.isPending}
+              onClick={handleRevisePayment}
+              className="cursor-pointer px-10 py-3 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_30px_rgba(59,91,255,0.35)] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updatePay.isPending ? "Memproses..." : "Submit"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

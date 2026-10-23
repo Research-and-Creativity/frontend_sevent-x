@@ -44,6 +44,35 @@ export default function AdminResultsPage() {
   const [isPublished, setIsPublished] = useState(false);
 
   const [rankings, setRankings] = useState<CalculatedRankItem[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCsv = async () => {
+    if (!activeSlug) {
+      toast.error("Pilih Kompetisi terlebih dahulu.");
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const res = await apiClient.get("/api/export/scores", {
+        params: { competitionSlug: activeSlug, round: roundName },
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nilai-${activeSlug}-${roundName}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Export CSV berhasil.");
+    } catch (err) {
+      toast.error("Gagal export CSV.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // BE mengembalikan array datar sesuai CalculatedRankItem.
   const handleCalculateScores = async () => {
@@ -167,6 +196,19 @@ export default function AdminResultsPage() {
             >
               {isCalculating && <Loader2 className="w-4 h-4 animate-spin" />}
               {isCalculating ? "Mengkalkulasi..." : "Hitung Akumulasi Skor Juri"}
+            </button>
+          </div>
+
+          {/* Tombol Export CSV (read-only) */}
+          <div className="sm:col-span-3">
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={handleExportCsv}
+              className="w-full flex items-center justify-center gap-2 border border-white/20 text-white font-semibold text-sm h-12 px-6 rounded-full hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isExporting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isExporting ? "Mengekspor..." : "Export CSV (Read-only)"}
             </button>
           </div>
         </div>
