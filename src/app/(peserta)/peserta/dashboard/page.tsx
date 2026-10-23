@@ -536,10 +536,10 @@ export default function PesertaDashboardPage() {
                     <span
                       className={`rounded-md border px-2.5 py-0.5 font-mono text-[10px] font-bold ${
                         isImportant
-                          ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                          ? "border-red-500/40 bg-red-500/10 text-red-300"
                           : isInfo
                           ? "border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-[#7D8CFF]"
-                          : "border-white/15 bg-white/[0.05] text-text-secondary"
+                          : "border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
                       }`}
                     >
                       {tag}
