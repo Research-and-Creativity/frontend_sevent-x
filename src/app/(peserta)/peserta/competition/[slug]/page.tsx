@@ -701,6 +701,76 @@ export default function CompetitionRegistrationPage() {
                 cancelText="Batal"
                 onConfirm={handleSubmitAll}
               />
+
+              {/* Hasil penilaian (muncul setelah juri menilai) */}
+              {existingSubmission?.scores && existingSubmission.scores.length > 0 && (
+                <div className={`${glass} p-6 lg:p-8`}>
+                  <h2 className="relative font-display text-lg font-bold tracking-tight text-white">
+                    Hasil Penilaian Juri
+                  </h2>
+                  <div className="relative mt-4 space-y-2">
+                    {(() => {
+                      const byCriteria = new Map<string, { name: string; max: number; scores: number[] }>();
+                      for (const s of existingSubmission.scores) {
+                        if (!byCriteria.has(s.criteria.id)) {
+                          byCriteria.set(s.criteria.id, { name: s.criteria.name, max: s.criteria.maxScore, scores: [] });
+                        }
+                        byCriteria.get(s.criteria.id)!.scores.push(s.score);
+                      }
+                      const rows = Array.from(byCriteria.values()).map((c) => ({
+                        name: c.name,
+                        max: c.max,
+                        avg: c.scores.length ? c.scores.reduce((a, b) => a + b, 0) / c.scores.length : 0,
+                      }));
+                      const overall = rows.length ? rows.reduce((a, b) => a + b.avg, 0) / rows.length : 0;
+                      return (
+                        <>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-text-secondary">
+                                <th className="text-left py-1">Komponen</th>
+                                <th className="text-right py-1">Rata-rata</th>
+                                <th className="text-right py-1">Maks</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((r) => (
+                                <tr key={r.name} className="border-t border-white/5">
+                                  <td className="py-1 text-white">{r.name}</td>
+                                  <td className="py-1 text-right text-white">{r.avg.toFixed(2)}</td>
+                                  <td className="py-1 text-right text-text-secondary">{r.max}</td>
+                                </tr>
+                              ))}
+                              <tr className="border-t border-white/10 font-semibold">
+                                <td className="py-1 text-white">Rata-rata keseluruhan</td>
+                                <td className="py-1 text-right text-white">{overall.toFixed(2)}</td>
+                                <td className="py-1 text-right text-text-secondary"></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          {existingSubmission.judgeEvaluations && existingSubmission.judgeEvaluations.length > 0 && (
+                            <div className="mt-4 space-y-3">
+                              <p className="text-sm font-semibold text-white">Catatan Juri</p>
+                              {existingSubmission.judgeEvaluations.map((ev, i) => (
+                                <div key={ev.id ?? i} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                                  <p className="text-xs font-semibold text-[#7D8CFF]">
+                                    {ev.judge?.user?.fullName ?? "Juri"}
+                                  </p>
+                                  {ev.feedback && (
+                                    <p className="mt-1 text-xs text-text-secondary whitespace-pre-wrap">
+                                      {ev.feedback}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* External Links */}

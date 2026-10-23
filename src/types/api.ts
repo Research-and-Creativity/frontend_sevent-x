@@ -119,6 +119,21 @@ export interface Submission {
   status: "DRAFT" | "SUBMITTED";
   /** Baru terisi ketika leader menekan Submit All. */
   submittedAt: string | null;
+  // Data penilaian (hanya ada setelah juri menilai).
+  scores?: Array<{
+    id: string;
+    score: number;
+    note?: string | null;
+    isLocked: boolean;
+    criteria: { id: string; name: string; maxScore: number; group?: string | null };
+    judge: { user: { fullName: string } };
+  }>;
+  judgeEvaluations?: Array<{
+    id: string;
+    recommendation?: string | null;
+    feedback?: string | null;
+    judge: { user: { fullName: string } };
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }
