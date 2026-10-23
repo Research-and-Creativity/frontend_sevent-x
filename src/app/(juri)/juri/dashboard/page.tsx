@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { useJudgeSubmissions } from "@/hooks/use-juri";
 import { useCompetitionTimeline } from "@/hooks/use-peserta";
+import { apiClient } from "@/lib/api-client";
 import {
   byTotalScoreDesc,
   formatCountdown,
@@ -54,6 +55,26 @@ export default function JuriDashboardPage() {
     submissions.filter((s) => s.evaluationStatus?.isEvaluated)
   ).slice(0, 3);
 
+  const exportScores = async (round: "PENYISIHAN" | "FINAL") => {
+    try {
+      const res = await apiClient.get("/api/export/scores", {
+        params: { round },
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nilai-${round.toLowerCase()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="relative isolate max-w-7xl mx-auto pb-10">
       {/* Blob warna di belakang supaya efek blur kaca kelihatan */}
@@ -65,9 +86,27 @@ export default function JuriDashboardPage() {
 
       <div className="space-y-6">
         <div className={`${glass} p-6`}>
-          <h1 className="relative font-display text-3xl font-bold">
-            Good Morning, {name}
-          </h1>
+          <div className="relative flex flex-wrap items-center justify-between gap-3">
+            <h1 className="font-display text-3xl font-bold">
+              Good Morning, {name}
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => exportScores("PENYISIHAN")}
+                className="px-4 py-2 rounded-full border border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors"
+              >
+                Export CSV (Penyisihan)
+              </button>
+              <button
+                type="button"
+                onClick={() => exportScores("FINAL")}
+                className="px-4 py-2 rounded-full border border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors"
+              >
+                Export CSV (Final)
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-4">

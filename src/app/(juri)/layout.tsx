@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
+import { useJudgeSubmissions } from "@/hooks/use-juri";
 import { toast } from "sonner";
 import { LayoutGrid, LogOut, Medal, SquarePen, Menu, X } from "lucide-react";
 
@@ -29,10 +30,12 @@ function SidebarContent({
   pathname,
   onNavigate,
   onLogout,
+  pendingCount,
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
+  pendingCount?: number;
 }) {
   return (
     <>
@@ -68,6 +71,11 @@ function SidebarContent({
           >
             <l.icon className="w-5 h-5" />
             {l.label}
+            {l.href === "/juri/already-submitted" && pendingCount && pendingCount > 0 ? (
+              <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#7D8CFF] text-white text-[10px] font-bold">
+                {pendingCount}
+              </span>
+            ) : null}
           </Link>
         ))}
       </nav>
@@ -109,8 +117,10 @@ export default function JuriLayout({
   const pathname = usePathname();
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
+  const { data: submissions } = useJudgeSubmissions();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
+  const pendingCount = submissions?.length ?? 0;
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
@@ -164,6 +174,7 @@ export default function JuriLayout({
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
                 onLogout={() => router.push("/login")}
+                pendingCount={pendingCount}
               />
             </div>
           </div>
@@ -184,6 +195,7 @@ export default function JuriLayout({
           <SidebarContent
             pathname={pathname}
             onLogout={() => router.push("/login")}
+            pendingCount={pendingCount}
           />
         </div>
       </aside>

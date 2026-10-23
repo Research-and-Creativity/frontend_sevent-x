@@ -70,30 +70,12 @@ export function RecommendationActions({
         <button
           type="button"
           disabled={recommend.isPending}
-          onClick={() => setPending("WAITLIST")}
-          className="cursor-pointer px-6 py-2.5 rounded-full border border-[#3B5BFF] text-white text-sm font-semibold hover:bg-[#3B5BFF]/10 transition-colors bg-[#3B5BFF]/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Hold Team
-        </button>
-        <button
-          type="button"
-          disabled={recommend.isPending}
           onClick={() => setPending("FINALIST")}
           className="cursor-pointer px-6 py-2.5 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Go to Finalist
         </button>
       </div>
-
-      <ConfirmModal
-        open={pending === "WAITLIST"}
-        onOpenChange={(open) => !open && setPending(null)}
-        title="Konfirmasi Hold Team"
-        description={`Apakah Anda yakin ingin merekomendasikan "${teamName}" ke Hold Team?`}
-        confirmText="Ya, Hold Team"
-        cancelText="Batal"
-        onConfirm={() => send("WAITLIST")}
-      />
 
       <ConfirmModal
         open={pending === "FINALIST"}
