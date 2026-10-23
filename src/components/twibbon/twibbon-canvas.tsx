@@ -131,7 +131,8 @@ export default function TwibbonCanvas({
       ref={canvasRef}
       width={CANVAS_WIDTH * EXPORT_SCALE}
       height={CANVAS_HEIGHT * EXPORT_SCALE}
-      className={`w-full max-w-[360px] aspect-[4/3] rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+      className={`w-full max-w-[360px] rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={{ aspectRatio: "4 / 3", height: "auto" }}
     />
   );
 }
