@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -45,6 +45,35 @@ export default function AdminResultsPage() {
 
   const [rankings, setRankings] = useState<CalculatedRankItem[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Persist hasil kalkulasi di sessionStorage agar tidak hilang saat reload.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("adminResultsState");
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.activeSlug) setSelectedCompSlug(saved.activeSlug);
+        if (saved.roundName) setRoundName(saved.roundName);
+        if (Array.isArray(saved.rankings)) setRankings(saved.rankings);
+        if (saved.hasCalculated) setHasCalculated(true);
+        if (saved.isPublished) setIsPublished(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasCalculated) return;
+    try {
+      sessionStorage.setItem(
+        "adminResultsState",
+        JSON.stringify({ activeSlug, roundName, rankings, hasCalculated, isPublished })
+      );
+    } catch {
+      // ignore
+    }
+  }, [activeSlug, roundName, rankings, hasCalculated, isPublished]);
 
   const handleExportCsv = async () => {
     if (!activeSlug) {

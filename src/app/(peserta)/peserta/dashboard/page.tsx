@@ -420,7 +420,6 @@ export default function PesertaDashboardPage() {
                         </>
                       ) : (
                         <>
-                          <Info className="w-5 h-5 text-blue-400 shrink-0" />
                           <span>Pengumuman Hasil Seleksi {roundName}</span>
                         </>
                       )}
