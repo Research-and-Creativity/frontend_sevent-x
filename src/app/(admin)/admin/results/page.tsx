@@ -136,7 +136,7 @@ export default function AdminResultsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
-        <h1 className="font-display text-3xl font-bold">Results</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">Results</h1>
       </div>
 
       {/* Selector Controls Bar: Pilih Kompetisi, Round, & Tombol Hitung */}

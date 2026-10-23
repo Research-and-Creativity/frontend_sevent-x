@@ -87,7 +87,7 @@ export default function JuriDashboardPage() {
       <div className="space-y-6">
         <div className={`${glass} p-6`}>
           <div className="relative flex flex-wrap items-center justify-between gap-3">
-            <h1 className="font-display text-3xl font-bold">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold">
               Good Morning, {name}
             </h1>
             <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function JuriDashboardPage() {
               </span>
               <Users className="w-5 h-5 text-white/70" />
             </div>
-            <p className="relative font-display text-4xl font-bold">
+            <p className="relative font-display text-3xl sm:text-4xl font-bold">
               {pendingCount}{" "}
               <span className="text-lg text-white/40 font-normal">
                 / {submissions.length}
@@ -138,7 +138,7 @@ export default function JuriDashboardPage() {
               </span>
               <Users className="w-5 h-5 text-white/70" />
             </div>
-            <p className="relative font-display text-4xl font-bold">
+            <p className="relative font-display text-3xl sm:text-4xl font-bold">
               {judgedCount}{" "}
               <span className="text-lg text-white/40 font-normal">
                 / {submissions.length}
@@ -159,7 +159,7 @@ export default function JuriDashboardPage() {
               </span>
               <Clock className="w-5 h-5 text-white/70" />
             </div>
-            <p className="relative font-display text-4xl font-bold">
+            <p className="relative font-display text-3xl sm:text-4xl font-bold">
               {deadline ? formatCountdown(deadline) : "--"}
             </p>
             <p className="relative text-xs text-white/50 mt-2">

@@ -351,7 +351,7 @@ export default function CompetitionRegistrationPage() {
 
       {/* Header */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
+        <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
           Competition
           <span className="mx-3 text-white/60">•</span>
           {competition?.name ?? "..."}
@@ -853,7 +853,7 @@ export default function CompetitionRegistrationPage() {
               <h3 className="font-display text-lg font-bold text-white">
                 Bank Account
               </h3>
-              <p className="mt-3 font-display text-3xl font-bold tracking-tight text-white">
+              <p className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 {PAYMENT_ACCOUNT.amount}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-text-secondary">

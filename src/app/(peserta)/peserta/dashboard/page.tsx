@@ -142,7 +142,7 @@ export default function PesertaDashboardPage() {
 
       {/* Welcome Banner */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
+        <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
           {userLoading
             ? "Welcome back"
             : `Welcome back${user?.fullName ? `, ${user.fullName}` : ""}`}
@@ -220,7 +220,7 @@ export default function PesertaDashboardPage() {
                 </span>
                 <Users className="h-4 w-4 text-text-secondary" />
               </div>
-              <div className="font-display text-3xl font-bold leading-none text-white">
+              <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
                 {memberCount}{" "}
                 <span className="text-base font-normal text-text-secondary">
                   / {maxMembers}
@@ -243,7 +243,7 @@ export default function PesertaDashboardPage() {
                 <RotateCcw className="h-4 w-4 text-text-secondary" />
               </div>
               <div
-                className={`font-display text-2xl font-bold ${
+                className={`font-display text-xl sm:text-2xl font-bold ${
                   submission ? "text-emerald-400" : "text-rose-500"
                 }`}
               >
@@ -259,7 +259,7 @@ export default function PesertaDashboardPage() {
                 </span>
                 <Clock className="h-4 w-4 text-text-secondary" />
               </div>
-              <div className="font-display text-2xl font-bold tracking-wide text-white">
+              <div className="font-display text-xl sm:text-2xl font-bold tracking-wide text-white">
                 {deadline ? formatCountdown(deadline) : "--"}
               </div>
               <p className="relative mt-2 text-[11px] text-text-secondary">
