@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Eye, ChevronLeft, ChevronRight, Trophy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useJudgeRankings } from "@/hooks/use-juri";
+import { useJudgeRankings, useJudgeAnnouncements } from "@/hooks/use-juri";
 import { podiumLabel } from "@/lib/juri-submission";
 
 // Style glass yang sama dengan halaman juri lainnya
@@ -23,11 +23,22 @@ const PODIUM_SIZE = 2;
 
 export default function JuriWinnerPage() {
   const { data, isLoading, isError, refetch } = useJudgeRankings();
+  const competitionSlug = data?.competition?.slug;
+  const { data: announcements = [] } = useJudgeAnnouncements(competitionSlug);
 
   const rankings = data?.rankings ?? [];
-  const winners = rankings
-    .filter((r) => r.submissionId)
-    .slice(0, PODIUM_SIZE);
+  // Pemenang resmi: announcement published dengan rank 1/2 (babak final).
+  const publishedWinners = announcements.filter(
+    (a) => a.publishedAt && (a.rank === 1 || a.rank === 2)
+  );
+  // Gabungkan dengan data ranking (skor, submissionId, dll.) untuk tampilan.
+  const winners = publishedWinners
+    .map((ann) => {
+      const r = rankings.find((x) => x.teamId === ann.teamId);
+      if (!r) return null;
+      return { ...r, rank: ann.rank as number };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
 
   return (
     <div className="relative isolate space-y-6">
@@ -119,12 +130,12 @@ export default function JuriWinnerPage() {
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <Trophy className="w-8 h-8 text-white/40 mx-auto mb-3" />
                     <p className="text-sm font-semibold text-white">
-                      Belum ada pemenang
+                      Belum ada pemenang yang dipublikasikan
                     </p>
                     <p className="text-xs text-text-secondary mt-1">
                       {rankings.length === 0
                         ? "Belum ada karya yang masuk pada kompetisi ini."
-                        : "Pemenang muncul setelah juri menyelesaikan penilaian."}
+                        : "Pemenang (Juara 1/2) muncul setelah babak final dihitung dan dipublikasikan oleh panitia."}
                     </p>
                   </td>
                 </tr>
