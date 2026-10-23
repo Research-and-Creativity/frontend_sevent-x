@@ -13,43 +13,47 @@ export default function AdminGalleryAddPage() {
   const createMutation = useCreateGalleryItem();
 
   const [title, setTitle] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileNames, setFileNames] = useState<string[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [error, setError] = useState("");
 
   const allowed = ["image/jpeg", "image/png", "image/jpg"];
   const maxSize = 5 * 1024 * 1024;
 
-  const handleFile = (f: File) => {
-    if (!allowed.includes(f.type)) {
-      setError("File must be JPG, JPEG, or PNG.");
-      setFile(null);
-      setFileName(null);
-      return;
+  const handleFiles = (list: FileList | null) => {
+    if (!list) return;
+    const accepted: File[] = [];
+    const names: string[] = [];
+    const previews: string[] = [];
+    let err = "";
+    for (const f of Array.from(list)) {
+      if (!allowed.includes(f.type)) {
+        err = "File must be JPG, JPEG, or PNG.";
+        continue;
+      }
+      if (f.size > maxSize) {
+        err = "File must be less than 5MB.";
+        continue;
+      }
+      accepted.push(f);
+      names.push(f.name);
+      previews.push(URL.createObjectURL(f));
     }
-    if (f.size > maxSize) {
-      setError("File must be less than 5MB.");
-      setFile(null);
-      setFileName(null);
-      return;
-    }
-    setError("");
-    setFile(f);
-    setFileName(f.name);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(f));
+    if (err) setError(err);
+    else setError("");
+    setFiles(accepted);
+    setFileNames(names);
+    setPreviewUrls(previews);
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) handleFile(f);
+    handleFiles(e.target.files);
   };
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const f = e.dataTransfer.files?.[0];
-    if (f) handleFile(f);
+    handleFiles(e.dataTransfer.files);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -58,13 +62,15 @@ export default function AdminGalleryAddPage() {
       setError("Image name is required.");
       return;
     }
-    if (!file) {
-      setError("Please select an image.");
+    if (files.length === 0) {
+      setError("Please select at least one image.");
       return;
     }
     try {
-      await createMutation.mutateAsync({ title: title.trim(), file });
-      toast.success("Gambar berhasil ditambahkan.");
+      for (const f of files) {
+        await createMutation.mutateAsync({ title: title.trim(), file: f });
+      }
+      toast.success(`${files.length} gambar berhasil ditambahkan.`);
       router.push("/admin/gallery");
     } catch (err: unknown) {
       toast.error(getErrorMessageWithDefault(err, "Gagal menambahkan gambar"));
@@ -92,18 +98,25 @@ export default function AdminGalleryAddPage() {
 
           <div>
             <label className="text-sm text-white/70">Upload Image</label>
-            <div className="mt-2 w-full aspect-video bg-neutral-200/90 rounded-lg overflow-hidden flex items-center justify-center">
-              {previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                />
+            <div className="mt-2 w-full bg-neutral-200/90 rounded-lg overflow-hidden p-2">
+              {previewUrls.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {previewUrls.map((u, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={i}
+                      src={u}
+                      alt={`Preview ${i + 1}`}
+                      className="w-full aspect-square object-cover rounded"
+                    />
+                  ))}
+                </div>
               ) : (
-                <span className="text-neutral-500 text-sm">
-                  No image selected
-                </span>
+                <div className="aspect-video flex items-center justify-center">
+                  <span className="text-neutral-500 text-sm">
+                    No image selected
+                  </span>
+                </div>
               )}
             </div>
             <div
@@ -117,13 +130,13 @@ export default function AdminGalleryAddPage() {
               </span>
               <p className="font-medium">Drag or Upload your files here</p>
               <p className="text-xs text-white/50 mt-1">
-                Upload your image.
+                Upload your image(s).
                 <br />
-                (JPG, JPEG, PNG. Max 1 File and 5MB)
+                (JPG, JPEG, PNG. Multiple files allowed, max 5MB each)
               </p>
-              {fileName && (
+              {fileNames.length > 0 && (
                 <p className="text-xs text-[#7FA7F5] mt-3">
-                  Selected: {fileName}
+                  Selected: {fileNames.length} file(s) — {fileNames.join(", ")}
                 </p>
               )}
               {error && <p className="text-xs text-red-400 mt-3">{error}</p>}
@@ -131,6 +144,7 @@ export default function AdminGalleryAddPage() {
                 ref={inputRef}
                 type="file"
                 accept="image/jpeg,image/png"
+                multiple
                 className="hidden"
                 onChange={onChange}
               />
