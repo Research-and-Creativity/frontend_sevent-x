@@ -224,6 +224,18 @@ export default function AdminResultsPage() {
               </h2>
               <p className="text-xs text-white/40">
                 {roundName} • Total {rankings.length} Submissions Calculated
+                {hasCalculated && (
+                  <>
+                    {" • "}
+                    <span className="text-[#63CFA0] font-semibold">
+                      {rankings.filter((r) => r.isFinalist).length} Finalis
+                    </span>
+                    {" / "}
+                    <span className="text-white/60">
+                      {rankings.filter((r) => !r.isFinalist).length} Tidak Lolos
+                    </span>
+                  </>
+                )}
               </p>
             </div>
 
@@ -283,8 +295,8 @@ export default function AdminResultsPage() {
                     {/* Status Badge */}
                     <td className="py-4 text-right">
                       {item.isFinalist ? (
-                        <span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578]/40 text-xs font-semibold text-[#63CFA0]">
-                          Finalis
+                        <span className="inline-block px-4 py-1.5 rounded-full bg-[#3CB578]/20 border border-[#3CB578] text-xs font-bold text-[#63CFA0] shadow-[0_0_12px_rgba(60,181,120,0.25)]">
+                          ✓ Finalis
                         </span>
                       ) : (
                         <span className="inline-block px-4 py-1.5 rounded-full border border-white/20 text-xs font-semibold text-white/40">

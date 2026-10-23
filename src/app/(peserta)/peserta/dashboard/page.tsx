@@ -356,9 +356,9 @@ export default function PesertaDashboardPage() {
             return (
               <div
                 key={announcement.id}
-                className={`relative overflow-hidden rounded-xl border p-5 transition-colors ${
-                  isFinalist
-                    ? "border-amber-500/40 bg-amber-500/[0.06]"
+                className={`relative overflow-hidden rounded-xl border-2 p-5 transition-colors ${
+                  isFinalist || isWinner
+                    ? "border-amber-400/70 bg-amber-500/[0.12] shadow-[0_0_24px_rgba(245,158,11,0.15)]"
                     : "border-white/10 bg-white/[0.02]"
                 }`}
               >
@@ -403,7 +403,7 @@ export default function PesertaDashboardPage() {
 
                   {/* Main Announcement Message */}
                   <div className="space-y-2">
-                    <h2 className="flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-white">
+                    <h2 className={`flex items-center gap-2.5 font-display tracking-tight text-white ${isFinalist || isWinner ? "text-xl font-extrabold" : "text-lg font-bold"}`}>
                       {isWinner ? (
                         <>
                           <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
