@@ -431,13 +431,19 @@ export function useAnnouncementNotifications() {
   const unreadCount = unreadTeam.length + unreadNews.length;
 
   // Toast saat item baru muncul setelah load awal (ref-based, tidak fire di load pertama).
+  // Inisialisasi prevIdsRef hanya setelah data benar-benar ada, supaya toast tidak
+  // muncul saat reload (ketika data awalnya kosong lalu terisi).
   const prevIdsRef = useRef<Set<string> | null>(null);
+  const dataReady =
+    (myAnnouncementsData?.announcements?.length ?? 0) > 0 ||
+    (newsFeedData?.news?.length ?? 0) > 0;
   useEffect(() => {
     const ids = new Set<string>([
       ...publishedTeamAnns.map((a) => `t:${a.id}`),
       ...newsItems.map((n) => `n:${n.id}`),
     ]);
 
+    if (!dataReady) return; // tunggu data load, jangan inisialisasi dengan set kosong
     if (prevIdsRef.current === null) {
       prevIdsRef.current = ids;
       return;
@@ -448,7 +454,7 @@ export function useAnnouncementNotifications() {
       toast.success(`Ada ${newCount} announcement baru`);
     }
     prevIdsRef.current = ids;
-  }, [publishedTeamAnns, newsItems]);
+  }, [publishedTeamAnns, newsItems, dataReady]);
 
   return { unreadCount };
 }

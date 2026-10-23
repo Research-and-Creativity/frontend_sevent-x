@@ -300,7 +300,7 @@ export default function AdminResultsPage() {
                         </span>
                       ) : (
                         <span className="inline-block px-4 py-1.5 rounded-full border border-white/20 text-xs font-semibold text-white/40">
-                          Peserta
+                          Tidak Lolos
                         </span>
                       )}
                     </td>
