@@ -138,7 +138,7 @@ export function useAdminOverview() {
       return res.data?.data || res.data;
     },
     staleTime: 30 * 1000,
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -166,7 +166,7 @@ export function useAdminReviewCounts() {
       }
     },
     staleTime: 10 * 1000,
-    refetchInterval: 30_000,
+    refetchInterval: 5_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
