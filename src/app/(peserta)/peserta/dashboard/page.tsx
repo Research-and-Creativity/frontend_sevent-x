@@ -152,26 +152,22 @@ export default function PesertaDashboardPage() {
 
       {/* Banner: bukti pembayaran perlu direvisi (untuk semua anggota tim) */}
       {team?.paymentProof?.status?.toUpperCase() === "REJECT" && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/[0.10] p-5 lg:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-rose-300">
-              <AlertCircle className="h-5 w-5" />
-            </div>
+        <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8 !border-rose-500/30`}>
+          <div className="relative flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
             <div>
-              <h2 className="font-display text-base font-bold tracking-tight text-rose-200">
+              <h2 className="font-display text-lg font-bold tracking-tight text-white">
                 Bukti Pembayaran Perlu Direvisi
               </h2>
-              <p className="mt-0.5 text-sm text-rose-100/80">
+              <p className="mt-1 text-sm text-text-secondary">
                 {team?.paymentProof?.rejectionReason
                   ? team.paymentProof.rejectionReason
                   : "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
               </p>
             </div>
           </div>
-          <Link href="/peserta/team" className="shrink-0">
-            <Button className="rounded-full bg-rose-500 px-5 h-9 text-xs font-semibold text-white hover:bg-rose-600">
-              Perbaiki &amp; Unggah Ulang
-            </Button>
+          <Link href={team?.competition?.slug ? `/peserta/competition/${team.competition.slug}` : "/peserta/competition"} className="shrink-0">
+            <Button className={pillButton}>Perbaiki &amp; Unggah Ulang</Button>
           </Link>
         </div>
       )}
