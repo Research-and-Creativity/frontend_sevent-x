@@ -7,12 +7,15 @@ export default function TwibbonUpload({
 }: {
   onPhotoSelected: (img: HTMLImageElement) => void;
 }) {
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function handleFile(file: File | undefined) {
     if (!file) return;
     const img = new Image();
     img.onload = () => onPhotoSelected(img);
     img.src = URL.createObjectURL(file);
+  }
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    handleFile(e.target.files?.[0]);
   }
 
   return (
@@ -28,11 +31,16 @@ export default function TwibbonUpload({
 
       <label
         htmlFor="photo-upload"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          handleFile(e.dataTransfer.files?.[0]);
+        }}
         className="group flex flex-col items-center justify-center gap-3 w-full h-44 rounded-xl border border-dashed border-white/20 hover:border-white/40 transition-colors cursor-pointer"
       >
         <Upload className="w-8 h-8 text-white/30 group-hover:text-white transition-colors" />
         <span className="text-sm text-white/50 group-hover:text-white/80 transition-colors">
-          Klik untuk pilih foto
+          Klik atau drag foto ke sini
         </span>
         <input
           id="photo-upload"

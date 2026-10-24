@@ -604,6 +604,11 @@ export default function CompetitionRegistrationPage() {
                 <button
                   type="button"
                   onClick={handlePickDeliverable}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleDeliverableSelected(e.dataTransfer.files?.[0]);
+                  }}
                   disabled={isLocked}
                   className="relative mt-4 flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/[0.02] px-6 py-10 text-center transition-colors hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white/[0.02]"
                 >
@@ -894,6 +899,11 @@ export default function CompetitionRegistrationPage() {
               <button
                 type="button"
                 onClick={handlePickProof}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleProofSelected(e.dataTransfer.files?.[0]);
+                }}
                 className="mt-3 flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/[0.02] px-6 py-10 text-center transition-colors hover:bg-white/[0.04]"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#7D8CFF]/20 text-[#7D8CFF]">
