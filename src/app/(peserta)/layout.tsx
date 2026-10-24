@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
-import { useUserMe } from "@/hooks/use-peserta";
+import { useUserMe, useUserTeam } from "@/hooks/use-peserta";
 import { toast } from "sonner";
 import { LayoutGrid, LogOut, Medal, User, Menu, X } from "lucide-react";
 import { useAnnouncementNotifications } from "@/hooks/use-peserta";
@@ -23,11 +23,13 @@ function SidebarContent({
   onNavigate,
   onLogout,
   unreadAnnouncements = 0,
+  paymentRejected = false,
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
   unreadAnnouncements?: number;
+  paymentRejected?: boolean;
 }) {
   return (
     <>
@@ -42,6 +44,10 @@ function SidebarContent({
             // dihapus), jadi badge unread menempel di menu Overview.
             const badge =
               l.href === "/peserta/dashboard" ? unreadAnnouncements : 0;
+            // Badge merah tambahan saat bukti pembayaran perlu direvisi — supaya
+            // leader/anggota notice tanpa harus buka halaman team dulu.
+            const showPaymentDot =
+              l.href === "/peserta/dashboard" && paymentRejected;
             return (
               <Link
                 key={l.href}
@@ -55,6 +61,9 @@ function SidebarContent({
                   <span className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                     {badge > 99 ? "99+" : badge}
                   </span>
+                )}
+                {showPaymentDot && (
+                  <span className="inline-flex h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/30" />
                 )}
               </Link>
             );
@@ -83,6 +92,9 @@ export default function PesertaLayout({
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const { unreadCount: unreadAnnouncements } = useAnnouncementNotifications();
+  const { data: userTeam } = useUserTeam();
+  const paymentRejected =
+    userTeam?.paymentProof?.status?.toUpperCase() === "REJECT";
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
 
@@ -139,6 +151,7 @@ export default function PesertaLayout({
                 onNavigate={() => setIsNavOpen(false)}
                 onLogout={() => router.push("/login")}
                 unreadAnnouncements={unreadAnnouncements}
+                paymentRejected={paymentRejected}
               />
             </div>
           </div>
@@ -160,6 +173,7 @@ export default function PesertaLayout({
             pathname={pathname}
             onLogout={() => router.push("/login")}
             unreadAnnouncements={unreadAnnouncements}
+            paymentRejected={paymentRejected}
           />
         </div>
       </aside>

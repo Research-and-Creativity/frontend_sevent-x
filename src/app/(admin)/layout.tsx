@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     const added = pendingReview - prevReviewRef.current;
     if (added > 0) {
-      toast.info(`📋 ${added} tim baru menunggu verifikasi dokumen & pembayaran`);
+    toast.info(`${added} tim baru menunggu verifikasi dokumen & pembayaran`);
     }
     prevReviewRef.current = pendingReview;
   }, [isLoading, pendingReview]);

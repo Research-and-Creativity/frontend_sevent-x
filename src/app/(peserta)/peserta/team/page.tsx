@@ -1167,6 +1167,20 @@ export default function PesertaTeamPage() {
             ) : (
               /* State: Regular Member View */
               <div className="space-y-2">
+                {isPaymentRejected && paymentRejectionReason && (
+                  <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-semibold text-rose-400">
+                        Pembayaran ditolak: {paymentRejectionReason}
+                      </p>
+                      <p className="text-[11px] text-rose-300/80">
+                        Hubungi ketua tim Anda untuk mengunggah ulang bukti
+                        pembayaran yang valid.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-text-secondary">
                   Pembayaran dikelola oleh Ketua Tim. Hubungi ketua tim Anda untuk
                   pengunggahan bukti bayar.

@@ -16,6 +16,7 @@ import {
   ChevronRight,
   User,
   Info,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,6 +149,32 @@ export default function PesertaDashboardPage() {
             : `Welcome back${user?.fullName ? `, ${user.fullName}` : ""}`}
         </h1>
       </div>
+
+      {/* Banner: bukti pembayaran perlu direvisi (untuk semua anggota tim) */}
+      {team?.paymentProof?.status?.toUpperCase() === "REJECT" && (
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/[0.10] p-5 lg:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-rose-300">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-bold tracking-tight text-rose-200">
+                Bukti Pembayaran Perlu Direvisi
+              </h2>
+              <p className="mt-0.5 text-sm text-rose-100/80">
+                {team?.paymentProof?.rejectionReason
+                  ? team.paymentProof.rejectionReason
+                  : "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
+              </p>
+            </div>
+          </div>
+          <Link href="/peserta/team" className="shrink-0">
+            <Button className="rounded-full bg-rose-500 px-5 h-9 text-xs font-semibold text-white hover:bg-rose-600">
+              Perbaiki &amp; Unggah Ulang
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Discord */}
       {!profileLoading && !profileComplete && (
