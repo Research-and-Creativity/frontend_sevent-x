@@ -14,8 +14,9 @@ type CanvasProps = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 };
 
-// Resolusi bitmap: 4x. Ini yang menentukan ketajaman hasil unduhan.
-const EXPORT_SCALE = 4;
+// Resolusi bitmap: 2x. Cukup tajam untuk twibbon, dan hasil file jauh
+// lebih kecil (PNG 4x menghasilkan ±10 MB, melebihi limit unggah 5 MB).
+const EXPORT_SCALE = 2;
 
 export default function TwibbonCanvas({
   userPhoto,
@@ -35,6 +36,12 @@ export default function TwibbonCanvas({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    // Isi latar dengan warna solid agar area transparan tidak jadi hitam
+    // saat diekspor ke JPEG (JPEG tidak mendukung alpha).
+    if (ctx) {
+      ctx.fillStyle = "#05070D";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     if (userPhoto) {
       ctx?.save();
