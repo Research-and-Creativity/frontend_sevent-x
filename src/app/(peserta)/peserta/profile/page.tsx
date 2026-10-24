@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { isPasswordStrong } from "@/lib/password";
+import { getErrorMessage } from "@/lib/errors";
 import {
   PROFILE_REQUIRED_FIELDS,
   useChangePassword,
@@ -54,14 +55,6 @@ const DOCUMENT_STATUS_LABEL: Record<string, string> = {
 
 function formatBytes(bytes: number) {
   return `${Math.round(bytes / (1024 * 1024))}MB`;
-}
-
-function getErrorMessage(err: unknown, fallback: string) {
-  if (err && typeof err === "object" && "response" in err) {
-    const response = (err as { response?: { data?: { message?: string } } }).response;
-    if (response?.data?.message) return response.data.message;
-  }
-  return err instanceof Error ? err.message : fallback;
 }
 
 interface ProfileForm {
