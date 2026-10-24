@@ -16,7 +16,6 @@ import {
   ChevronRight,
   User,
   Info,
-  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -154,7 +153,6 @@ export default function PesertaDashboardPage() {
       {team?.paymentProof?.status?.toUpperCase() === "REJECT" && (
         <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8 !border-rose-500/30`}>
           <div className="relative flex items-start gap-3">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" />
             <div>
               <h2 className="font-display text-lg font-bold tracking-tight text-white">
                 Bukti Pembayaran Perlu Direvisi

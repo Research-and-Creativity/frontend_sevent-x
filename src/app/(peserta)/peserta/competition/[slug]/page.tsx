@@ -843,19 +843,12 @@ export default function CompetitionRegistrationPage() {
             Payment Information
           </h2>
           {paymentStatus === "REJECT" ? (
-            <div className="relative mt-3 rounded-xl border border-rose-500/40 bg-rose-500/[0.08] p-4">
-              <p className="text-sm font-semibold text-rose-300">
-                Bukti pembayaran ditolak
-              </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                {team?.paymentProof?.rejectionReason
-                  ? team.paymentProof.rejectionReason
-                  : "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
-              </p>
-              <p className="mt-2 text-xs text-rose-200/70">
-                Silakan perbaiki dan unggah ulang bukti pembayaran di bawah.
-              </p>
-            </div>
+            <p className="relative mt-2 text-sm text-text-secondary">
+              <span className="font-semibold text-rose-300">Bukti pembayaran ditolak.</span>{" "}
+              {team?.paymentProof?.rejectionReason
+                ? team.paymentProof.rejectionReason
+                : "Silakan unggah ulang bukti pembayaran yang valid."}
+            </p>
           ) : (
             <p className="relative mt-2 text-sm text-text-secondary">
               Before you can submit your product to this competition, please
