@@ -15,7 +15,7 @@ test.describe('Auth - Login', () => {
   test('form login bisa diisi dan tombol bisa diklik', async ({ page }) => {
     await page.goto('/login');
     
-    await expect(page.getByRole('heading', { name: /login/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
     await page.fill('input[type="email"]', 'test@example.com');
     await page.fill('input[type="password"]', 'Test12345');
     
