@@ -102,10 +102,32 @@ test.describe('Profile - Upload Dokumen', () => {
       });
     });
 
-    await page.goto('/peserta/profile');
+    await page.route('**/api/announcements/me', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: { announcements: [] }
+        })
+      });
+    });
+
+    await page.route('**/api/news**', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: { news: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 1 } }
+        })
+      });
+    });
+
+    await page.goto('/peserta/profile', { waitUntil: 'domcontentloaded' });
     
     // Cek halaman profile muncul
-    await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 15000 });
     
     // Coba pilih file untuk dokumen KTM
     const fileInput = page.locator('input[type="file"]').first();
