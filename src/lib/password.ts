@@ -9,7 +9,7 @@ import * as z from "zod";
 const PASSWORD_MIN_LENGTH = 8;
 
 const PASSWORD_RULE_MESSAGE =
-  "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number";
+  "Password minimal 8 karakter dan harus memuat huruf besar, huruf kecil, serta angka";
 
 // Satu pemeriksaan tunggal, bukan rantai .min() + .regex(), supaya server
 // selalu mengembalikan tepat satu pesan. Pada zod versi lama rantai seperti itu

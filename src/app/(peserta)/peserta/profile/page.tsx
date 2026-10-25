@@ -147,7 +147,7 @@ export default function PesertaProfilePage() {
     }
     if (!isPasswordStrong(passwords.next)) {
       toast.error(
-        "Password baru minimal 8 karakter dan harus memuat huruf besar, huruf kecil, serta angka.",
+        "Password minimal 8 karakter dan harus memuat huruf besar, huruf kecil, serta angka.",
       );
       return;
     }
