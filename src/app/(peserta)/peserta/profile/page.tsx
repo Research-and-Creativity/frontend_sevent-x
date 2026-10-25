@@ -170,6 +170,9 @@ export default function PesertaProfilePage() {
 
   const handleDocumentSelected = (file: File | undefined) => {
     const type = activeDocType;
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     if (!file || !type) {
       setActiveDocType(null);
       return;
