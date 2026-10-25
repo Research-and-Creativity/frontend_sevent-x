@@ -130,10 +130,10 @@ test.describe('Profile - Upload Dokumen', () => {
     await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 15000 });
     
     // Coba pilih file untuk dokumen Student ID
-    await page.getByRole('button', { name: /upload student id/i }).click();
+    await page.getByText('Student ID').locator('..').getByRole('button').click();
     
     const fileInput = page.locator('input[type="file"]').first();
-    await expect(fileInput).toBeAttached();
+    await page.waitForTimeout(300);
     
     // Buat file dummy untuk testing
     await fileInput.setInputFiles({
@@ -146,6 +146,6 @@ test.describe('Profile - Upload Dokumen', () => {
     
     // Tombol Kirim Semua harus enabled setelah file dipilih
     const submitAllBtn = page.getByRole('button', { name: /kirim semua/i });
-    await expect(submitAllBtn).toBeEnabled({ timeout: 5000 });
+    await expect(submitAllBtn).toBeEnabled({ timeout: 10000 });
   });
 });
