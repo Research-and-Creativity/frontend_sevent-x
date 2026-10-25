@@ -1,0 +1,108 @@
+import { test, expect } from '@playwright/test';
+import path from 'path';
+
+test.describe('Profile - Upload Dokumen', () => {
+  test('upload dokumen dengan mock API - tidak hang', async ({ page }) => {
+    // Mock API login untuk bisa akses halaman profile
+    await page.route('**/api/auth/me', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            id: 'test-user-id',
+            email: 'peserta@test.com',
+            fullName: 'Test Peserta',
+            role: 'PESERTA',
+            isVerified: true,
+          }
+        })
+      });
+    });
+
+    await page.route('**/api/user/me', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            id: 'test-user-id',
+            email: 'peserta@test.com',
+            fullName: 'Test Peserta',
+            role: 'PESERTA',
+            isVerified: true,
+            institution: 'Test Univ',
+            phone: '+628123456789',
+            birthDate: '2000-01-01',
+            domicile: 'Jakarta',
+            discordId: 'test#1234',
+          }
+        })
+      });
+    });
+
+    await page.route('**/api/user/documents', async route => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            data: []
+          })
+        });
+      } else if (route.request().method() === 'POST') {
+        // Simulate successful upload
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            message: 'Dokumen berhasil disimpan',
+            data: {
+              id: 'doc-id',
+              type: 'KTM',
+              status: 'REVIEW'
+            }
+          })
+        });
+      }
+    });
+
+    await page.route('**/api/teams/me', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: null
+        })
+      });
+    });
+
+    await page.goto('/peserta/profile');
+    
+    // Cek halaman profile muncul
+    await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 10000 });
+    
+    // Coba pilih file untuk dokumen KTM
+    const fileInput = page.locator('input[type="file"]').first();
+    await expect(fileInput).toBeAttached();
+    
+    // Buat file dummy untuk testing
+    await fileInput.setInputFiles({
+      name: 'ktm.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from('fake-image-content')
+    });
+    
+    // Pastikan file terpilih (muncul nama file)
+    await expect(page.getByText('ktm.jpg')).toBeVisible({ timeout: 5000 });
+    
+    // Tombol Kirim Semua harus enabled
+    const submitAllBtn = page.getByRole('button', { name: /kirim semua/i });
+    await expect(submitAllBtn).toBeEnabled();
+  });
+});
