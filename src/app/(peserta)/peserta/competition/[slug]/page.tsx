@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, UploadCloud } from "lucide-react";
+import { AlertCircle, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -205,6 +205,7 @@ export default function CompetitionRegistrationPage() {
     (requirements?.teamApproved ?? false) &&
     (requirements?.paymentApproved ?? false) &&
     (requirements?.allMembersDocumentsApproved ?? false);
+  const allDocsApproved = requirements?.allMembersDocumentsApproved ?? false;
 
   const members = useMemo(
     () =>
@@ -263,6 +264,21 @@ export default function CompetitionRegistrationPage() {
 
   // Satu payload untuk dua aksi; yang membedakan hanya status yang dikirim.
   const saveWork = async (status: "DRAFT" | "SUBMITTED") => {
+    // Block submit kalau dokumen verifikasi belum semua disetujui
+    if (status === "SUBMITTED" && !allDocsApproved) {
+      toast.error("Dokumen verifikasi belum lengkap atau belum disetujui admin. Silakan lengkapi di halaman Profile.");
+      router.push("/peserta/profile");
+      return;
+    }
+    if (status === "SUBMITTED" && !isEligible) {
+      toast.error("Belum memenuhi syarat pengumpulan karya.");
+      return;
+    }
+    if (!isLeader && status === "SUBMITTED") {
+      toast.error("Hanya leader yang boleh mengirim karya tim.");
+      return;
+    }
+
     // Proposal yang sudah terlampir tidak wajib diunggah ulang: backend
     // mempertahankan fileUrl lama selama tidak ada file baru yang dikirim.
     // Hanya pengiriman final yang mewajibkannya, Simpan Draft memang longgar.
@@ -512,17 +528,31 @@ export default function CompetitionRegistrationPage() {
               </li>
             </ul>
             {!isEligible && (
-              <div className="relative mt-5">
-                <p className="text-xs text-text-secondary mb-3">
-                  Lengkapi semua syarat di atas sebelum mengirim karya.
-                </p>
-                <Button
-                  type="button"
-                  onClick={() => router.push("/peserta/profile")}
-                  className="rounded-full border border-white/20 bg-white/[0.05] px-5 h-9 text-xs font-semibold text-white hover:bg-white/[0.1]"
-                >
-                  Lengkapi di Profile
-                </Button>
+              <div className="relative mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-amber-200">
+                      Belum bisa mengumpulkan karya
+                    </p>
+                    <p className="mt-1 text-xs text-amber-100/80">
+                      {!allDocsApproved
+                        ? "Semua dokumen verifikasi tim harus diupload dan disetujui oleh Admin terlebih dahulu."
+                        : !paymentApproved
+                        ? "Pembayaran tim harus disetujui oleh Admin terlebih dahulu."
+                        : "Lengkapi semua syarat di atas sebelum mengirim karya."}
+                    </p>
+                    {!allDocsApproved && (
+                      <Button
+                        type="button"
+                        onClick={() => router.push("/peserta/profile")}
+                        className="mt-3 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 h-8 text-xs font-semibold text-amber-200 hover:bg-amber-400/20"
+                      >
+                        Lengkapi Dokumen di Profile
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -674,7 +704,7 @@ export default function CompetitionRegistrationPage() {
                       <Button
                         type="button"
                         onClick={handleSaveDraft}
-                        disabled={submissionMutation.isPending}
+                        disabled={submissionMutation.isPending || !isEligible}
                         className="rounded-full border border-white/25 bg-white/[0.03] px-6 h-10 text-xs font-semibold text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-white disabled:opacity-60"
                       >
                         {submissionMutation.isPending ? "Saving..." : "Save Progress"}
@@ -682,14 +712,16 @@ export default function CompetitionRegistrationPage() {
                       <Button
                         type="button"
                         onClick={() => setShowSubmitConfirm(true)}
-                        disabled={!isLeader || submissionMutation.isPending}
+                        disabled={!isLeader || submissionMutation.isPending || !isEligible}
                         className="rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90 disabled:opacity-60"
                       >
                         Submit All
                       </Button>
                     </div>
                     <p className="relative mt-3 text-xs text-text-secondary">
-                      {isLeader
+                      {!isEligible
+                        ? "Karya hanya bisa disimpan/dikirim setelah semua dokumen verifikasi tim disetujui dan pembayaran disetujui."
+                        : isLeader
                         ? "Save Progress boleh dilakukan semua anggota. Submit All hanya leader, dan begitu dikirim karya ditutup dari perubahan."
                         : "Kamu boleh menyimpan draf. Pengiriman final (Submit All) dilakukan oleh leader."}
                     </p>
@@ -701,10 +733,14 @@ export default function CompetitionRegistrationPage() {
                 open={showSubmitConfirm}
                 onOpenChange={setShowSubmitConfirm}
                 title="Kirim karya sekarang?"
-                description="Submit All akan mengirim karya tim ke panitia dan menutupnya dari perubahan. Pastikan seluruh isian dan lampiran sudah benar."
-                confirmText="Submit All"
-                cancelText="Batal"
-                onConfirm={handleSubmitAll}
+                description={
+                  !isEligible
+                    ? "Tidak bisa mengirim karya karena masih ada syarat yang belum terpenuhi. Pastikan semua dokumen verifikasi sudah disetujui dan pembayaran sudah disetujui."
+                    : "Submit All akan mengirim karya tim ke panitia dan menutupnya dari perubahan. Pastikan seluruh isian dan lampiran sudah benar."
+                }
+                confirmText={isEligible ? "Submit All" : "Kembali"}
+                cancelText={isEligible ? "Batal" : undefined}
+                onConfirm={isEligible ? handleSubmitAll : () => setShowSubmitConfirm(false)}
               />
 
               {/* Hasil penilaian (muncul setelah juri menilai) */}
