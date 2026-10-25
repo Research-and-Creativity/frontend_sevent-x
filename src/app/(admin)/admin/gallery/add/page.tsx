@@ -20,14 +20,26 @@ export default function AdminGalleryAddPage() {
 
   const allowed = ["image/jpeg", "image/png", "image/jpg"];
   const maxSize = 5 * 1024 * 1024;
+  const maxFiles = 10;
 
   const handleFiles = (list: FileList | null) => {
     if (!list) return;
+    const filesArr = Array.from(list);
+    if (filesArr.length > maxFiles) {
+      setError(`Maksimal ${maxFiles} file sekaligus.`);
+      setFiles([]);
+      setFileNames([]);
+      setPreviewUrls((prev) => {
+        prev.forEach((u) => URL.revokeObjectURL(u));
+        return [];
+      });
+      return;
+    }
     const accepted: File[] = [];
     const names: string[] = [];
     const previews: string[] = [];
     let err = "";
-    for (const f of Array.from(list)) {
+    for (const f of filesArr) {
       if (!allowed.includes(f.type)) {
         err = "File must be JPG, JPEG, or PNG.";
         continue;
@@ -40,11 +52,14 @@ export default function AdminGalleryAddPage() {
       names.push(f.name);
       previews.push(URL.createObjectURL(f));
     }
+    setPreviewUrls((prev) => {
+      prev.forEach((u) => URL.revokeObjectURL(u));
+      return previews;
+    });
     if (err) setError(err);
     else setError("");
     setFiles(accepted);
     setFileNames(names);
-    setPreviewUrls(previews);
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +147,7 @@ export default function AdminGalleryAddPage() {
               <p className="text-xs text-white/50 mt-1">
                 Upload your image(s).
                 <br />
-                (JPG, JPEG, PNG. Multiple files allowed, max 5MB each)
+                (JPG, JPEG, PNG. Multiple files allowed, max 10 files, max 5MB each)
               </p>
               {fileNames.length > 0 && (
                 <p className="text-xs text-[#7FA7F5] mt-3">
