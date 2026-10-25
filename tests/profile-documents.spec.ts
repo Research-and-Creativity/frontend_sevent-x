@@ -129,7 +129,9 @@ test.describe('Profile - Upload Dokumen', () => {
     // Cek halaman profile muncul
     await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 15000 });
     
-    // Coba pilih file untuk dokumen KTM (Student ID)
+    // Coba pilih file untuk dokumen Student ID
+    await page.getByRole('button', { name: /upload student id/i }).click();
+    
     const fileInput = page.locator('input[type="file"]').first();
     await expect(fileInput).toBeAttached();
     
@@ -140,7 +142,7 @@ test.describe('Profile - Upload Dokumen', () => {
       buffer: Buffer.from('fake-image-content')
     });
     
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
     
     // Tombol Kirim Semua harus enabled setelah file dipilih
     const submitAllBtn = page.getByRole('button', { name: /kirim semua/i });

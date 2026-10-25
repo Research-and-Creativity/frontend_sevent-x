@@ -12,99 +12,28 @@
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
+Error: expect(locator).toBeEnabled() failed
 
-Locator: getByText('ktm.jpg')
-Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
+Locator:  getByRole('button', { name: /kirim semua/i })
+Expected: enabled
+Received: disabled
+Timeout:  5000ms
 
 Call log:
-  - Expect "toBeVisible" getByText('ktm.jpg') with timeout 5000ms
-  - waiting for getByText('ktm.jpg')
+  - Expect "toBeEnabled" getByRole('button', { name: /kirim semua/i }) with timeout 5000ms
+  - waiting for getByRole('button', { name: /kirim semua/i })
+    14 × locator resolved to <button disabled type="button" class="cursor-pointer rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">Kirim Semua Dokumen</button>
+       - unexpected value "disabled"
 
 ```
 
 ```yaml
-- alert
-- complementary:
-  - link "SEVENT X SEVENT X":
-    - /url: /peserta/dashboard
-    - img "SEVENT X"
-    - text: SEVENT X
-  - navigation:
-    - link "Overview":
-      - /url: /peserta/dashboard
-    - link "Profile":
-      - /url: /peserta/profile
-    - link "Competition":
-      - /url: /peserta/competition
-  - button "Log out"
-- main:
-  - heading "Profile" [level=1]
-  - heading "Profil sudah lengkap" [level=2]
-  - text: 5/5 terisi
-  - paragraph: Kelima field wajib sudah terisi, jadi kamu sudah bisa mendaftar kompetisi.
-  - list:
-    - listitem: Institution sudah terisi
-    - listitem: Phone Number sudah terisi
-    - listitem: Birth Date sudah terisi
-    - listitem: Domicile sudah terisi
-    - listitem: Discord ID sudah terisi
-  - heading "General Information" [level=2]
-  - text: Name
-  - textbox "Name": Test Peserta
-  - text: Birth Date *
-  - textbox "Birth Date *": 2000-01-01
-  - text: Domicile *
-  - textbox "Domicile *":
-    - /placeholder: Domicile
-    - text: Jakarta
-  - text: Institution/University/School *
-  - textbox "Institution/University/School *":
-    - /placeholder: Institution/University/School
-    - text: Test Univ
-  - text: Phone Number * +62
-  - textbox "Phone Number *":
-    - /placeholder: 812-3456-7890
-    - text: "8123456789"
-  - text: Discord ID *
-  - textbox "Discord ID *":
-    - /placeholder: Discord ID
-    - text: test#1234
-  - button "Save"
-  - heading "Account Information" [level=2]
-  - text: Email
-  - textbox "Email": peserta@test.com
-  - text: New Password
-  - textbox "New Password":
-    - /placeholder: ••••••••
-  - text: Current Password
-  - textbox "Current Password":
-    - /placeholder: ••••••••
-  - button "Save"
-  - heading "Verification Document" [level=2]
-  - text: Twibbon Upload File
-  - button "Upload Twibbon"
-  - link "Belum punya twibbon? Bikin di sini →":
-    - /url: /twibbon
-  - text: Post Story Upload File
-  - button "Upload Post Story"
-  - text: Student ID Upload File
-  - button "Upload Student ID"
-  - text: Follow Instagram Sevent.tup Upload File
-  - button "Upload Follow Instagram Sevent.tup"
-  - button "Kirim Semua Dokumen" [disabled]
-  - paragraph: Dokumen menunggu persetujuan admin. Kamu baru bisa mengirim karya setelah keempat dokumen disetujui.
-- region "Notifications alt+T"
+- button "Kirim Semua Dokumen" [disabled]
 ```
 
 # Test source
 
 ```ts
-  44  |     await page.route('**/api/user/me', async route => {
-  45  |       await route.fulfill({
-  46  |         status: 200,
   47  |         contentType: 'application/json',
   48  |         body: JSON.stringify({
   49  |           success: true,
@@ -190,7 +119,7 @@ Call log:
   129 |     // Cek halaman profile muncul
   130 |     await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible({ timeout: 15000 });
   131 |     
-  132 |     // Coba pilih file untuk dokumen KTM
+  132 |     // Coba pilih file untuk dokumen KTM (Student ID)
   133 |     const fileInput = page.locator('input[type="file"]').first();
   134 |     await expect(fileInput).toBeAttached();
   135 |     
@@ -201,14 +130,13 @@ Call log:
   140 |       buffer: Buffer.from('fake-image-content')
   141 |     });
   142 |     
-  143 |     // Pastikan file terpilih (muncul nama file)
-> 144 |     await expect(page.getByText('ktm.jpg')).toBeVisible({ timeout: 5000 });
-      |                                             ^ Error: expect(locator).toBeVisible() failed
-  145 |     
-  146 |     // Tombol Kirim Semua harus enabled
-  147 |     const submitAllBtn = page.getByRole('button', { name: /kirim semua/i });
-  148 |     await expect(submitAllBtn).toBeEnabled();
-  149 |   });
-  150 | });
-  151 | 
+  143 |     await page.waitForTimeout(500);
+  144 |     
+  145 |     // Tombol Kirim Semua harus enabled setelah file dipilih
+  146 |     const submitAllBtn = page.getByRole('button', { name: /kirim semua/i });
+> 147 |     await expect(submitAllBtn).toBeEnabled({ timeout: 5000 });
+      |                                ^ Error: expect(locator).toBeEnabled() failed
+  148 |   });
+  149 | });
+  150 | 
 ```
