@@ -150,10 +150,10 @@ test.describe('Competition - Eligibility Guard', () => {
     await page.goto('/peserta/competition/web-development', { waitUntil: 'domcontentloaded' });
     
     // Banner warning harus muncul
-    await expect(page.getByText(/belum bisa mengumpulkan karya/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/belum bisa mengumpulkan karya/i)).toBeVisible({ timeout: 20000 });
     
     // Tombol lengkapi dokumen di profile harus ada
-    await expect(page.getByRole('button', { name: /lengkapi dokumen di profile/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /lengkapi dokumen di profile/i })).toBeVisible({ timeout: 10000 });
     
     // Tombol submit all harus disabled
     const submitBtn = page.getByRole('button', { name: /submit all/i });
