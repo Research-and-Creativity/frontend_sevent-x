@@ -528,31 +528,24 @@ export default function CompetitionRegistrationPage() {
               </li>
             </ul>
             {!isEligible && (
-              <div className="relative mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-amber-200">
-                      Belum bisa mengumpulkan karya
-                    </p>
-                    <p className="mt-1 text-xs text-amber-100/80">
-                      {!allDocsApproved
-                        ? "Semua dokumen verifikasi tim harus diupload dan disetujui oleh Admin terlebih dahulu."
-                        : !paymentApproved
-                        ? "Pembayaran tim harus disetujui oleh Admin terlebih dahulu."
-                        : "Lengkapi semua syarat di atas sebelum mengirim karya."}
-                    </p>
-                    {!allDocsApproved && (
-                      <Button
-                        type="button"
-                        onClick={() => router.push("/peserta/profile")}
-                        className="mt-3 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 h-8 text-xs font-semibold text-amber-200 hover:bg-amber-400/20"
-                      >
-                        Lengkapi Dokumen di Profile
-                      </Button>
-                    )}
-                  </div>
-                </div>
+              <div className="relative mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <p className="text-sm text-text-secondary">
+                  <span className="font-semibold text-white">Belum bisa mengumpulkan karya.</span>{" "}
+                  {!allDocsApproved
+                    ? "Semua dokumen verifikasi tim harus diupload dan disetujui oleh Admin terlebih dahulu."
+                    : !paymentApproved
+                    ? "Pembayaran tim harus disetujui oleh Admin terlebih dahulu."
+                    : "Lengkapi semua syarat di atas sebelum mengirim karya."}
+                </p>
+                {!allDocsApproved && (
+                  <Button
+                    type="button"
+                    onClick={() => router.push("/peserta/profile")}
+                    className="mt-3 rounded-full border border-white/20 bg-white/[0.05] px-5 h-9 text-xs font-semibold text-white hover:bg-white/[0.1]"
+                  >
+                    Lengkapi Dokumen di Profile
+                  </Button>
+                )}
               </div>
             )}
           </div>
