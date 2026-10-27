@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/errors";
+import { passwordSchema } from "@/lib/password";
 import { initiateGoogleLogin } from "@/lib/google-auth";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -17,7 +18,8 @@ const registerSchema = z
   .object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    institution: z.string().min(2, "Institution must be at least 2 characters").optional().or(z.literal("")),
+    password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -49,7 +51,7 @@ export default function RegisterPage() {
         email: data.email,
         username,
         password: data.password,
-        institution: "SEVENT X",
+        institution: data.institution?.trim() || undefined,
       };
       await apiClient.post("/api/auth/register", payload);
       setRegisteredEmail(data.email);
@@ -155,14 +157,14 @@ export default function RegisterPage() {
               type="button"
               onClick={onResend}
               disabled={isResending}
-              className="cursor-pointer mt-4 text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
+              className="cursor-pointer mt-4 block mx-auto w-fit text-xs font-semibold text-white/70 underline underline-offset-4 hover:text-white transition-colors disabled:opacity-60"
             >
               {isResending ? "Mengirim ulang..." : "Kirim ulang email verifikasi"}
             </button>
             <button
               type="button"
               onClick={() => setRegisteredEmail(null)}
-              className="cursor-pointer mt-3 text-xs font-semibold text-white/50 hover:text-white transition-colors"
+              className="cursor-pointer mt-4 block mx-auto w-fit text-xs font-semibold text-white/50 hover:text-white transition-colors"
             >
               Ganti alamat email
             </button>
@@ -192,6 +194,24 @@ export default function RegisterPage() {
                 )}
               </div>
             ))}
+
+            <div>
+              <label htmlFor="institution" className="text-xs text-white/70">
+                Institution <span className="text-white/40">(optional)</span>
+              </label>
+              <input
+                id="institution"
+                type="text"
+                placeholder="Your school/university (optional)"
+                {...register("institution")}
+                className="mt-2 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
+              />
+              {errors.institution && (
+                <p className="text-xs text-red-400 mt-1">
+                  {errors.institution.message}
+                </p>
+              )}
+            </div>
 
             <div>
               <label htmlFor="password" className="text-xs text-white/70">

@@ -48,7 +48,12 @@ export default function LoginPage() {
         router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Invalid credentials."));
+      const err = error as any;
+      const msg =
+        err?.response?.data?.message ||
+        getErrorMessage(error, "Invalid credentials.") ||
+        "Invalid credentials.";
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

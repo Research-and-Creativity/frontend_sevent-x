@@ -138,7 +138,7 @@ export function useAdminOverview() {
       return res.data?.data || res.data;
     },
     staleTime: 30 * 1000,
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -166,7 +166,7 @@ export function useAdminReviewCounts() {
       }
     },
     staleTime: 10 * 1000,
-    refetchInterval: 30_000,
+    refetchInterval: 5_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
@@ -299,10 +299,14 @@ export interface TeamDetail {
   } | null;
   submission?: {
     projectTitle: string;
-    githubUrl: string;
-    demoVideoUrl: string;
+    // Nullable: kompetisi UI/UX mengisi figmaUrl/prototypeUrl, bukan dua ini.
+    githubUrl: string | null;
+    demoVideoUrl: string | null;
     deploymentUrl: string | null;
+    figmaUrl: string | null;
+    prototypeUrl: string | null;
     fileUrl: string | null;
+    status: "DRAFT" | "SUBMITTED";
   } | null;
 }
 

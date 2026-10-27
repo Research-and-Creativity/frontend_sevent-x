@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Circle, UploadCloud } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { isPasswordStrong } from "@/lib/password";
+import { getErrorMessage } from "@/lib/errors";
 import {
   PROFILE_REQUIRED_FIELDS,
   useChangePassword,
@@ -55,14 +57,6 @@ function formatBytes(bytes: number) {
   return `${Math.round(bytes / (1024 * 1024))}MB`;
 }
 
-function getErrorMessage(err: unknown, fallback: string) {
-  if (err && typeof err === "object" && "response" in err) {
-    const response = (err as { response?: { data?: { message?: string } } }).response;
-    if (response?.data?.message) return response.data.message;
-  }
-  return err instanceof Error ? err.message : fallback;
-}
-
 interface ProfileForm {
   fullName: string;
   birthDate: string;
@@ -86,6 +80,10 @@ export default function PesertaProfilePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeDocType, setActiveDocType] = useState<string | null>(null);
+  // File yang sudah dipilih tapi belum dikirim. Upload baru terjadi saat tombol
+  // "Kirim" ditekan, supaya peserta bisa cek dulu sebelum mengirim.
+  // File yang sudah dipilih tapi belum dikirim, per tipe dokumen.
+  const [pendingDocs, setPendingDocs] = useState<Record<string, File>>({});
   const [passwords, setPasswords] = useState({ current: "", next: "" });
 
   const [form, setForm] = useState<ProfileForm>({
@@ -147,8 +145,10 @@ export default function PesertaProfilePage() {
       toast.error("Isi password lama dan password baru.");
       return;
     }
-    if (passwords.next.length < 6) {
-      toast.error("Password baru minimal 6 karakter.");
+    if (!isPasswordStrong(passwords.next)) {
+      toast.error(
+        "Password minimal 8 karakter dan harus memuat huruf besar, huruf kecil, serta angka.",
+      );
       return;
     }
     try {
@@ -168,25 +168,63 @@ export default function PesertaProfilePage() {
     fileInputRef.current?.click();
   };
 
-  const handleDocumentSelected = async (file: File | undefined) => {
+  const handleDocumentSelected = (file: File | undefined) => {
     const type = activeDocType;
-    setActiveDocType(null);
-    if (!file || !type) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(`Ukuran file maksimal ${formatBytes(5 * 1024 * 1024)}.`);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    if (!file || !type) {
+      setActiveDocType(null);
       return;
     }
 
-    const payload = new FormData();
-    payload.append("type", type);
-    payload.append("file", file);
-    try {
-      await uploadDocumentMutation.mutateAsync(payload);
-      toast.success("Dokumen terkirim dan menunggu review.");
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Gagal mengunggah dokumen."));
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(`Ukuran file maksimal ${formatBytes(5 * 1024 * 1024)}.`);
+      setActiveDocType(null);
+      return;
     }
+
+    // Simpan file yang dipilih; upload baru terjadi saat "Kirim Semua" ditekan.
+    setPendingDocs((prev) => ({ ...prev, [type]: file }));
+    setActiveDocType(null);
+  };
+
+  const handleSendAllDocuments = async () => {
+    const pendingTypes = Object.keys(pendingDocs);
+    if (pendingTypes.length === 0) {
+      toast.error("Pilih file dokumen terlebih dahulu.");
+      return;
+    }
+
+    // Validasi: semua dokumen wajib sudah ada (sudah terunggah atau baru dipilih).
+    const missing = VERIFICATION_DOCS.filter(
+      (doc) =>
+        !documentsByType.get(doc.type) && !pendingDocs[doc.type],
+    );
+    if (missing.length > 0) {
+      toast.error(
+        `Lengkapi semua dokumen terlebih dahulu: ${missing
+          .map((d) => d.label)
+          .join(", ")}.`,
+      );
+      return;
+    }
+
+    // Upload semua file yang pending secara berurutan.
+    for (const type of pendingTypes) {
+      const file = pendingDocs[type];
+      const payload = new FormData();
+      payload.append("type", type);
+      payload.append("file", file);
+      try {
+        await uploadDocumentMutation.mutateAsync(payload);
+      } catch (err) {
+        toast.error(getErrorMessage(err, `Gagal mengunggah ${type}.`));
+        return;
+      }
+    }
+    toast.success("Semua dokumen terkirim dan menunggu review.");
+    setPendingDocs({});
   };
 
   return (
@@ -288,7 +326,7 @@ export default function PesertaProfilePage() {
               type="date"
               value={form.birthDate}
               onChange={(e) => updateField("birthDate", e.target.value)}
-              className={`${glassInput} text-white`}
+              className={`${glassInput} text-white accent-white [color-scheme:dark]`}
             />
           </div>
 
@@ -469,6 +507,11 @@ export default function PesertaProfilePage() {
           {VERIFICATION_DOCS.map((doc) => {
             const uploaded = documentsByType.get(doc.type);
             const status = uploaded?.status;
+            // Indikator hanya menempel di baris yang sedang diunggah, bukan
+            // mematikan tampilan seluruh daftar dokumen sekaligus.
+            const isUploading =
+              uploadDocumentMutation.isPending && activeDocType === doc.type;
+            const isPendingForThis = Boolean(pendingDocs[doc.type]);
 
             return (
               <div key={doc.type} className="space-y-1.5">
@@ -477,12 +520,16 @@ export default function PesertaProfilePage() {
                 </label>
                 <div className="flex h-12 items-center rounded-full border border-white/25 bg-white/[0.03] pl-5 pr-1.5 backdrop-blur-md transition-colors focus-within:border-[#7D8CFF]/70">
                   <span
-                    className={`flex-1 truncate text-sm ${uploaded ? "text-white" : "text-white/40"
+                    className={`flex-1 truncate text-sm ${isUploading || uploaded || isPendingForThis ? "text-white" : "text-white/40"
                       }`}
                   >
-                    {uploaded
-                      ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
-                      : "Upload File"}
+                    {isUploading
+                      ? "Mengunggah..."
+                      : isPendingForThis
+                        ? pendingDocs[doc.type]?.name
+                        : uploaded
+                          ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
+                          : "Upload File"}
                   </span>
                   <button
                     type="button"
@@ -491,7 +538,11 @@ export default function PesertaProfilePage() {
                     disabled={uploadDocumentMutation.isPending}
                     className="cursor-pointer flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#7D8CFF] transition-colors hover:bg-white/80 disabled:opacity-60"
                   >
-                    <UploadCloud className="h-4 w-4" />
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UploadCloud className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
                 {uploaded?.status === "REJECT" && uploaded.rejectionReason && (
@@ -512,6 +563,27 @@ export default function PesertaProfilePage() {
               </div>
             );
           })}
+        </div>
+
+        <div className="relative mt-6 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSendAllDocuments}
+            disabled={
+              uploadDocumentMutation.isPending ||
+              Object.keys(pendingDocs).length === 0
+            }
+            className="cursor-pointer rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-[0_0_30px_rgba(46,92,255,0.45)] hover:bg-white/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {uploadDocumentMutation.isPending
+              ? "Mengirim..."
+              : "Kirim Semua Dokumen"}
+          </button>
+          {Object.keys(pendingDocs).length > 0 && (
+            <p className="text-xs text-text-secondary">
+              {Object.keys(pendingDocs).length} file siap dikirim.
+            </p>
+          )}
         </div>
 
         <p className="relative mt-6 text-xs text-text-secondary">

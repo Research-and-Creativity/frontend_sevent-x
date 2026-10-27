@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -37,13 +37,71 @@ export default function AdminResultsPage() {
   const [selectedCompSlug, setSelectedCompSlug] = useState("");
   const activeSlug = selectedCompSlug || competitions[0]?.slug || "";
 
-  const [roundName, setRoundName] = useState("Final Round");
+  const [roundName, setRoundName] = useState("PENYISIHAN");
   const [isCalculating, setIsCalculating] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
 
   const [rankings, setRankings] = useState<CalculatedRankItem[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Persist hasil kalkulasi di sessionStorage agar tidak hilang saat reload.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("adminResultsState");
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.activeSlug) setSelectedCompSlug(saved.activeSlug);
+        if (saved.roundName) setRoundName(saved.roundName);
+        if (Array.isArray(saved.rankings)) setRankings(saved.rankings);
+        if (saved.hasCalculated) setHasCalculated(true);
+        if (saved.isPublished) setIsPublished(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasCalculated) return;
+    try {
+      sessionStorage.setItem(
+        "adminResultsState",
+        JSON.stringify({ activeSlug, roundName, rankings, hasCalculated, isPublished })
+      );
+    } catch {
+      // ignore
+    }
+  }, [activeSlug, roundName, rankings, hasCalculated, isPublished]);
+
+  const handleExportCsv = async () => {
+    if (!activeSlug) {
+      toast.error("Pilih Kompetisi terlebih dahulu.");
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const res = await apiClient.get("/api/export/scores", {
+        params: { competitionSlug: activeSlug, round: roundName },
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nilai-${activeSlug}-${roundName}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Export CSV berhasil.");
+    } catch (err) {
+      toast.error("Gagal export CSV.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // BE mengembalikan array datar sesuai CalculatedRankItem.
   const handleCalculateScores = async () => {
@@ -107,7 +165,7 @@ export default function AdminResultsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
-        <h1 className="font-display text-3xl font-bold">Results</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">Results</h1>
       </div>
 
       {/* Selector Controls Bar: Pilih Kompetisi, Round, & Tombol Hitung */}
@@ -152,9 +210,8 @@ export default function AdminResultsPage() {
               }}
               className="w-full h-12 rounded-full border border-white/30 bg-transparent px-5 text-white focus:outline-none focus:border-white/60 cursor-pointer [&>option]:bg-[#15161A]"
             >
-              <option value="Final Round">Final Round</option>
-              <option value="Phase 1 Preliminary">Phase 1 Preliminary</option>
-              <option value="Phase 2 Finalist">Phase 2 Finalist</option>
+              <option value="PENYISIHAN">Penyisihan (Finalis)</option>
+              <option value="FINAL">Final (Pemenang)</option>
             </select>
           </div>
 
@@ -170,6 +227,19 @@ export default function AdminResultsPage() {
               {isCalculating ? "Mengkalkulasi..." : "Hitung Akumulasi Skor Juri"}
             </button>
           </div>
+
+          {/* Tombol Export CSV (read-only) */}
+          <div className="sm:col-span-3">
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={handleExportCsv}
+              className="w-full flex items-center justify-center gap-2 border border-white/20 text-white font-semibold text-sm h-12 px-6 rounded-full hover:bg-white/10 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isExporting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isExporting ? "Mengekspor..." : "Export CSV (Read-only)"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -183,6 +253,18 @@ export default function AdminResultsPage() {
               </h2>
               <p className="text-xs text-white/40">
                 {roundName} • Total {rankings.length} Submissions Calculated
+                {hasCalculated && (
+                  <>
+                    {" • "}
+                    <span className="text-[#63CFA0] font-semibold">
+                      {rankings.filter((r) => r.isFinalist).length} Finalis
+                    </span>
+                    {" / "}
+                    <span className="text-white/60">
+                      {rankings.filter((r) => !r.isFinalist).length} Tidak Lolos
+                    </span>
+                  </>
+                )}
               </p>
             </div>
 
@@ -242,12 +324,12 @@ export default function AdminResultsPage() {
                     {/* Status Badge */}
                     <td className="py-4 text-right">
                       {item.isFinalist ? (
-                        <span className="inline-block px-4 py-1.5 rounded-full border border-[#3CB578]/40 text-xs font-semibold text-[#63CFA0]">
-                          Finalis
+                        <span className="inline-block px-4 py-1.5 rounded-full bg-[#3CB578]/20 border border-[#3CB578] text-xs font-bold text-[#63CFA0] shadow-[0_0_12px_rgba(60,181,120,0.25)]">
+                          ✓ Finalis
                         </span>
                       ) : (
                         <span className="inline-block px-4 py-1.5 rounded-full border border-white/20 text-xs font-semibold text-white/40">
-                          Peserta
+                          Tidak Lolos
                         </span>
                       )}
                     </td>

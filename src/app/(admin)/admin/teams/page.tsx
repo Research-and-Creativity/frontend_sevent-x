@@ -55,6 +55,10 @@ export default function AdminTeamsPage() {
       const list = res.data?.data || res.data;
       return Array.isArray(list) ? list : [];
     },
+    staleTime: 10 * 1000,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const handleReloadData = async () => {

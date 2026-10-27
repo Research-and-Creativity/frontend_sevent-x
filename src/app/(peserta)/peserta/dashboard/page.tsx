@@ -18,13 +18,13 @@ import {
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCompetitionTimeline,
   useMyAnnouncements,
   useNewsFeed,
   useProfileComplete,
+  useSubmissionEligibility,
   useUserMe,
   useUserSubmission,
   useUserTeam,
@@ -111,6 +111,14 @@ export default function PesertaDashboardPage() {
 
   const hasJoined = Boolean(team);
 
+  // Status dokumen verifikasi per anggota. Selama ini data eligibility tidak
+  // pernah ditampilkan di mana pun, padahal peserta baru tahu mereka harus
+  // unggah Twibbon/KTM/dsb setelah membaca halaman kompetisi.
+  const { data: eligibility } = useSubmissionEligibility();
+  const teamMembers = eligibility?.requirements.members ?? [];
+  const docsAllApproved =
+    eligibility?.requirements.allMembersDocumentsApproved ?? false;
+
   const memberCount = team?.members?.length ?? 0;
   const maxMembers = team?.competition?.maxMember ?? 0;
   const memberProgress =
@@ -134,12 +142,33 @@ export default function PesertaDashboardPage() {
 
       {/* Welcome Banner */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
+        <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
           {userLoading
             ? "Welcome back"
             : `Welcome back${user?.fullName ? `, ${user.fullName}` : ""}`}
         </h1>
       </div>
+
+      {/* Banner: bukti pembayaran perlu direvisi (untuk semua anggota tim) */}
+      {team?.paymentProof?.status?.toUpperCase() === "REJECT" && (
+        <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8 !border-rose-500/30`}>
+          <div className="relative flex items-start gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold tracking-tight text-white">
+                Bukti Pembayaran Perlu Direvisi
+              </h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {team?.paymentProof?.rejectionReason
+                  ? team.paymentProof.rejectionReason
+                  : "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
+              </p>
+            </div>
+          </div>
+          <Link href={team?.competition?.slug ? `/peserta/competition/${team.competition.slug}` : "/peserta/competition"} className="shrink-0">
+            <Button className={pillButton}>Perbaiki &amp; Unggah Ulang</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Discord */}
       {!profileLoading && !profileComplete && (
@@ -212,7 +241,7 @@ export default function PesertaDashboardPage() {
                 </span>
                 <Users className="h-4 w-4 text-text-secondary" />
               </div>
-              <div className="font-display text-3xl font-bold leading-none text-white">
+              <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
                 {memberCount}{" "}
                 <span className="text-base font-normal text-text-secondary">
                   / {maxMembers}
@@ -235,7 +264,7 @@ export default function PesertaDashboardPage() {
                 <RotateCcw className="h-4 w-4 text-text-secondary" />
               </div>
               <div
-                className={`font-display text-2xl font-bold ${
+                className={`font-display text-xl sm:text-2xl font-bold ${
                   submission ? "text-emerald-400" : "text-rose-500"
                 }`}
               >
@@ -251,7 +280,7 @@ export default function PesertaDashboardPage() {
                 </span>
                 <Clock className="h-4 w-4 text-text-secondary" />
               </div>
-              <div className="font-display text-2xl font-bold tracking-wide text-white">
+              <div className="font-display text-xl sm:text-2xl font-bold tracking-wide text-white">
                 {deadline ? formatCountdown(deadline) : "--"}
               </div>
               <p className="relative mt-2 text-[11px] text-text-secondary">
@@ -275,11 +304,61 @@ export default function PesertaDashboardPage() {
         </div>
       )}
 
+      {/* Dokumen verifikasi — arahan singkat begitu tim terbentuk. Rincian
+          per dokumen dan per anggota ada di halaman Competition. */}
+      {hasJoined && teamMembers.length > 0 && (
+        <div className={`${glass} p-6 lg:p-8`}>
+          <h2 className="relative mb-1 font-display text-xl font-bold tracking-tight text-white">
+            Dokumen Verifikasi
+          </h2>
+          <p className="relative text-sm text-text-secondary">
+            {docsAllApproved
+              ? "Semua dokumen anggota sudah disetujui. Kamu siap mengirim karya."
+              : "Masih ada dokumen anggota yang belum disetujui. Lengkapi lewat halaman Profile."}
+          </p>
+
+          <ul className="relative mt-4 space-y-2">
+            {teamMembers.map((member) => (
+              <li
+                key={member.userId}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3"
+              >
+                <span className="text-sm text-white">
+                  {member.fullName}
+                  <span className="ml-2 text-xs font-normal text-text-secondary">
+                    {member.role === "LEADER" ? "Leader" : "Anggota"}
+                  </span>
+                </span>
+                <span
+                  className={
+                    member.allDocumentsApproved
+                      ? "text-xs font-medium text-emerald-400"
+                      : "text-xs font-medium text-amber-300"
+                  }
+                >
+                  {member.allDocumentsApproved
+                    ? "Semua dokumen disetujui"
+                    : "Menunggu kelengkapan"}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="relative mt-5">
+            <Link href="/peserta/competition">
+              <Button className={pillButton}>Lihat Rincian Dokumen</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* SECTION 1: PENGUMUMAN HASIL TIM — muncul hanya bila sudah dipublish */}
       {!isAnnouncementsLoading && publishedTeamAnnouncements.length > 0 && (
-        <div className="space-y-4">
+        <div className={`${glass} space-y-4 p-6 lg:p-8`}>
           {publishedTeamAnnouncements.map((announcement) => {
             const isFinalist = Boolean(announcement.isFinalist);
+            const winnerRank = announcement.rank;
+            const isWinner = winnerRank === 1 || winnerRank === 2;
             const competitionName =
               announcement.competition?.name ||
               teamInfo?.competition?.name ||
@@ -298,34 +377,39 @@ export default function PesertaDashboardPage() {
             return (
               <div
                 key={announcement.id}
-                className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 border shadow-xl transition-all ${
-                  isFinalist
-                    ? "bg-linear-to-br from-amber-500/15 via-emerald-500/10 to-surface border-amber-500/40 text-white"
-                    : "bg-linear-to-br from-surface via-card to-surface border-border/80 text-white"
+                className={`relative overflow-hidden rounded-xl border-2 p-5 transition-colors ${
+                  isFinalist || isWinner
+                    ? "border-amber-400/70 bg-amber-500/[0.12] shadow-[0_0_24px_rgba(245,158,11,0.15)]"
+                    : "border-white/10 bg-white/[0.02]"
                 }`}
               >
-                {/* Background Glow Accent */}
+                {/* Kilau amber tipis, hanya untuk tim yang lolos */}
                 {isFinalist && (
-                  <div className="absolute -right-10 -top-10 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-amber-500/15 blur-3xl" />
                 )}
 
-                <div className="relative z-10 space-y-4">
+                <div className="relative z-10 space-y-3">
                   {/* Top Badge & Published Date */}
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      {isFinalist ? (
-                        <span className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                      {isWinner ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                          <span>JUARA {winnerRank}</span>
+                        </span>
+                      ) : isFinalist ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
                           <Trophy className="w-3.5 h-3.5 text-amber-400" />
                           <span>LOLOS SEBAGAI FINALIS</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 bg-blue-500/15 border border-blue-500/30 text-blue-300 font-mono text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                          <Award className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+                          <Award className="w-3.5 h-3.5 text-text-secondary" />
                           <span>PENGUMUMAN HASIL SELEKSI</span>
                         </span>
                       )}
 
-                      <span className="bg-white/10 text-text-secondary font-mono text-xs px-2.5 py-0.5 rounded-md">
+                      <span className="rounded-md bg-white/[0.06] px-2.5 py-0.5 font-mono text-xs text-text-secondary">
                         {roundName}
                       </span>
                     </div>
@@ -340,8 +424,15 @@ export default function PesertaDashboardPage() {
 
                   {/* Main Announcement Message */}
                   <div className="space-y-2">
-                    <h2 className="font-display font-bold text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2.5">
-                      {isFinalist ? (
+                    <h2 className={`flex items-center gap-2.5 font-display tracking-tight text-white ${isFinalist || isWinner ? "text-xl font-extrabold" : "text-lg font-bold"}`}>
+                      {isWinner ? (
+                        <>
+                          <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
+                          <span>
+                            Selamat! Tim {teamName} Meraih Juara {winnerRank}
+                          </span>
+                        </>
+                      ) : isFinalist ? (
                         <>
                           <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
                           <span>
@@ -350,14 +441,15 @@ export default function PesertaDashboardPage() {
                         </>
                       ) : (
                         <>
-                          <Info className="w-5 h-5 text-blue-400 shrink-0" />
                           <span>Pengumuman Hasil Seleksi {roundName}</span>
                         </>
                       )}
                     </h2>
 
                     <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-2xl">
-                      {isFinalist
+                      {isWinner
+                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih Juara ${winnerRank} pada babak ${roundName}. Terima kasih atas dedikasi dan kerja keras seluruh anggota tim.`
+                        : isFinalist
                         ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih nilai unggul dan dinyatakan lolos untuk melaju ke tahap ${roundName}. Persiapkan diri Anda untuk tahapan berikutnya sesuai jadwal yang ditentukan oleh panitia.`
                         : `Terima kasih atas partisipasi dan dedikasi tim ${teamName} (${competitionName}) pada babak ${roundName}. Tim Anda belum berhasil melaju ke babak selanjutnya pada kesempatan ini. Tetap semangat dan terus berkarya!`}
                     </p>
@@ -370,15 +462,13 @@ export default function PesertaDashboardPage() {
       )}
 
       {/* SECTION 2: FEED BERITA & PENGUMUMAN PANITIA */}
-      <div className={`${glass} p-6 lg:p-8`}>
-        <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-border/40">
+      <div className={`${glass} space-y-6 p-6 lg:p-8`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
-            <h1 className="font-display text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <Megaphone className="w-6 h-6 text-accent" />
-              <span>Pengumuman &amp; Berita Panitia</span>
-            </h1>
-            <p className="text-xs text-text-secondary mt-1">
+            <h2 className="font-display text-xl font-bold tracking-tight text-white">
+              Pengumuman &amp; Berita Panitia
+            </h2>
+            <p className="mt-1 text-sm text-text-secondary">
               Informasi resmi terkini seputar kompetisi, jadwal, dan panduan dari panitia SEVENT X.
             </p>
           </div>
@@ -393,10 +483,10 @@ export default function PesertaDashboardPage() {
                   onClick={() => handleFilterChange(filter)}
                   variant={isActive ? "default" : "outline"}
                   size="sm"
-                  className={`px-4 h-8 rounded-full text-xs font-mono font-semibold transition-all cursor-pointer ${
+                  className={`h-8 cursor-pointer rounded-full border px-4 font-mono text-xs font-semibold transition-all ${
                     isActive
-                      ? "bg-primary hover:bg-primary-hover text-white shadow-sm"
-                      : "bg-surface hover:bg-card-hover border-border text-text-secondary hover:text-white"
+                      ? "border-white bg-white text-[#1B235E] shadow-sm hover:bg-white/90"
+                      : "border-white/25 bg-white/[0.03] text-text-secondary hover:text-white"
                   }`}
                 >
                   {filter === "All" ? "Semua" : filter}
@@ -410,24 +500,24 @@ export default function PesertaDashboardPage() {
         {isNewsLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Card
+              <div
                 key={i}
-                className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-4"
+                className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-5"
               >
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-5 w-20 rounded-md bg-surface" />
-                  <Skeleton className="h-4 w-28 rounded-md bg-surface" />
+                  <Skeleton className="h-5 w-20 rounded-md bg-white/[0.06]" />
+                  <Skeleton className="h-4 w-28 rounded-md bg-white/[0.06]" />
                 </div>
-                <Skeleton className="h-7 w-3/4 rounded-lg bg-surface" />
-                <Skeleton className="h-16 w-full rounded-lg bg-surface" />
-                <Skeleton className="h-4 w-40 rounded-md bg-surface" />
-              </Card>
+                <Skeleton className="h-7 w-3/4 rounded-lg bg-white/[0.06]" />
+                <Skeleton className="h-16 w-full rounded-lg bg-white/[0.06]" />
+                <Skeleton className="h-4 w-40 rounded-md bg-white/[0.06]" />
+              </div>
             ))}
           </div>
         ) : newsList.length === 0 ? (
           /* Empty State */
-          <Card className="bg-card/60 border border-white/10 rounded-2xl p-10 text-center space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-surface border border-white/10 flex items-center justify-center text-text-secondary mx-auto">
+          <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-10 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-text-secondary">
               <Megaphone className="w-6 h-6" />
             </div>
             <h3 className="font-display font-semibold text-base text-white">
@@ -438,7 +528,7 @@ export default function PesertaDashboardPage() {
                 ? `Tidak ada berita atau pengumuman dengan kategori "${activeFilter}".`
                 : "Panitia belum mengunggah pengumuman publik saat ini. Silakan periksa kembali nanti."}
             </p>
-          </Card>
+          </div>
         ) : (
           /* Announcement Cards List */
           <div className="space-y-4">
@@ -446,7 +536,6 @@ export default function PesertaDashboardPage() {
               const tag = item.tag;
               const isImportant = tag === "IMPORTANT";
               const isInfo = tag === "INFO";
-              const isUpdate = tag === "UPDATE";
 
               const formattedDate = item.createdAt
                 ? new Date(item.createdAt).toLocaleDateString("id-ID", {
@@ -459,21 +548,19 @@ export default function PesertaDashboardPage() {
               const authorName = item.author?.fullName || "Panitia SEVENT X";
 
               return (
-                <Card
+                <div
                   key={item.id}
-                  className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm transition-all hover:border-white/20 space-y-3"
+                  className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:bg-white/[0.04]"
                 >
                   {/* Top Row: Category Badge (Left) & Date (Right) */}
                   <div className="flex items-center justify-between gap-4">
                     <span
-                      className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md border ${
+                      className={`rounded-md border px-2.5 py-0.5 font-mono text-[10px] font-bold ${
                         isImportant
-                          ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
+                          ? "border-red-500/40 bg-red-500/10 text-red-300"
                           : isInfo
-                          ? "bg-primary/20 border-primary/40 text-accent"
-                          : isUpdate
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                          : "bg-card-hover border-border text-text-secondary"
+                          ? "border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-[#7D8CFF]"
+                          : "border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
                       }`}
                     >
                       {tag}
@@ -496,7 +583,7 @@ export default function PesertaDashboardPage() {
                   </p>
 
                   {/* Footer: Posted By */}
-                  <div className="pt-2 border-t border-border/30 flex items-center justify-between text-xs font-mono text-text-secondary">
+                  <div className="flex items-center justify-between border-t border-white/10 pt-2 text-xs font-mono text-text-secondary">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-text-secondary" />
                       <span>
@@ -507,13 +594,13 @@ export default function PesertaDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
 
             {/* Pagination Controls */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between border-t border-white/10 pt-4">
                 <span className="text-xs font-mono text-text-secondary">
                   Halaman {pagination.page} dari {pagination.totalPages} ({pagination.total} Pengumuman)
                 </span>
@@ -524,7 +611,7 @@ export default function PesertaDashboardPage() {
                     size="sm"
                     disabled={currentPage <= 1 || isPlaceholderData}
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    className="bg-surface hover:bg-card-hover border-border text-text-secondary hover:text-white text-xs h-8 px-3 rounded-lg cursor-pointer disabled:opacity-40"
+                    className="h-8 cursor-pointer rounded-lg border border-white/25 bg-white/[0.03] px-3 text-xs text-text-secondary transition-colors hover:text-white disabled:opacity-40"
                   >
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     <span>Sebelumnya</span>
@@ -535,7 +622,7 @@ export default function PesertaDashboardPage() {
                     size="sm"
                     disabled={currentPage >= pagination.totalPages || isPlaceholderData}
                     onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="bg-surface hover:bg-card-hover border-border text-text-secondary hover:text-white text-xs h-8 px-3 rounded-lg cursor-pointer disabled:opacity-40"
+                    className="h-8 cursor-pointer rounded-lg border border-white/25 bg-white/[0.03] px-3 text-xs text-text-secondary transition-colors hover:text-white disabled:opacity-40"
                   >
                     <span>Selanjutnya</span>
                     <ChevronRight className="w-4 h-4 ml-1" />
@@ -545,7 +632,6 @@ export default function PesertaDashboardPage() {
             )}
           </div>
         )}
-        </div>
       </div>
     </div>
   );

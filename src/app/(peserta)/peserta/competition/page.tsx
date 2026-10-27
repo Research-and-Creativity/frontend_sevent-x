@@ -155,6 +155,22 @@ export default function PesertaCompetitionPage() {
       );
     }
 
+    // Peserta yang sudah join kompetisi lain tidak boleh mendaftar di kompetisi
+    // lain (satu peserta = satu tim = satu kompetisi). Tampilkan state
+    // nonaktif supaya tidak menyesatkan.
+    if (joinedCompetitionSlug && joinedCompetitionSlug !== competition.slug) {
+      return (
+        <Button
+          type="button"
+          disabled
+          title="Kamu sudah terdaftar di kompetisi lain"
+          className={`${pillButton} cursor-not-allowed border border-white/10 bg-white/[0.04] text-white/40`}
+        >
+          Already in another competition
+        </Button>
+      );
+    }
+
     // Mendaftarkan tim butuh profil yang sudah lengkap. Ini gerbang UX, bukan
     // gerbang keamanan; yang menentukan boleh submit karya tetap isEligible
     // di backend.
@@ -244,6 +260,32 @@ export default function PesertaCompetitionPage() {
             className={`${pillButton} shrink-0 bg-white text-[#1B235E] hover:bg-white/90`}
           >
             Complete Profile
+          </Button>
+        </div>
+      )}
+
+      {/* Banner: peserta sudah join kompetisi lain */}
+      {joinedCompetitionSlug && (
+        <div className={`${glass} flex flex-col gap-2 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8`}>
+          <div className="relative">
+            <h2 className="font-display text-lg font-bold tracking-tight text-white">
+              Kamu sudah terdaftar
+            </h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Kamu sudah bergabung di kompetisi{" "}
+              <span className="font-semibold text-white">
+                {userTeam?.competition?.name ?? joinedCompetitionSlug}
+              </span>
+              . Setiap peserta hanya boleh berpartisipasi di satu kompetisi.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => router.push(`/peserta/competition/${joinedCompetitionSlug}`)}
+            className={`${pillButton} shrink-0 bg-white text-[#1B235E] hover:bg-white/90`}
+          >
+            Manage your Team
+            <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
         </div>
       )}

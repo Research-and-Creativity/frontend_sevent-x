@@ -2,7 +2,7 @@
 
 // Adaptasi dari freebbonize (github.com/GithubFarelAlghazali/freebbonize)
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TransformType } from "./types";
 
 type CanvasProps = {
@@ -14,14 +14,9 @@ type CanvasProps = {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 };
 
-// Ruang koordinat transform (nilai x/y/scale selalu dalam satuan ini). Jangan
-// diubah tanpa menyesuaikan slider & input di panel "Atur Posisi".
-const CANVAS_SIZE = 500;
-// Resolusi bitmap: 500 x 4 = 2000 px. Ini yang menentukan ketajaman hasil
-// unduhan; geometri di layar tidak terpengaruh karena semua digambar lewat
-// ctx.scale(EXPORT_SCALE). Samakan dengan resolusi frame resmi kalau nanti
-// frame SVG ini diganti PNG beresolusi tetap.
-const EXPORT_SCALE = 4;
+// Resolusi bitmap: 2x. Cukup tajam untuk twibbon, dan hasil file jauh
+// lebih kecil (PNG 4x menghasilkan ±10 MB, melebihi limit unggah 5 MB).
+const EXPORT_SCALE = 2;
 
 export default function TwibbonCanvas({
   userPhoto,
@@ -32,20 +27,26 @@ export default function TwibbonCanvas({
   canvasRef,
 }: CanvasProps) {
   const frameRef = useRef(new Image());
+  // Dimensi kanvas mengikuti dimensi asli frame, supaya tidak ada ruang kosong
+  // maupun pemotongan. Default 4:3 sampai frame ter-load.
+  const [dims, setDims] = useState({ w: 1600, h: 1200 });
 
   function draw() {
     const canvas = canvasRef?.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    // Isi latar dengan warna solid agar area transparan tidak jadi hitam
+    // saat diekspor ke JPEG (JPEG tidak mendukung alpha).
+    if (ctx) {
+      ctx.fillStyle = "#05070D";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     if (userPhoto) {
       ctx?.save();
       ctx?.scale(EXPORT_SCALE, EXPORT_SCALE);
-      ctx?.translate(
-        CANVAS_SIZE / 2 + transform.x,
-        CANVAS_SIZE / 2 + transform.y,
-      );
+      ctx?.translate(dims.w / 2 + transform.x, dims.h / 2 + transform.y);
       ctx?.rotate((transform.rotate * Math.PI) / 180);
       ctx?.scale(transform.scale / 100, transform.scale / 100);
       ctx?.drawImage(
@@ -59,24 +60,35 @@ export default function TwibbonCanvas({
     }
 
     const frame = frameRef.current;
-    if (frame.complete && frame.src) {
+    if (frame.complete && frame.src && frame.naturalWidth > 0) {
+      // Frame dan kanvas punya rasio yang sama, jadi cukup digambar penuh.
       ctx?.drawImage(frame, 0, 0, canvas.width, canvas.height);
     }
   }
 
-  // Load frame image
+  // Load frame image; set dimensi kanvas sesuai frame.
   useEffect(() => {
     const frame = frameRef.current;
-    frame.onload = draw;
+    const onLoad = () => {
+      if (frame.naturalWidth > 0 && frame.naturalHeight > 0) {
+        setDims({ w: frame.naturalWidth, h: frame.naturalHeight });
+      }
+      draw();
+    };
+    frame.onload = onLoad;
     frame.src = frameSrc;
+    // Jika frame sudah ter-cache, onload mungkin tidak terpicu.
+    if (frame.complete && frame.naturalWidth > 0) {
+      onLoad();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frameSrc]);
 
-  // Redraw whenever photo or transform changes
+  // Redraw whenever photo, transform, or dims change
   useEffect(() => {
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPhoto, transform]);
+  }, [userPhoto, transform, dims]);
 
   // Drag-to-reposition (only in edit mode)
   useEffect(() => {
@@ -118,9 +130,10 @@ export default function TwibbonCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={CANVAS_SIZE * EXPORT_SCALE}
-      height={CANVAS_SIZE * EXPORT_SCALE}
-      className={`w-full max-w-[360px] aspect-square rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+      width={dims.w * EXPORT_SCALE}
+      height={dims.h * EXPORT_SCALE}
+      className={`w-full max-w-[360px] rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={{ aspectRatio: `${dims.w} / ${dims.h}`, height: "auto" }}
     />
   );
 }

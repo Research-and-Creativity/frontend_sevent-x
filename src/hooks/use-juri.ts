@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import type { TeamAnnouncementItem } from "@/types/api";
 
 export interface JudgeSubmissionScore {
   id: string;
@@ -24,9 +25,13 @@ export interface JudgeSubmissionItem {
   teamId: string;
   projectTitle: string;
   description: string;
-  githubUrl: string;
-  demoVideoUrl: string;
+  // Nullable: kompetisi UI/UX tidak mengisi GitHub/Demo Video, melainkan
+  // figmaUrl dan prototypeUrl di bawah.
+  githubUrl: string | null;
+  demoVideoUrl: string | null;
   deploymentUrl?: string | null;
+  figmaUrl?: string | null;
+  prototypeUrl?: string | null;
   fileUrl?: string | null;
   submittedAt: string;
   updatedAt: string;
@@ -199,6 +204,23 @@ export function useSubmitJudgeRecommendation(submissionId: string) {
         queryKey: ["judgeSubmissionDetail", submissionId],
       });
     },
+  });
+}
+
+// Hook 6: Pengumuman (finalis/pemenang) untuk kompetisi juri (GET /api/admin/announcements)
+export function useJudgeAnnouncements(competitionSlug?: string) {
+  return useQuery<TeamAnnouncementItem[]>({
+    queryKey: ["judgeAnnouncements", competitionSlug],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/admin/announcements", {
+        params: { competitionSlug },
+      });
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+    enabled: Boolean(competitionSlug),
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 }
 

@@ -21,6 +21,7 @@ import {
   useUpdatePaymentProofStatus,
   useUpdateUserDocumentStatus,
   type TeamDetailMember,
+  type TeamDetailMemberDocument,
 } from "@/hooks/use-admin";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -38,11 +39,22 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
   const updatePay = useUpdatePaymentProofStatus();
 
   const [openMember, setOpenMember] = useState<number | null>(0);
-  const [reviseTarget, setReviseTarget] = useState<TeamDetailMember | null>(null);
+  const [reviseTarget, setReviseTarget] = useState<{
+    member: TeamDetailMember;
+    doc: TeamDetailMemberDocument;
+  } | null>(null);
   const [reviseNote, setReviseNote] = useState("");
   const [confirmRevise, setConfirmRevise] = useState(false);
-  const [verifyDocTarget, setVerifyDocTarget] = useState<TeamDetailMember | null>(null);
+  const [verifyDocTarget, setVerifyDocTarget] = useState<{
+    member: TeamDetailMember;
+    doc: TeamDetailMemberDocument;
+  } | null>(null);
   const [verifyPay, setVerifyPay] = useState(false);
+  const [revisePay, setRevisePay] = useState(false);
+  const [revisePayNote, setRevisePayNote] = useState("");
+  // Dokumen yang sedang diproses, supaya spinner menempel di barisnya sendiri
+  // dan baris lain tetap terbaca.
+  const [actingDocId, setActingDocId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -89,41 +101,52 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
 
   const backHref = mode === "registered" ? "/admin/teams" : "/admin/documents";
 
-  // Hanya dokumen yang masih menunggu review yang bisa diputuskan.
-  const pendingDocs = (m: TeamDetailMember) => m.user.documents.filter((d) => d.status === "REVIEW");
+  const docTypeLabel = (type: string) =>
+    REQUIRED_DOC_LABELS.find((d) => d.type === type)?.label ?? type;
 
-  const runAction = async (fn: () => Promise<unknown>, successMsg: string) => {
+  const runAction = async (
+    fn: () => Promise<unknown>,
+    successMsg: string,
+    docId?: string,
+  ) => {
+    if (docId) setActingDocId(docId);
     try {
       await fn();
       toast.success(successMsg);
     } catch (err) {
       toast.error(getErrorMessage(err, "Gagal menyimpan perubahan status."));
+    } finally {
+      if (docId) setActingDocId(null);
     }
   };
 
-  const handleVerifyDocs = (member: TeamDetailMember) => {
-    const pending = pendingDocs(member);
-    if (pending.length === 0) return;
+  const handleVerifyDoc = (doc: TeamDetailMemberDocument) => {
     setVerifyDocTarget(null);
-    void runAction(async () => {
-      for (const doc of pending) {
-        await updateDoc.mutateAsync({ documentId: doc.id, status: "APPROVE" });
-      }
-    }, `Dokumen ${member.user.fullName} diverifikasi.`);
+    void runAction(
+      () => updateDoc.mutateAsync({ documentId: doc.id, status: "APPROVE" }),
+      `Dokumen ${docTypeLabel(doc.type)} diverifikasi.`,
+      doc.id,
+    );
   };
 
-  const handleReviseDocs = () => {
-    const member = reviseTarget;
+  const handleReviseDoc = () => {
+    const target = reviseTarget;
     const note = reviseNote.trim();
     setConfirmRevise(false);
-    if (!member || !note) return;
+    if (!target || !note) return;
     setReviseTarget(null);
-    void runAction(async () => {
-      for (const doc of pendingDocs(member)) {
-        await updateDoc.mutateAsync({ documentId: doc.id, status: "REJECT", reason: note });
-      }
-      setReviseNote("");
-    }, `Catatan revisi dikirim ke ${member.user.fullName}.`);
+    void runAction(
+      async () => {
+        await updateDoc.mutateAsync({
+          documentId: target.doc.id,
+          status: "REJECT",
+          reason: note,
+        });
+        setReviseNote("");
+      },
+      `Catatan revisi ${docTypeLabel(target.doc.type)} dikirim ke ${target.member.user.fullName}.`,
+      target.doc.id,
+    );
   };
 
   const handleVerifyPayment = () => {
@@ -133,6 +156,22 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
       () => updatePay.mutateAsync({ teamId: team.id, status: "APPROVE" }),
       "Bukti pembayaran tim berhasil diverifikasi."
     );
+  };
+
+  const handleRevisePayment = () => {
+    if (!revisePayNote.trim()) return;
+    setRevisePay(false);
+    if (!team.paymentProof) return;
+    void runAction(
+      () =>
+        updatePay.mutateAsync({
+          teamId: team.id,
+          status: "REJECT",
+          reason: revisePayNote.trim(),
+        }),
+      "Catatan revisi bukti pembayaran dikirim ke tim."
+    );
+    setRevisePayNote("");
   };
 
   return (
@@ -270,29 +309,34 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
                               Catatan: {doc.rejectionReason}
                             </p>
                           )}
+                          {mode === "registered" && doc.status === "REVIEW" && (
+                            <div className="mt-2 flex gap-2">
+                              <button
+                                disabled={updateDoc.isPending}
+                                onClick={() => setReviseTarget({ member, doc })}
+                                className="cursor-pointer flex-1 rounded-full border border-[#3B5BFF] px-3 py-1.5 text-xs font-semibold text-[#7D8CFF] transition-colors hover:bg-[#3B5BFF]/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Revise
+                              </button>
+                              <button
+                                disabled={updateDoc.isPending}
+                                onClick={() => setVerifyDocTarget({ member, doc })}
+                                className="cursor-pointer flex-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#7C83BC] shadow-[0_0_20px_rgba(180,190,255,0.5)] transition-colors hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Verify
+                              </button>
+                            </div>
+                          )}
+                          {actingDocId === doc.id && (
+                            <p className="mt-1.5 flex items-center gap-1.5 text-[10px] text-white/60">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Menyimpan...
+                            </p>
+                          )}
                         </div>
                       );
                     })}
                   </div>
-
-                  {mode === "registered" && (
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button
-                        disabled={pendingDocs(member).length === 0 || updateDoc.isPending}
-                        onClick={() => setReviseTarget(member)}
-                        className="cursor-pointer px-8 py-2.5 rounded-full border border-[#3B5BFF] text-[#7D8CFF] text-sm font-semibold hover:bg-[#3B5BFF]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Revise
-                      </button>
-                      <button
-                        disabled={pendingDocs(member).length === 0 || updateDoc.isPending}
-                        onClick={() => setVerifyDocTarget(member)}
-                        className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Verification
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -325,13 +369,27 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         )}
 
         {mode === "registered" && (
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
+              onClick={() => setRevisePay(true)}
+              className="cursor-pointer px-8 py-2.5 rounded-full border border-[#F0C969] text-[#F0C969] text-sm font-semibold hover:bg-[#F0C969]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Revise
+            </button>
             <button
               disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
               onClick={() => setVerifyPay(true)}
               className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Verification
+              {updatePay.isPending ? (
+                <>
+                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                "Verification"
+              )}
             </button>
           </div>
         )}
@@ -344,8 +402,8 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
             Revise Notes
           </DialogTitle>
           <DialogDescription className="text-white/60 text-sm">
-            Catatan revisi dikirim ke {reviseTarget?.user.fullName} untuk dokumen yang masih
-            menunggu review.
+            Catatan revisi {reviseTarget && docTypeLabel(reviseTarget.doc.type)} dikirim ke{" "}
+            {reviseTarget?.member.user.fullName}.
           </DialogDescription>
           <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
           <Textarea
@@ -376,20 +434,24 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         open={confirmRevise}
         onOpenChange={setConfirmRevise}
         title="Submit revision note?"
-        description="Dokumen akan ditandai Revise dan catatan dikirim ke peserta."
+        description={`Dokumen ${
+          reviseTarget ? docTypeLabel(reviseTarget.doc.type) : ""
+        } akan ditandai Revise dan catatan dikirim ke peserta.`}
         confirmText="Submit"
         cancelText="Cancel"
-        onConfirm={handleReviseDocs}
+        onConfirm={handleReviseDoc}
       />
 
       <ConfirmModal
         open={!!verifyDocTarget}
         onOpenChange={(open) => !open && setVerifyDocTarget(null)}
         title="Verify document?"
-        description={`Seluruh dokumen ${verifyDocTarget?.user.fullName} yang menunggu review akan ditandai Approved.`}
+        description={`Dokumen ${
+          verifyDocTarget ? docTypeLabel(verifyDocTarget.doc.type) : ""
+        } milik ${verifyDocTarget?.member.user.fullName} akan ditandai Approved.`}
         confirmText="Verify"
         cancelText="Cancel"
-        onConfirm={() => verifyDocTarget && handleVerifyDocs(verifyDocTarget)}
+        onConfirm={() => verifyDocTarget && handleVerifyDoc(verifyDocTarget.doc)}
       />
 
       <ConfirmModal
@@ -401,6 +463,39 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         cancelText="Cancel"
         onConfirm={handleVerifyPayment}
       />
+
+      <Dialog open={revisePay} onOpenChange={(open) => !open && setRevisePay(false)}>
+        <DialogContent className="bg-[#1A1D24]/80 backdrop-blur-xl border border-white/20 text-white max-w-lg rounded-2xl p-8">
+          <DialogTitle className="text-white text-2xl font-extrabold tracking-tight">
+            Revise Payment
+          </DialogTitle>
+          <DialogDescription className="text-white/60 text-sm">
+            Catatan revisi dikirim ke tim untuk bukti pembayaran.
+          </DialogDescription>
+          <label className="block text-sm text-white/70 mt-4 mb-2">Catatan Revisi</label>
+          <Textarea
+            value={revisePayNote}
+            onChange={(e) => setRevisePayNote(e.target.value)}
+            placeholder="Contoh: Bukti pembayaran tidak jelas, mohon upload ulang."
+            className="w-full h-32 rounded-2xl border border-white/30 bg-transparent p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/60 resize-none"
+          />
+          <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-white/10">
+            <button
+              onClick={() => setRevisePay(false)}
+              className="cursor-pointer px-8 py-3 rounded-full border border-white/20 text-white/70 text-sm font-semibold hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={!revisePayNote.trim() || updatePay.isPending}
+              onClick={handleRevisePayment}
+              className="cursor-pointer px-10 py-3 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_30px_rgba(59,91,255,0.35)] hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updatePay.isPending ? "Memproses..." : "Submit"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

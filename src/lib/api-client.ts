@@ -56,14 +56,24 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const url = originalRequest.url || "";
     const isRefreshEndpoint =
-      originalRequest.url?.includes("/api/auth/refresh-token") ||
-      originalRequest.url?.includes("/auth/refresh-token");
+      url.includes("/api/auth/refresh-token") ||
+      url.includes("/auth/refresh-token");
+    const isAuthEndpoint =
+      url.includes("/api/auth/login") ||
+      url.includes("/api/auth/register") ||
+      url.includes("/api/auth/google") ||
+      url.includes("/api/auth/forgot-password") ||
+      url.includes("/api/auth/reset-password") ||
+      url.includes("/api/auth/resend-verification") ||
+      url.includes("/api/auth/verify-email");
 
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !isRefreshEndpoint
+      !isRefreshEndpoint &&
+      !isAuthEndpoint
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {

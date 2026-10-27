@@ -108,12 +108,32 @@ export interface Submission {
   };
   projectTitle?: string;
   description?: string;
-  githubUrl?: string;
-  demoVideoUrl?: string;
+  githubUrl?: string | null;
+  demoVideoUrl?: string | null;
   deploymentUrl?: string | null;
+  figmaUrl?: string | null;
+  prototypeUrl?: string | null;
   fileUrl?: string | null;
   linkUrl?: string | null;
-  submittedAt: string;
+  /** DRAFT = masih disimpan sebagai draf, SUBMITTED = sudah dikirim dan dikunci. */
+  status: "DRAFT" | "SUBMITTED";
+  /** Baru terisi ketika leader menekan Submit All. */
+  submittedAt: string | null;
+  // Data penilaian (hanya ada setelah juri menilai).
+  scores?: Array<{
+    id: string;
+    score: number;
+    note?: string | null;
+    isLocked: boolean;
+    criteria: { id: string; name: string; maxScore: number; group?: string | null };
+    judge: { user: { fullName: string } };
+  }>;
+  judgeEvaluations?: Array<{
+    id: string;
+    recommendation?: string | null;
+    feedback?: string | null;
+    judge: { user: { fullName: string } };
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -186,6 +206,9 @@ export interface TeamAnnouncementItem {
   competitionId: string;
   teamId: string;
   isFinalist: boolean;
+  // Peringkat pemenang pada babak final: 1 = Juara 1, 2 = Juara 2. Null untuk
+  // babak penyisihan dan tim non-podium.
+  rank: number | null;
   round: string;
   publishedAt: string | null;
   createdAt: string;
