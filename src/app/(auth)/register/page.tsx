@@ -18,7 +18,10 @@ const registerSchema = z
   .object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    institution: z.string().min(2, "Institution must be at least 2 characters").optional().or(z.literal("")),
+    institution: z
+      .string()
+      .trim()
+      .min(2, "Institution must be at least 2 characters"),
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
@@ -51,7 +54,7 @@ export default function RegisterPage() {
         email: data.email,
         username,
         password: data.password,
-        institution: data.institution?.trim() || undefined,
+        institution: data.institution,
       };
       await apiClient.post("/api/auth/register", payload);
       setRegisteredEmail(data.email);
@@ -170,173 +173,174 @@ export default function RegisterPage() {
             </button>
           </div>
         ) : (
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            {[
-              { id: "fullName", label: "Name", type: "text" },
-              { id: "email", label: "Email", type: "email" },
-            ].map((f) => (
-              <div key={f.id}>
-                <label htmlFor={f.id} className="text-xs text-white/70">
-                  {f.label}
+          <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              {[
+                { id: "fullName", label: "Name", type: "text" },
+                { id: "email", label: "Email", type: "email" },
+              ].map((f) => (
+                <div key={f.id}>
+                  <label htmlFor={f.id} className="text-xs text-white/70">
+                    {f.label} <span className="text-[#7D8CFF]">*</span>
+                  </label>
+                  <input
+                    id={f.id}
+                    type={f.type}
+                    placeholder={f.label}
+                    {...register(f.id as keyof RegisterFormValues)}
+                    className="mt-2 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
+                  />
+                  {errors[f.id as keyof RegisterFormValues] && (
+                    <p className="text-xs text-red-400 mt-1">
+                      {errors[f.id as keyof RegisterFormValues]?.message}
+                    </p>
+                  )}
+                </div>
+              ))}
+
+              <div>
+                <label htmlFor="institution" className="text-xs text-white/70">
+                  Institution <span className="text-[#7D8CFF]">*</span>
                 </label>
                 <input
-                  id={f.id}
-                  type={f.type}
-                  placeholder={f.label}
-                  {...register(f.id as keyof RegisterFormValues)}
+                  id="institution"
+                  type="text"
+                  placeholder="Your school/university"
+                  required
+                  {...register("institution")}
                   className="mt-2 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
                 />
-                {errors[f.id as keyof RegisterFormValues] && (
+                {errors.institution && (
                   <p className="text-xs text-red-400 mt-1">
-                    {errors[f.id as keyof RegisterFormValues]?.message}
+                    {errors.institution.message}
                   </p>
                 )}
               </div>
-            ))}
 
-            <div>
-              <label htmlFor="institution" className="text-xs text-white/70">
-                Institution <span className="text-white/40">(optional)</span>
-              </label>
-              <input
-                id="institution"
-                type="text"
-                placeholder="Your school/university (optional)"
-                {...register("institution")}
-                className="mt-2 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
-              />
-              {errors.institution && (
-                <p className="text-xs text-red-400 mt-1">
-                  {errors.institution.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="text-xs text-white/70">
-                Password
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  {...register("password")}
-                  className="w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                  aria-label="Toggle password"
-                >
-                  {showPassword ? (
-                    <Eye className="w-5 h-5" />
-                  ) : (
-                    <EyeOff className="w-5 h-5" />
-                  )}
-                </button>
+              <div>
+                <label htmlFor="password" className="text-xs text-white/70">
+                  Password <span className="text-[#7D8CFF]">*</span>
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    {...register("password")}
+                    className="w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                    aria-label="Toggle password"
+                  >
+                    {showPassword ? (
+                      <Eye className="w-5 h-5" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-red-400 mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-xs text-red-400 mt-1">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="text-xs text-white/70"
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="text-xs text-white/70"
+                >
+                  Confirm Password <span className="text-[#7D8CFF]">*</span>
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    {...register("confirmPassword")}
+                    className="w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                    aria-label="Toggle confirm password"
+                  >
+                    {showConfirm ? (
+                      <Eye className="w-5 h-5" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-400 mt-1">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="cursor-pointer w-full h-10 mt-2 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-60"
               >
-                Confirm Password
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="confirmPassword"
-                  type={showConfirm ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  {...register("confirmPassword")}
-                  className="w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm pr-12 text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                  aria-label="Toggle confirm password"
-                >
-                  {showConfirm ? (
-                    <Eye className="w-5 h-5" />
-                  ) : (
-                    <EyeOff className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-xs text-red-400 mt-1">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </form>
+
+            <div className="relative flex items-center justify-center my-4">
+              <div className="border-t border-white/10 w-full" />
+              <span className="bg-transparent px-4 text-xs text-white/40">
+                or
+              </span>
+              <div className="border-t border-white/10 w-full" />
             </div>
 
             <button
-              type="submit"
-              disabled={isLoading}
-              className="cursor-pointer w-full h-10 mt-2 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-colors disabled:opacity-60"
+              type="button"
+              onClick={initiateGoogleLogin}
+              className="cursor-pointer w-full h-10 rounded-full bg-[#2E5CFF] hover:bg-[#3648D9] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-              ) : (
-                "Create Account"
-              )}
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="#EA4335"
+                  d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
+                />
+              </svg>
+              Continue with Google
             </button>
-          </form>
 
-          <div className="relative flex items-center justify-center my-4">
-            <div className="border-t border-white/10 w-full" />
-            <span className="bg-transparent px-4 text-xs text-white/40">
-              or
-            </span>
-            <div className="border-t border-white/10 w-full" />
+            <p className="text-center text-sm text-white/50 mt-4">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-white underline underline-offset-4 hover:text-white/80"
+              >
+                Login
+              </Link>
+            </p>
           </div>
-
-          <button
-            type="button"
-            onClick={initiateGoogleLogin}
-            className="cursor-pointer w-full h-10 rounded-full bg-[#2E5CFF] hover:bg-[#3648D9] text-white font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-              />
-              <path
-                fill="#4285F4"
-                d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-              />
-            </svg>
-            Continue with Google
-          </button>
-
-          <p className="text-center text-sm text-white/50 mt-4">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-white underline underline-offset-4 hover:text-white/80"
-            >
-              Login
-            </Link>
-          </p>
-        </div>
         )}
       </div>
 

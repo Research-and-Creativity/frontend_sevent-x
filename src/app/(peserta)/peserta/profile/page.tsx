@@ -123,6 +123,10 @@ export default function PesertaProfilePage() {
       toast.error("Nama lengkap tidak boleh kosong.");
       return;
     }
+    if (!form.institution.trim()) {
+      toast.error("Nama institusi tidak boleh kosong.");
+      return;
+    }
     try {
       await updateProfileMutation.mutateAsync({
         fullName: form.fullName.trim(),
@@ -359,6 +363,7 @@ export default function PesertaProfilePage() {
               id="profile-institution"
               type="text"
               placeholder="Institution/University/School"
+              required
               value={form.institution}
               onChange={(e) => updateField("institution", e.target.value)}
               className={glassInput}
