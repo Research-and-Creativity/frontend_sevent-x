@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
@@ -12,9 +13,46 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "SEVENT X - Tech Competition National 2026",
+  metadataBase: SITE_URL,
+  title: "SEVENT X",
   description:
-    "Wadah kompetisi teknologi nasional terbesar untuk inovator muda Indonesia. Tunjukkan karya terbaikmu di bidang Web Dev, UI/UX, CP, dan AI.",
+    "SEVENT X adalah kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Ikuti kategori Software Development atau UI/UX Design dengan tema SDGs.",
+  applicationName: "SEVENT X",
+  category: "education",
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    siteName: "SEVENT X",
+    title: "SEVENT X",
+    description:
+      "Kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Kembangkan inovasi digital di kategori Software Development atau UI/UX Design.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "SEVENT X — Software Engineering Event",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SEVENT X",
+    description:
+      "Kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Kembangkan inovasi digital di kategori Software Development atau UI/UX Design.",
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 export default function RootLayout({

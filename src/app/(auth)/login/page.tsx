@@ -8,18 +8,30 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { apiClient } from "@/lib/api-client";
-import { getErrorMessage } from "@/lib/errors";
+import { getErrorMessageWithDefault } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth-store";
 import { initiateGoogleLogin } from "@/lib/google-auth";
+import type { User } from "@/types/api";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
+
+type LoginResponse = {
+  data?: {
+    user?: User | null;
+    accessToken?: string | null;
+  } | null;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,29 +45,49 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post("/api/auth/login", data);
-      const { user, accessToken } = response.data.data;
-      if (!accessToken || !user) throw new Error("Invalid response");
+      const response = await apiClient.post<LoginResponse>(
+        "/api/auth/login",
+        data,
+      );
+      const user = response.data?.data?.user;
+      const accessToken = response.data?.data?.accessToken;
+      if (!user || typeof accessToken !== "string" || !accessToken) {
+        throw new Error("Invalid login response from server.");
+      }
+
       setAuth(user, accessToken);
       toast.success(`Welcome back, ${user.fullName}!`);
 
-      const role = user.role?.toUpperCase();
+      const role = user.role.toUpperCase();
       if (role === "ADMIN") router.push("/admin/dashboard");
       else if (role === "JURI" || role === "JUDGE")
         router.push("/juri/dashboard");
       else router.push("/peserta/dashboard");
     } catch (error: unknown) {
-      const err = error as any;
-      const msg =
-        err?.response?.data?.message ||
-        getErrorMessage(error, "Invalid credentials.") ||
-        "Invalid credentials.";
-      toast.error(msg);
+      toast.error(
+        getErrorMessageWithDefault(
+          error,
+          "Login failed. Check your email and password, then try again.",
+        ),
+      );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = (): void => {
+    try {
+      initiateGoogleLogin();
+    } catch (error: unknown) {
+      toast.error(
+        getErrorMessageWithDefault(
+          error,
+          "Google login is not configured. Please contact the administrator.",
+        ),
+      );
     }
   };
 
@@ -110,7 +142,11 @@ export default function LoginPage() {
         </p>
 
         <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-[#111318] p-6 sm:p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-3"
+            aria-busy={isLoading}
+          >
             <div>
               <label htmlFor="email" className="text-xs text-white/70">
                 Email
@@ -119,11 +155,14 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="Email"
+                autoComplete="email"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
                 {...register("email")}
                 className="mt-1 w-full h-10 rounded-full border border-white/30 bg-transparent px-5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
               />
               {errors.email && (
-                <p className="text-xs text-red-400 mt-1">
+                <p id="email-error" role="alert" className="text-xs text-red-400 mt-1">
                   {errors.email.message}
                 </p>
               )}
@@ -138,24 +177,29 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
                   {...register("password")}
                   className="w-full h-10 rounded-full border border-white/30 bg-transparent px-5 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/70 transition-colors"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((visible) => !visible)}
                   className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                  aria-label="Toggle password"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-5 h-5" aria-hidden="true" />
                   ) : (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-xs text-red-400 mt-1">
+                <p id="password-error" role="alert" className="text-xs text-red-400 mt-1">
                   {errors.password.message}
                 </p>
               )}
@@ -179,7 +223,10 @@ export default function LoginPage() {
               className="cursor-pointer w-full h-10 rounded-full bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors disabled:opacity-60"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" aria-hidden="true" />
+                  <span className="sr-only">Signing in...</span>
+                </>
               ) : (
                 "Login"
               )}
@@ -196,7 +243,7 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={initiateGoogleLogin}
+            onClick={handleGoogleLogin}
             className="cursor-pointer w-full h-10 rounded-full bg-[#2E5CFF] hover:bg-[#2448D9] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

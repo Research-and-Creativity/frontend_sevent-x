@@ -12,11 +12,50 @@ if (typeof window !== "undefined") {
 }
 
 const faqs = [
-  { q: "AVAILABLE TIERS", a: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
-  { q: "AVAILABLE TIERS", a: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
-  { q: "AVAILABLE TIERS", a: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
-  { q: "AVAILABLE TIERS", a: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
-  { q: "GUIDEBOOK", a: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+  {
+    q: "Siapa yang boleh ikut dan berapa anggota timnya?",
+    a: "Siswa SMA/sederajat dan mahasiswa aktif S1/D4/D3 dari seluruh Indonesia dapat mengikuti kompetisi. Satu tim terdiri dari 3–5 orang untuk Software Development dan 1–3 orang untuk UI/UX Design. Seluruh anggota tim harus berasal dari institusi yang sama.",
+  },
+  {
+    q: "Subtema apa yang bisa dipilih?",
+    a: "Pilih satu subtema SDGs: Zero Hunger, Good Health and Well-being, Quality Education, Gender Equality, Decent Work and Economic Growth, atau Responsible Consumption and Production. Khusus Software Development, tersedia satu subtema tambahan: Industry, Innovation, and Infrastructure.",
+  },
+  {
+    q: "Apa saja yang harus dikumpulkan?",
+    a: "Software Development kategori website: URL website yang aktif dan link repository GitHub publik. Kategori mobile: file .apk (.ipa opsional) dan link repository GitHub publik. UI/UX Design: link project Figma dan link prototype Figma (Mobile atau Desktop). Semua lomba juga wajib mengumpulkan proposal dan surat pernyataan orisinalitas menggunakan template dari panitia.",
+  },
+  {
+    q: "Apa syarat teknis yang perlu diperhatikan?",
+    a: "Website harus aktif dan bisa diakses kapan saja; boleh menggunakan domain gratis maupun berbayar. File .apk harus bisa diinstal dan bebas malware. Repository GitHub wajib publik dan aktif selama perlombaan. Link Figma harus aktif, berstatus Public, dan memiliki akses View Only.",
+  },
+  {
+    q: "Berapa karya yang boleh dikirim dan apakah harus orisinal?",
+    a: "Setiap tim hanya boleh mengirim satu karya dan satu proposal. Karya harus merupakan ide asli tim tanpa plagiarisme. Keputusan juri bersifat final.",
+  },
+  {
+    q: "GUIDEBOOK",
+    a: (
+      <>
+        <a
+          href="https://drive.google.com/drive/folders/1xr8xSS393c1DegO7hpV10VEEa_CS3bnS?usp=drive_link"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-4 hover:text-white"
+        >
+          UI/UX Rulebook
+        </a>
+        <br />
+        <a
+          href="https://drive.google.com/drive/folders/1BbCrFSz9n7cMKORzgoKFoXP-wuEAeP2n?usp=drive_link"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-4 hover:text-white"
+        >
+          Softdev Rulebook
+        </a>
+      </>
+    ),
+  },
 ];
 
 export function FaqSection() {

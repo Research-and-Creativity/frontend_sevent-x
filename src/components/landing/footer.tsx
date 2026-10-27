@@ -57,12 +57,12 @@ export function Footer() {
         <div>
           <h4 className="text-lg font-bold text-white mb-2">Contact Us</h4>
           <ul className="space-y-1 text-sm text-white/50">
-            <li className="flex items-center gap-2">
-              <Phone className="w-4 h-4" /> (+62) 888 8888 8888
-            </li>
-            <li className="flex items-center gap-2">
-              <Phone className="w-4 h-4" /> (+62) 888 8888 8888
-            </li>
+            <a href="https://wa.me/6285327058888" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" /> (+62) 853-2705-8888 (Livia)
+            </a>
+            <a href="https://wa.me/6285742707648" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" /> (+62) 857-4270-7648 (Wulan)
+            </a>
           </ul>
         </div>
 

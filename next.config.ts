@@ -7,7 +7,29 @@ const withBundleAnalyzer = withBundleAnalyzerFactory({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async headers() {
+    const privateRoutes = [
+      "/admin/:path*",
+      "/peserta/:path*",
+      "/juri/:path*",
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/verify-email",
+      "/auth/:path*",
+    ];
+
+    return privateRoutes.map((source) => ({
+      source,
+      headers: [
+        {
+          key: "X-Robots-Tag",
+          value: "noindex, nofollow",
+        },
+      ],
+    }));
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

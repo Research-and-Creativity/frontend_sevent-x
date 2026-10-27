@@ -20,15 +20,21 @@ function InstagramIcon({ className }: { className?: string }) {
 }
 
 export function SocialLinks() {
-  const icons = [WhatsAppIcon, InstagramIcon, Globe];
+  const links = [
+    { Icon: WhatsAppIcon, label: "WhatsApp", href: "https://wa.me/6285742707648" },
+    { Icon: InstagramIcon, label: "Instagram", href: "https://www.instagram.com/sevent.tup/" },
+    { Icon: Globe, label: "Website", href: "https://sevent.zetech.id/" },
+  ];
 
   return (
     <div className="flex items-center gap-3">
-      {icons.map((Icon, i) => (
+      {links.map(({ Icon, label, href }) => (
         <a
-          key={i}
-          href="#"
-          aria-label="social"
+          key={label}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={label}
           className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-white/80 transition-colors"
         >
           <Icon className="w-4 h-4" />
