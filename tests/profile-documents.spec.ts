@@ -3,27 +3,6 @@ import path from 'path';
 
 test.describe('Profile - Upload Dokumen', () => {
   test('upload dokumen dengan mock API - tidak hang', async ({ page }) => {
-    // Set auth in localStorage
-    await page.addInitScript(() => {
-      localStorage.setItem('seventx-auth-user', JSON.stringify({
-        state: {
-          user: {
-            id: 'test-user-id',
-            email: 'peserta@test.com',
-            fullName: 'Test Peserta',
-            role: 'PESERTA',
-            isVerified: true,
-            institution: 'Test Univ',
-            phone: '+628123456789',
-            birthDate: '2000-01-01',
-            domicile: 'Jakarta',
-            discordId: 'test#1234',
-          }
-        },
-        version: 0
-      }));
-    });
-
     await page.route('**/api/auth/me', async route => {
       await route.fulfill({
         status: 200,

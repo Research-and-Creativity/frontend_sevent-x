@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'node:path';
+
+const authFile = path.join(process.cwd(), 'playwright', '.auth', 'peserta.json');
 
 export default defineConfig({
   testDir: './tests',
@@ -15,8 +18,17 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'setup',
+      testMatch: '**/auth.setup.ts',
+    },
+    {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+      testMatch: '**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: authFile,
+      },
     },
   ],
 });

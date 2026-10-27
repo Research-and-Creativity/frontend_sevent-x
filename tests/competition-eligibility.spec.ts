@@ -2,22 +2,6 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Competition - Eligibility Guard', () => {
   test('banner muncul dan tombol submit disabled jika dokumen belum disetujui', async ({ page }) => {
-    // Set auth in localStorage
-    await page.addInitScript(() => {
-      localStorage.setItem('seventx-auth-user', JSON.stringify({
-        state: {
-          user: {
-            id: 'test-user-id',
-            email: 'peserta@test.com',
-            fullName: 'Test Peserta',
-            role: 'PESERTA',
-            isVerified: true,
-          }
-        },
-        version: 0
-      }));
-    });
-
     // Mock semua API yang dibutuhkan
     await page.route('**/api/user/me', async route => {
       await route.fulfill({

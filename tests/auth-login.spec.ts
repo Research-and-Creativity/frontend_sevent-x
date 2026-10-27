@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Auth - Login', () => {
   test('login salah muncul pesan error', async ({ page }) => {
     await page.goto('/login');
