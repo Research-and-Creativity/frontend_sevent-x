@@ -1,326 +1,187 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
-import { User, Team, Submission, NewsPost, Competition } from "@/types/api";
+import { useAnnouncementStore } from "@/store/announcement-store";
+import { toast } from "sonner";
+import { User, Team, Submission, NewsPost, Competition, MyAnnouncementResponse, GalleryItem } from "@/types/api";
 
 export interface TimelineStage {
   id: string;
+  phase: string;
   stageName: string;
   startDate: string;
   endDate: string;
-  description: string;
   isCompleted: boolean;
   isActive: boolean;
 }
 
-// Fallback Mock Data for Development & Initial Render
-export const mockUserFallback: User = {
-  id: "u-1",
-  email: "peserta@seventx.id",
-  name: "Alex Septiadi",
-  role: "PESERTA",
-  institution: "Telkom University",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-  createdAt: "2026-08-01T00:00:00Z",
-  updatedAt: "2026-08-01T00:00:00Z",
-};
-
-export const mockTeamFallback: Team = {
-  id: "t-101",
-  name: "Apex Innovators",
-  competitionId: "1",
-  leaderId: "u-1",
-  inviteCode: "APEX2026",
-  status: "VERIFIED",
-  members: [
-    {
-      id: "tm-1",
-      teamId: "t-101",
-      userId: "u-1",
-      user: mockUserFallback,
-      role: "LEADER",
-      joinedAt: "2026-08-05T00:00:00Z",
-    },
-    {
-      id: "tm-2",
-      teamId: "t-101",
-      userId: "u-2",
-      user: {
-        id: "u-2",
-        email: "sarah@seventx.id",
-        name: "Sarah Amanda",
-        role: "PESERTA",
-        institution: "Telkom University",
-        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
-        createdAt: "2026-08-06T00:00:00Z",
-        updatedAt: "2026-08-06T00:00:00Z",
-      },
-      role: "MEMBER",
-      joinedAt: "2026-08-06T00:00:00Z",
-    },
-    {
-      id: "tm-3",
-      teamId: "t-101",
-      userId: "u-3",
-      user: {
-        id: "u-3",
-        email: "budi@seventx.id",
-        name: "Budi Pratama",
-        role: "PESERTA",
-        institution: "Telkom University",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
-        createdAt: "2026-08-07T00:00:00Z",
-        updatedAt: "2026-08-07T00:00:00Z",
-      },
-      role: "MEMBER",
-      joinedAt: "2026-08-07T00:00:00Z",
-    },
-  ],
-  createdAt: "2026-08-05T00:00:00Z",
-  updatedAt: "2026-08-05T00:00:00Z",
-};
-
-export const mockSubmissionFallback: Submission = {
-  id: "sub-1",
-  teamId: "t-101",
-  competitionId: "1",
-  title: "SEVENT X Platform Web Application",
-  description: "A high-performance modern web application built with Next.js and Tailwind CSS.",
-  fileUrl: "https://example.com/proposal.pdf",
-  repoUrl: "https://github.com/Apex-Innovators/seventx-project",
-  videoUrl: "https://youtube.com/watch?v=demo",
-  status: "SUBMITTED",
-  submittedAt: "2026-08-18T14:30:00Z",
-  updatedAt: "2026-08-18T14:30:00Z",
-};
-
-export const mockNewsFallback: NewsPost[] = [
-  {
-    id: "n-1",
-    title: "Pengumuman Jadwal Technical Meeting Finalis SEVENT X 2026",
-    slug: "jadwal-technical-meeting-2026",
-    content: "Seluruh tim yang lolos tahap awal wajib menghadiri sesi Technical Meeting melalui Zoom pada tanggal 1 November 2026 pukul 13.00 WIB.",
-    excerpt: "Sesi briefing teknis untuk seluruh tim peserta SEVENT X 2026.",
-    category: "ANNOUNCEMENT",
-    authorId: "admin-1",
-    publishedAt: "2026-08-15T09:00:00Z",
-    isPublished: true,
-    createdAt: "2026-08-15T09:00:00Z",
-    updatedAt: "2026-08-15T09:00:00Z",
-  },
-  {
-    id: "n-2",
-    title: "Update Buku Panduan & Kriteria Penilaian Web Development",
-    slug: "update-guidebook-web-dev",
-    content: "Telah diterbitkan revisi buku panduan versi 1.2 mencakup detail bobot kriteria penilaian responsivitas dan aksesibilitas.",
-    excerpt: "Detail revisi kriteria penilaian kategori Web Development.",
-    category: "GUIDEBOOK",
-    authorId: "admin-1",
-    publishedAt: "2026-08-10T11:00:00Z",
-    isPublished: true,
-    createdAt: "2026-08-10T11:00:00Z",
-    updatedAt: "2026-08-10T11:00:00Z",
-  },
-];
-
-export const mockTimelineFallback: TimelineStage[] = [
-  {
-    id: "stage-1",
-    stageName: "Registration & Account Setup",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-15T23:59:59Z",
-    description: "Pendaftaran akun tim & pengunggahan berkas peserta.",
-    isCompleted: true,
-    isActive: false,
-  },
-  {
-    id: "stage-upload",
-    stageName: "Project Submission (Upload Karya)",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-15T23:59:59Z",
-    description: "Batas akhir pengunggahan proposal, repositori kode, dan video demo.",
-    isCompleted: false,
-    isActive: true,
-  },
-  {
-    id: "stage-3",
-    stageName: "Initial Judging & Screening",
-    startDate: "2026-10-16T00:00:00Z",
-    endDate: "2026-10-24T23:59:59Z",
-    description: "Penilaian tahap penyisihan oleh dewan juri ahli.",
-    isCompleted: false,
-    isActive: false,
-  },
-  {
-    id: "stage-4",
-    stageName: "Grand Final & Awarding Night",
-    startDate: "2026-11-10T00:00:00Z",
-    endDate: "2026-11-10T23:59:59Z",
-    description: "Presentasi finalis 10 besar dan pengumuman pemenang.",
-    isCompleted: false,
-    isActive: false,
-  },
-];
-
-// Hook 1: Fetch Current User Profile GET /api/user/me
 export function useUserMe() {
-  const storeUser = useAuthStore((state) => state.user);
-
   return useQuery<User | null>({
     queryKey: ["userMe"],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/user/me");
-        return res.data?.data || res.data || storeUser || null;
-      } catch {
-        return storeUser || null;
-      }
+      const res = await apiClient.get("/api/user/me");
+      return res.data?.data ?? null;
     },
     staleTime: 5 * 60 * 1000,
   });
 }
 
-// Hook 2: Fetch Current Team GET /api/teams/me
 export function useUserTeam() {
   return useQuery<Team | null>({
     queryKey: ["userTeam"],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/teams/me");
-        return res.data?.data ?? res.data ?? null;
-      } catch {
-        try {
-          const fallbackRes = await apiClient.get("/api/user/team");
-          return fallbackRes.data?.data ?? fallbackRes.data ?? null;
-        } catch {
-          return null;
-        }
-      }
+      const res = await apiClient.get("/api/teams/me");
+      return res.data?.data ?? null;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
-// Hook 3: Fetch Submission GET /api/submissions/me
 export function useUserSubmission() {
   return useQuery<Submission | null>({
     queryKey: ["userSubmission"],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/submissions/me");
-        return res.data?.data ?? res.data ?? null;
-      } catch {
-        return null;
-      }
+      const res = await apiClient.get("/api/submissions/me");
+      return res.data?.data ?? null;
     },
     staleTime: 5 * 60 * 1000,
   });
 }
-
-// Alias for requirement compatibility
 export const useSubmission = useUserSubmission;
 
-// Hook 4: Fetch Announcements / News GET /api/news?limit=X
-export function useNews(limit: number = 2) {
-  return useQuery<NewsPost[]>({
-    queryKey: ["newsAnnouncements", limit],
-    queryFn: async () => {
-      try {
-        const res = await apiClient.get(`/api/news?limit=${limit}`);
-        const list = res.data?.data || res.data;
-        if (Array.isArray(list) && list.length > 0) {
-          return list.slice(0, limit);
-        }
-        return mockNewsFallback.slice(0, limit);
-      } catch {
-        return mockNewsFallback.slice(0, limit);
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+// Helper: ubah enum phase jadi label yang enak dibaca
+export function getPhaseLabel(phase: string): string {
+  const labels: Record<string, string> = {
+    REGISTRATION: "Pendaftaran & Registrasi Tim",
+    UPLOAD_KARYA: "Pengumpulan Karya",
+    PENJURIAN: "Penjurian",
+    FINAL: "Final & Pengumuman",
+  };
+  return labels[phase] || phase;
 }
 
-export const useNewsAnnouncements = useNews;
+// Bentuk timeline dari BE sebelum dinormalisasi menjadi TimelineStage.
+type TimelineResponseItem = {
+  id: string;
+  phase: string;
+  stageName?: string | null;
+  startDate: string;
+  endDate: string;
+  description?: string | null;
+};
 
-// Hook 5: Fetch Competition Timeline GET /api/competitions/:id/timeline
-export function useCompetitionTimeline(competitionId?: string) {
+function toTimelineStages(items: TimelineResponseItem[]): TimelineStage[] {
+  const now = Date.now();
+  return items.map((t) => ({
+    id: t.id,
+    phase: t.phase,
+    stageName: t.stageName || (t.phase ? getPhaseLabel(t.phase) : "Milestone"),
+    startDate: t.startDate,
+    endDate: t.endDate,
+    description: t.description || "",
+    isCompleted: new Date(t.endDate).getTime() < now,
+    isActive:
+      new Date(t.startDate).getTime() <= now &&
+      now <= new Date(t.endDate).getTime(),
+  }));
+}
+
+// Timeline diambil dari GET /api/competitions/:slug/timeline
+export function useCompetitionTimeline(slug?: string) {
   return useQuery<TimelineStage[]>({
-    queryKey: ["competitionTimeline", competitionId],
+    queryKey: ["competitionTimeline", slug],
     queryFn: async () => {
-      if (!competitionId) return mockTimelineFallback;
+      if (!slug) return [];
       try {
-        const res = await apiClient.get(`/api/competitions/${competitionId}/timeline`);
+        const res = await apiClient.get(`/api/competitions/${slug}/timeline`);
         const list = res.data?.data || res.data;
-        return Array.isArray(list) && list.length > 0 ? list : mockTimelineFallback;
+        return toTimelineStages((Array.isArray(list) ? list : []) as TimelineResponseItem[]);
       } catch {
-        return mockTimelineFallback;
+        // Fallback: get from detail competition
+        const res = await apiClient.get(`/api/competitions/${slug}`);
+        const competition = res.data?.data || res.data;
+        const timelines = competition?.timelines || [];
+        return toTimelineStages(timelines as TimelineResponseItem[]);
       }
     },
-    enabled: !!competitionId,
+    enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export const mockCompetitionsFallback: Competition[] = [
-  {
-    id: "1",
-    title: "Web Development Competition",
-    slug: "web-development",
-    description: "Bangun aplikasi web inovatif, responsif, dan modern menggunakan teknologi web terbaru.",
-    category: "Web Development",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-28T23:59:59Z",
-    registrationFee: 150000,
-    maxTeamMembers: 5,
-    status: "OPEN",
-    createdAt: "2026-08-01T00:00:00Z",
-    updatedAt: "2026-08-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    title: "UI/UX Design Competition",
-    slug: "ui-ux-design",
-    description: "Rancang antarmuka & pengalaman pengguna yang intuitif, estetik, dan berdaya guna tinggi.",
-    category: "UI/UX Design",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-10-30T23:59:59Z",
-    registrationFee: 100000,
-    maxTeamMembers: 3,
-    status: "OPEN",
-    createdAt: "2026-08-01T00:00:00Z",
-    updatedAt: "2026-08-01T00:00:00Z",
-  },
-  {
-    id: "3",
-    title: "Competitive Programming",
-    slug: "competitive-programming",
-    description: "Uji kemampuan algoritma, struktur data, dan pemecahan masalah dengan batas waktu ketat.",
-    category: "Competitive Programming",
-    startDate: "2026-09-01T00:00:00Z",
-    endDate: "2026-11-05T23:59:59Z",
-    registrationFee: 75000,
-    maxTeamMembers: 3,
-    status: "OPEN",
-    createdAt: "2026-08-01T00:00:00Z",
-    updatedAt: "2026-08-01T00:00:00Z",
-  },
-];
-
-// Hook 6: Fetch Competitions GET /api/competitions
 export function useCompetitions() {
   return useQuery<Competition[]>({
     queryKey: ["competitionsList"],
+    // Sengaja tidak menangkap error: kalau fetch gagal, isError harus terlihat
+    // (bukan diam-diam jadi [] seperti sebelumnya), supaya pemakai tahu data
+    // yang kosong itu gagal dimuat, bukan memang kosong.
+    queryFn: async () => {
+      const res = await apiClient.get("/api/competitions");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Daftar seluruh item galeri (public) GET /api/gallery
+export function useGallery() {
+  return useQuery<GalleryItem[]>({
+    queryKey: ["gallery"],
     queryFn: async () => {
       try {
-        const res = await apiClient.get("/api/competitions");
+        const res = await apiClient.get("/api/gallery");
         const list = res.data?.data || res.data;
-        return Array.isArray(list) && list.length > 0 ? list : mockCompetitionsFallback;
+        return Array.isArray(list) ? list : [];
       } catch {
-        return mockCompetitionsFallback;
+        return [];
       }
     },
     staleTime: 5 * 60 * 1000,
   });
+}
+
+// Detail satu kompetisi GET /api/competitions/:slug
+export function useCompetition(slug?: string) {
+  return useQuery<Competition | null>({
+    queryKey: ["competitionDetail", slug],
+    queryFn: async () => {
+      if (!slug) return null;
+      const res = await apiClient.get(`/api/competitions/${slug}`);
+      return res.data?.data ?? null;
+    },
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export const PROFILE_REQUIRED_FIELDS = [
+  { key: "institution", label: "Institution" },
+  { key: "phone", label: "Phone Number" },
+  { key: "birthDate", label: "Birth Date" },
+  { key: "domicile", label: "Domicile" },
+  { key: "discordId", label: "Discord ID" },
+] as const satisfies ReadonlyArray<{ key: keyof User; label: string }>;
+
+// Kelengkapan profil dipakai sebagai gerbang masuk fitur kompetisi. Dokumen
+// sengaja tidak termasuk: statusnya menunggu review admin, jadi tidak bisa
+// dijadikan syarat yang bisa dipenuhi peserta secara langsung.
+export function useProfileComplete() {
+  const { data: user, isLoading } = useUserMe();
+
+  const missingFields = PROFILE_REQUIRED_FIELDS.filter(
+    (field) => !user?.[field.key],
+  ).map((field) => field.label);
+
+  return {
+    isLoading,
+    isComplete: Boolean(user) && missingFields.length === 0,
+    missingFields,
+  };
 }
 
 export interface UserDocumentItem {
@@ -329,6 +190,9 @@ export interface UserDocumentItem {
   type: string;
   fileUrl: string;
   status: "REVIEW" | "APPROVE" | "REJECT" | string;
+  rejectionReason?: string | null;
+  reviewCount?: number;
+  lastRejectedAt?: string | null;
 }
 
 // Hook 7: Fetch User Documents GET /api/user/documents
@@ -336,34 +200,54 @@ export function useUserDocuments() {
   return useQuery<UserDocumentItem[]>({
     queryKey: ["userDocuments"],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get("/api/user/documents");
-        const list = res.data?.data || res.data;
-        return Array.isArray(list) ? list : [];
-      } catch {
-        try {
-          const resFallback = await apiClient.get("/api/user-documents");
-          const list = resFallback.data?.data || resFallback.data;
-          return Array.isArray(list) ? list : [];
-        } catch {
-          return [];
-        }
-      }
+      // Endpoint ini milik role PESERTA (roleGuard di backend), jadi tidak
+      // ada fallback ke /api/user-documents yang hanya untuk admin.
+      const res = await apiClient.get("/api/user/documents");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
 // Hook 8: Create Team POST /api/teams
 export function useCreateTeam() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (data: { name: string; competitionId: string }) => {
-      const res = await apiClient.post("/api/teams", data);
+  return useMutation<Team, unknown, { name: string; competitionSlug: string }>({
+    // Backend mencari Competition berdasarkan slug, bukan id.
+    mutationFn: async (data) => {
+      const res = await apiClient.post("/api/teams", {
+        teamName: data.name,
+        competitionSlug: data.competitionSlug,
+      });
       return res.data?.data || res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Batas ukuran mengikuti multer di backend (upload.middleware.ts).
+export const PAYMENT_PROOF_MAX_BYTES = 5 * 1024 * 1024;
+export const SUBMISSION_DELIVERABLE_MAX_BYTES = 10 * 1024 * 1024;
+
+// Hook: Upload bukti pembayaran POST /api/teams/:id/payment-proof (multipart "file")
+export function useUploadPaymentProof() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { teamId: string; file: File }>({
+    mutationFn: async ({ teamId, file }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await apiClient.post(`/api/teams/${teamId}/payment-proof`, formData);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
     },
   });
 }
@@ -371,9 +255,11 @@ export function useCreateTeam() {
 // Hook 9: Join Team POST /api/teams/join
 export function useJoinTeam() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (data: { inviteCode: string }) => {
-      const res = await apiClient.post("/api/teams/join", data);
+  return useMutation<Team, unknown, { teamCode: string }>({
+    mutationFn: async (data) => {
+      const res = await apiClient.post("/api/teams/join", {
+        teamCode: data.teamCode,
+      });
       return res.data?.data || res.data;
     },
     onSuccess: () => {
@@ -381,5 +267,327 @@ export function useJoinTeam() {
     },
   });
 }
+
+// Hook 10: Update Team Name PATCH /api/teams/me
+export function useUpdateTeamName() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (teamName: string) => {
+      const res = await apiClient.patch("/api/teams/me", { teamName });
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Hook 11: Leave / Disband Team DELETE /api/teams/me
+export function useLeaveTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.delete("/api/teams/me");
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+// Hook 12: Transfer Leadership POST /api/teams/me/transfer-leadership
+export function useTransferLeadership() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (newLeaderId: string) => {
+      const res = await apiClient.post("/api/teams/me/transfer-leadership", {
+        newLeaderUserId: newLeaderId,
+      });
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+    },
+  });
+}
+
+export interface TeamEligibilityMember {
+  userId: string;
+  fullName: string;
+  role: "LEADER" | "MEMBER" | string;
+  twibbonApproved: boolean;
+  shareStoryApproved: boolean;
+  ktmApproved: boolean;
+  instagramFollowApproved: boolean;
+  allDocumentsApproved: boolean;
+}
+
+export interface TeamEligibilityRequirements {
+  teamApproved: boolean;
+  paymentApproved: boolean;
+  timelineActive: boolean;
+  members: TeamEligibilityMember[];
+  allMembersDocumentsApproved: boolean;
+}
+
+export interface TeamEligibilityResponse {
+  isEligible: boolean;
+  message?: string;
+  requirements: TeamEligibilityRequirements;
+}
+
+// Hook 13: Fetch Team Submission Eligibility GET /api/teams/me/eligibility
+export function useSubmissionEligibility() {
+  return useQuery<TeamEligibilityResponse | null>({
+    queryKey: ["submissionEligibility"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/teams/me/eligibility");
+        return res.data?.data || res.data || null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+// Hook 14: Submit or Update Submission POST /api/submissions
+export function useCreateOrUpdateSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      const res = await apiClient.post("/api/submissions", formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userSubmission"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+    },
+  });
+}
+
+// Hook 15: Fetch Team Announcements (Finalist / Results) GET /api/announcements/me
+export function useMyAnnouncements() {
+  return useQuery<MyAnnouncementResponse | null>({
+    queryKey: ["myAnnouncements"],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get("/api/announcements/me");
+        return res.data?.data ?? null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+// Hook 15b: Notifikasi announcement baru di sidebar peserta (badge unread + toast).
+// Tidak memanggil useNewsFeed/useMyAnnouncements di sini? — dipanggil di dalam,
+// jadi hook ini juga memicu polling 30s untuk badge.
+export function useAnnouncementNotifications() {
+  const { data: myAnnouncementsData } = useMyAnnouncements();
+  const { data: newsFeedData } = useNewsFeed({ page: 1, limit: 10 });
+
+  const lastSeen = useAnnouncementStore((s) => s.lastSeen);
+  const markSeen = useAnnouncementStore((s) => s.markSeen);
+
+  // Inisialisasi lastSeen saat pertama kali ada data (hindari spam badge di kunjungan pertama).
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current) return;
+    if (!lastSeen && (myAnnouncementsData || newsFeedData)) {
+      markSeen();
+      initializedRef.current = true;
+    } else {
+      initializedRef.current = true;
+    }
+  }, [lastSeen, myAnnouncementsData, newsFeedData, markSeen]);
+
+  // Kumpulkan item announcement yang published + news posts, dengan timestamp.
+  const publishedTeamAnns = (myAnnouncementsData?.announcements || []).filter(
+    (a) => a.publishedAt
+  );
+  const newsItems = newsFeedData?.news || [];
+
+  const threshold = lastSeen ? new Date(lastSeen).getTime() : Infinity;
+
+  const unreadTeam = publishedTeamAnns.filter((a) => {
+    const t = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+    return Number.isFinite(t) && t > threshold;
+  });
+  const unreadNews = newsItems.filter((n) => {
+    const t = new Date(n.createdAt).getTime();
+    return Number.isFinite(t) && t > threshold;
+  });
+  const unreadCount = unreadTeam.length + unreadNews.length;
+
+  // Toast saat item baru muncul setelah load awal (ref-based, tidak fire di load pertama).
+  // Inisialisasi prevIdsRef hanya setelah data benar-benar ada, supaya toast tidak
+  // muncul saat reload (ketika data awalnya kosong lalu terisi).
+  const prevIdsRef = useRef<Set<string> | null>(null);
+  const dataReady =
+    (myAnnouncementsData?.announcements?.length ?? 0) > 0 ||
+    (newsFeedData?.news?.length ?? 0) > 0;
+  useEffect(() => {
+    const ids = new Set<string>([
+      ...publishedTeamAnns.map((a) => `t:${a.id}`),
+      ...newsItems.map((n) => `n:${n.id}`),
+    ]);
+
+    if (!dataReady) return; // tunggu data load, jangan inisialisasi dengan set kosong
+    if (prevIdsRef.current === null) {
+      prevIdsRef.current = ids;
+      return;
+    }
+    const prev = prevIdsRef.current;
+    const newCount = Array.from(ids).filter((id) => !prev.has(id)).length;
+    if (newCount > 0) {
+      toast.success(`Ada ${newCount} announcement baru`);
+    }
+    prevIdsRef.current = ids;
+  }, [publishedTeamAnns, newsItems, dataReady]);
+
+  return { unreadCount };
+}
+
+export interface NewsPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface NewsFeedResponse {
+  news: NewsPost[];
+  pagination: NewsPagination;
+}
+
+// Hook 16: Fetch News Feed with Tag Filter & Pagination GET /api/news
+export function useNewsFeed(params?: { tag?: string; page?: number; limit?: number }) {
+  return useQuery<NewsFeedResponse>({
+    queryKey: ["newsFeed", params?.tag, params?.page, params?.limit],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.tag && params.tag !== "All") {
+        queryParams.append("tag", params.tag);
+      }
+      if (params?.page) {
+        queryParams.append("page", params.page.toString());
+      }
+      if (params?.limit) {
+        queryParams.append("limit", params.limit.toString());
+      }
+
+      const queryString = queryParams.toString();
+      const endpoint = queryString ? `/api/news?${queryString}` : "/api/news";
+      const res = await apiClient.get(endpoint);
+      const data = res.data?.data;
+
+      if (data && Array.isArray(data.news)) {
+        return {
+          news: data.news,
+          pagination: data.pagination || {
+            page: params?.page || 1,
+            limit: params?.limit || 10,
+            total: data.news.length,
+            totalPages: 1,
+          },
+        };
+      }
+      if (Array.isArray(data)) {
+        return {
+          news: data,
+          pagination: {
+            page: 1,
+            limit: data.length,
+            total: data.length,
+            totalPages: 1,
+          },
+        };
+      }
+      return {
+        news: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 1,
+        },
+      };
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export interface UpdateProfileInput {
+  fullName?: string;
+  institution?: string;
+  birthDate?: string | null;
+  domicile?: string | null;
+  phone?: string | null;
+  discordId?: string | null;
+}
+
+// Hook 17: Update User Profile PATCH /api/user/me
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  const updateUser = useAuthStore((state) => state.updateUser);
+  return useMutation<User, unknown, UpdateProfileInput>({
+    mutationFn: async (data) => {
+      const res = await apiClient.patch("/api/user/me", data);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.invalidateQueries({ queryKey: ["userMe"] });
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+      if (updatedUser) {
+        updateUser(updatedUser);
+      }
+    },
+  });
+}
+
+// Hook 18: Change Password POST /api/auth/change-password
+export function useChangePassword() {
+  return useMutation<unknown, unknown, { currentPassword: string; newPassword: string }>({
+    mutationFn: async (data) => {
+      const res = await apiClient.post("/api/auth/change-password", data);
+      return res.data?.data || res.data;
+    },
+  });
+}
+
+// Hook 19: Upload User Document File POST /api/user/documents
+export function useUploadUserDocument() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, FormData>({
+    mutationFn: async (formData) => {
+      const res = await apiClient.post("/api/user/documents", formData);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userDocuments"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+      queryClient.invalidateQueries({ queryKey: ["userMe"] });
+    },
+  });
+}
+
+
+
+
 
 

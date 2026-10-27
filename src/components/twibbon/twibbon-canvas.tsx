@@ -1,0 +1,139 @@
+"use client";
+
+// Adaptasi dari freebbonize (github.com/GithubFarelAlghazali/freebbonize)
+
+import { useEffect, useRef, useState } from "react";
+import type { TransformType } from "./types";
+
+type CanvasProps = {
+  isEditMode: boolean;
+  transform: TransformType;
+  setTransform: React.Dispatch<React.SetStateAction<TransformType>>;
+  userPhoto: HTMLImageElement | null;
+  frameSrc: string;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+};
+
+// Resolusi bitmap: 2x. Cukup tajam untuk twibbon, dan hasil file jauh
+// lebih kecil (PNG 4x menghasilkan ±10 MB, melebihi limit unggah 5 MB).
+const EXPORT_SCALE = 2;
+
+export default function TwibbonCanvas({
+  userPhoto,
+  transform,
+  frameSrc,
+  isEditMode,
+  setTransform,
+  canvasRef,
+}: CanvasProps) {
+  const frameRef = useRef(new Image());
+  // Dimensi kanvas mengikuti dimensi asli frame, supaya tidak ada ruang kosong
+  // maupun pemotongan. Default 4:3 sampai frame ter-load.
+  const [dims, setDims] = useState({ w: 1600, h: 1200 });
+
+  function draw() {
+    const canvas = canvasRef?.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    // Isi latar dengan warna solid agar area transparan tidak jadi hitam
+    // saat diekspor ke JPEG (JPEG tidak mendukung alpha).
+    if (ctx) {
+      ctx.fillStyle = "#05070D";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    if (userPhoto) {
+      ctx?.save();
+      ctx?.scale(EXPORT_SCALE, EXPORT_SCALE);
+      ctx?.translate(dims.w / 2 + transform.x, dims.h / 2 + transform.y);
+      ctx?.rotate((transform.rotate * Math.PI) / 180);
+      ctx?.scale(transform.scale / 100, transform.scale / 100);
+      ctx?.drawImage(
+        userPhoto,
+        -userPhoto.width / 2,
+        -userPhoto.height / 2,
+        userPhoto.width,
+        userPhoto.height,
+      );
+      ctx?.restore();
+    }
+
+    const frame = frameRef.current;
+    if (frame.complete && frame.src && frame.naturalWidth > 0) {
+      // Frame dan kanvas punya rasio yang sama, jadi cukup digambar penuh.
+      ctx?.drawImage(frame, 0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  // Load frame image; set dimensi kanvas sesuai frame.
+  useEffect(() => {
+    const frame = frameRef.current;
+    const onLoad = () => {
+      if (frame.naturalWidth > 0 && frame.naturalHeight > 0) {
+        setDims({ w: frame.naturalWidth, h: frame.naturalHeight });
+      }
+      draw();
+    };
+    frame.onload = onLoad;
+    frame.src = frameSrc;
+    // Jika frame sudah ter-cache, onload mungkin tidak terpicu.
+    if (frame.complete && frame.naturalWidth > 0) {
+      onLoad();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameSrc]);
+
+  // Redraw whenever photo, transform, or dims change
+  useEffect(() => {
+    draw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPhoto, transform, dims]);
+
+  // Drag-to-reposition (only in edit mode)
+  useEffect(() => {
+    const canvas = canvasRef?.current;
+    if (!canvas || !isEditMode) return;
+
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging = true;
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.offsetX - lastX;
+      const dy = e.offsetY - lastY;
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+      setTransform((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+    };
+    const onMouseUp = () => { isDragging = false; };
+
+    canvas.addEventListener("mousedown", onMouseDown);
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("mouseup", onMouseUp);
+    canvas.addEventListener("mouseleave", onMouseUp);
+
+    return () => {
+      canvas.removeEventListener("mousedown", onMouseDown);
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseup", onMouseUp);
+      canvas.removeEventListener("mouseleave", onMouseUp);
+    };
+  }, [canvasRef, isEditMode, setTransform]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={dims.w * EXPORT_SCALE}
+      height={dims.h * EXPORT_SCALE}
+      className={`w-full max-w-[360px] rounded-xl border border-white/15 bg-[#05070D] ${isEditMode ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={{ aspectRatio: `${dims.w} / ${dims.h}`, height: "auto" }}
+    />
+  );
+}

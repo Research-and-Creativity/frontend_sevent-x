@@ -1,172 +1,308 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users,
-  FileCheck,
-  Trophy,
-  Calendar,
-  Newspaper,
-  Megaphone,
+  Clock,
+  Eye,
+  ChevronLeft,
   ChevronRight,
-  ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiClient } from "@/lib/api-client";
+import { useAdminOverview } from "@/hooks/use-admin";
+import { useCompetitions } from "@/hooks/use-peserta";
+import {
+  docStatusInfo,
+  payStatusInfo,
+  teamLeaderName,
+  formatRegistrationDate,
+} from "@/lib/admin-team-status";
+import { Team } from "@/types/api";
+
+const PAGE_SIZE = 10;
 
 export default function AdminOverviewDashboardPage() {
+  const [page, setPage] = useState(1);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const { data: overview } = useAdminOverview();
+  const {
+    data: competitions = [],
+    isLoading: isCompetitionsLoading,
+    isError: isCompetitionsError,
+  } = useCompetitions();
+
+  const {
+    data: teams = [],
+    isLoading: isTeamsLoading,
+    isError: isTeamsError,
+  } = useQuery<Team[]>({
+    queryKey: ["adminTeams", ""],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/teams");
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+  });
+
+  const counts = useMemo(() => {
+    let needReview = 0;
+    let revise = 0;
+    let approvedDoc = 0;
+    let paid = 0;
+    for (const t of teams) {
+      const doc = docStatusInfo(t).label;
+      const pay = payStatusInfo(t).label;
+      if (doc === "Need Review") needReview += 1;
+      if (doc === "Revise") revise += 1;
+      if (doc === "Approved") approvedDoc += 1;
+      if (pay === "Paid") paid += 1;
+    }
+    return { needReview, revise, approvedDoc, paid };
+  }, [teams]);
+
+  const deadline = useMemo(() => {
+    const times = competitions
+      .flatMap((c) => c.timelines ?? [])
+      .filter((t) => t.phase === "REGISTRATION")
+      .map((t) => new Date(t.endDate).getTime())
+      .filter((ts) => !Number.isNaN(ts));
+    if (times.length === 0) return null;
+    const upcoming = times.filter((ts) => ts > now).sort((a, b) => a - b);
+    return (upcoming[0] ?? Math.max(...times)) as number;
+  }, [competitions, now]);
+
+  const remaining = useMemo(() => {
+    if (!deadline) return null;
+    const diff = Math.max(0, deadline - now);
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return `${String(d).padStart(2, "0")}d : ${String(h).padStart(2, "0")}h : ${String(m).padStart(2, "0")}m`;
+  }, [deadline, now]);
+
+  const totalTeams = overview?.totalTeams ?? teams.length;
+  const totalPages = Math.max(1, Math.ceil(teams.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = teams.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  const statusCards = [
+    { label: "NEED REVIEW", value: counts.needReview },
+    { label: "NEED REVISE", value: counts.revise },
+    { label: "APPROVED PROFILE", value: counts.approvedDoc },
+    { label: "APPROVED PAYMENT", value: counts.paid },
+  ];
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-8 space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono font-semibold">
-          <ShieldAlert className="w-3.5 h-3.5" />
-          <span>System Administrator Control Center</span>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Greeting */}
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
+      </div>
+
+      {/* Top stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs tracking-widest text-white/60">
+              REGISTERED TEAM
+            </span>
+            <Users className="w-5 h-5 text-white/70" />
+          </div>
+          <p className="font-display text-5xl font-bold">{totalTeams}</p>
+          <p className="text-xs text-white/50 mt-2">
+            {overview?.totalPeserta ?? 0} peserta terdaftar
+          </p>
         </div>
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Welcome back, Admin Panel
-        </h1>
-        <p className="text-xs sm:text-sm text-text-secondary max-w-3xl leading-relaxed">
-          Ringkasan status pendaftaran tim, verifikasi berkas administrasi, jadwal kompetisi, serta publikasi berita resmi SEVENT X 2026.
-        </p>
+        <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs tracking-widest text-white/60">
+              TIME REMAINING
+            </span>
+            <Clock className="w-5 h-5 text-white/70" />
+          </div>
+          {isCompetitionsLoading ? (
+            <Skeleton className="h-12 w-40 rounded-xl bg-white/5" />
+          ) : isCompetitionsError ? (
+            <div className="p-5 space-y-2 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+              <AlertCircle className="w-6 h-6 text-rose-400" />
+              <p className="text-sm font-semibold text-white">
+                Gagal memuat countdown
+              </p>
+              <p className="text-xs text-white/60">
+                Data kompetisi tidak bisa diambil. Muat ulang halaman.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="font-display text-5xl font-bold">
+                {remaining ?? "—"}
+              </p>
+              <p className="text-xs text-white/50 mt-2">
+                {deadline ? "Registration" : "No active registration"}
+              </p>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* 4 Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Pending Teams</span>
-          <p className="font-display text-3xl font-bold text-amber-400">12</p>
-          <p className="text-xs text-text-secondary">Butuh verifikasi pembayaran</p>
-        </Card>
-
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Pending Documents</span>
-          <p className="font-display text-3xl font-bold text-amber-400">28</p>
-          <p className="text-xs text-text-secondary">Berkas KTM/KTP belum direview</p>
-        </Card>
-
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Active Competitions</span>
-          <p className="font-display text-3xl font-bold text-white">2</p>
-          <p className="text-xs text-text-secondary">Web Dev & UI/UX Design</p>
-        </Card>
-
-        <Card className="bg-card/90 border border-white/10 rounded-2xl p-5 space-y-2">
-          <span className="font-mono text-xs text-text-secondary uppercase">Published News</span>
-          <p className="font-display text-3xl font-bold text-accent">5</p>
-          <p className="text-xs text-text-secondary">Artikel pengumuman aktif</p>
-        </Card>
+      {/* Status cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statusCards.map((c) => {
+          const percent = teams.length
+            ? Math.round((c.value / teams.length) * 100)
+            : 0;
+          return (
+            <div
+              key={c.label}
+              className="bg-[#15161A] border border-white/10 rounded-2xl p-5"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] tracking-widest text-white/60">
+                  {c.label}
+                </span>
+                <Users className="w-5 h-5 text-white/70" />
+              </div>
+              <p className="font-display text-4xl font-bold text-[#A9B7FF]">
+                {c.value}{" "}
+                <span className="text-sm text-white/40 font-normal">
+                  / {teams.length}
+                </span>
+              </p>
+              <div className="mt-4 h-1.5 rounded-full bg-[#2A3568] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-[#7D8CFF]"
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Quick Navigation Cards Grid */}
-      <div className="space-y-4 pt-2">
-        <h2 className="font-display text-xl font-bold text-white tracking-tight">
-          Admin Quick Actions
+      {/* Registered Team table */}
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
+        <h2 className="font-display text-2xl font-bold mb-6">
+          Registered Team
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link href="/admin/teams">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <Users className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
+        {isTeamsLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+            <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+            <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+          </div>
+        ) : isTeamsError ? (
+          <div className="p-8 text-center space-y-3 bg-rose-500/5 border border-rose-500/20 rounded-xl">
+            <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+            <p className="text-sm font-semibold text-white">
+              Gagal memuat data tim
+            </p>
+          </div>
+        ) : teams.length === 0 ? (
+          <div className="p-12 text-center space-y-2 bg-white/5 border border-dashed border-white/10 rounded-xl">
+            <Users className="w-8 h-8 text-white/40 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-white">
+              Belum ada data tim yang terdaftar
+            </p>
+            <p className="text-xs text-white/40">
+              Tim yang dibuat oleh peserta akan muncul di antrean ini.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-white/70 border-b border-white/10">
+                    <th className="pb-3 font-semibold">Team</th>
+                    <th className="pb-3 font-semibold">Team Leader Name</th>
+                    <th className="pb-3 font-semibold">Time Registration</th>
+                    <th className="pb-3 font-semibold">Status Document</th>
+                    <th className="pb-3 font-semibold">Status Payment</th>
+                    <th className="pb-3 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((t) => {
+                    const doc = docStatusInfo(t);
+                    const pay = payStatusInfo(t);
+                    return (
+                      <tr key={t.id} className="border-b border-white/5">
+                        <td className="py-4">{t.teamName}</td>
+                        <td className="py-4">{teamLeaderName(t)}</td>
+                        <td className="py-4">
+                          {formatRegistrationDate(t.createdAt)}
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}
+                          >
+                            {doc.label}
+                          </span>
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}
+                          >
+                            {pay.label}
+                          </span>
+                        </td>
+                        <td className="py-4">
+                          <Link
+                            href={`/admin/teams/${t.id}`}
+                            className="text-white/60 hover:text-white"
+                            title="Lihat detail tim"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between pt-5 text-xs text-white/50">
+              <span>
+                Showing {pageRows.length} data out of {teams.length}
+              </span>
+              <div className="flex items-center gap-3">
+                <span>
+                  Page {safePage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(Math.max(1, safePage - 1))}
+                  disabled={safePage <= 1}
+                  className="border border-white/20 rounded-lg p-1.5 disabled:opacity-40"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+                  disabled={safePage >= totalPages}
+                  className="border border-white/20 rounded-lg p-1.5 disabled:opacity-40"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                Teams & Payment Verification
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Verifikasi pembayaran dan status pendaftaran tim peserta.
-              </p>
-            </Card>
-          </Link>
-
-          <Link href="/admin/documents">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <FileCheck className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                User Documents Verification
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Review dan approve dokumen KTM, KTP, dan Twibbon peserta.
-              </p>
-            </Card>
-          </Link>
-
-          <Link href="/admin/competitions">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <Trophy className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                Competitions & Tracks
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Tambah dan kelola cabang kompetisi serta kuota anggota.
-              </p>
-            </Card>
-          </Link>
-
-          <Link href="/admin/timeline">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                Timeline Stages
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Atur jadwal dan milestone tahapan pendaftaran & penjurian.
-              </p>
-            </Card>
-          </Link>
-
-          <Link href="/admin/news">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <Newspaper className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                News & Article Publisher
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Rilis pengumuman resmi dan artikel panduan untuk peserta.
-              </p>
-            </Card>
-          </Link>
-
-          <Link href="/admin/results">
-            <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 space-y-3 group hover:border-white/20 transition-all cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 text-accent flex items-center justify-center">
-                  <Megaphone className="w-5 h-5" />
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="font-display font-bold text-white text-base group-hover:text-accent transition-colors">
-                Publish Results & Winners
-              </h3>
-              <p className="text-xs text-text-secondary">
-                Hitung akumulasi skor juri & umumkan pemenang resmi.
-              </p>
-            </Card>
-          </Link>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

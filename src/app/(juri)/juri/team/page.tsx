@@ -1,238 +1,180 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { Eye, ChevronLeft, ChevronRight, Users, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Users, Code2, Sparkles, Cpu, Layers } from "lucide-react";
-import { Team, Submission } from "@/types/api";
+import { useJudgeRankings } from "@/hooks/use-juri";
+import { formatSubmittedDate } from "@/lib/juri-submission";
 
-interface MockDirectoryCard {
-  team: Team;
-  submission: Submission;
-  category: string;
-  status: "Scored" | "Pending";
-  icon: React.ReactNode;
-}
+// Style glass yang sama dengan halaman juri lainnya
+const glass =
+  "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] " +
+  "backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] " +
+  "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl " +
+  "before:bg-gradient-to-br before:from-white/[0.04] before:to-transparent";
+
+// Kaca untuk elemen kecil (input, tombol, select trigger)
+const glassControl =
+  "bg-white/[0.03] border-white/15 backdrop-blur-md " +
+  "hover:bg-white/10 text-white/70 hover:text-white transition-colors";
 
 export default function JuriTeamDirectoryPage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { data, isLoading, isError, refetch } = useJudgeRankings();
 
-  // Pass 1: 3 Mock Data Cards following Team & Submission interfaces from src/types/api.ts
-  const mockDirectoryData: MockDirectoryCard[] = [
-    {
-      team: {
-        id: "4092",
-        name: "Quantum Coders",
-        competitionId: "1",
-        leaderId: "u-401",
-        inviteCode: "QUANTUM",
-        status: "VERIFIED",
-        members: [
-          { id: "tm-1", teamId: "4092", userId: "u-401", role: "LEADER", joinedAt: "" },
-          { id: "tm-2", teamId: "4092", userId: "u-402", role: "MEMBER", joinedAt: "" },
-          { id: "tm-3", teamId: "4092", userId: "u-403", role: "MEMBER", joinedAt: "" },
-          { id: "tm-4", teamId: "4092", userId: "u-404", role: "MEMBER", joinedAt: "" },
-        ],
-        createdAt: "",
-        updatedAt: "",
-      },
-      submission: {
-        id: "sub-4092",
-        teamId: "4092",
-        competitionId: "1",
-        title: "Quantum Algorithm Visualization Engine",
-        description: "Interactive UI for quantum circuit simulation.",
-        fileUrl: "https://example.com/quantum.pdf",
-        repoUrl: "https://github.com/quantum/engine",
-        videoUrl: "https://youtube.com/watch?v=quantum",
-        status: "SUBMITTED",
-        submittedAt: "2026-10-12T11:59:00Z",
-        updatedAt: "2026-10-12T11:59:00Z",
-      },
-      category: "UI/UX",
-      status: "Scored",
-      icon: <Cpu className="w-6 h-6 text-accent" />,
-    },
-    {
-      team: {
-        id: "8120",
-        name: "Nexus Navigators",
-        competitionId: "1",
-        leaderId: "u-801",
-        inviteCode: "NEXUS8120",
-        status: "VERIFIED",
-        members: [
-          { id: "tm-5", teamId: "8120", userId: "u-801", role: "LEADER", joinedAt: "" },
-          { id: "tm-6", teamId: "8120", userId: "u-802", role: "MEMBER", joinedAt: "" },
-          { id: "tm-7", teamId: "8120", userId: "u-803", role: "MEMBER", joinedAt: "" },
-        ],
-        createdAt: "",
-        updatedAt: "",
-      },
-      submission: {
-        id: "sub-8120",
-        teamId: "8120",
-        competitionId: "1",
-        title: "Autonomous Navigation & Spatial Mapping",
-        description: "Real-time indoor spatial mapping portal.",
-        fileUrl: "https://example.com/nexus.pdf",
-        repoUrl: "https://github.com/nexus/navigator",
-        videoUrl: "https://youtube.com/watch?v=nexus",
-        status: "UNDER_REVIEW",
-        submittedAt: "2026-10-15T18:00:00Z",
-        updatedAt: "2026-10-15T18:00:00Z",
-      },
-      category: "UI/UX",
-      status: "Pending",
-      icon: <Layers className="w-6 h-6 text-accent" />,
-    },
-    {
-      team: {
-        id: "2291",
-        name: "Data Drifters",
-        competitionId: "1",
-        leaderId: "u-201",
-        inviteCode: "DRIFTERS",
-        status: "VERIFIED",
-        members: [
-          { id: "tm-8", teamId: "2291", userId: "u-201", role: "LEADER", joinedAt: "" },
-          { id: "tm-9", teamId: "2291", userId: "u-202", role: "MEMBER", joinedAt: "" },
-          { id: "tm-10", teamId: "2291", userId: "u-203", role: "MEMBER", joinedAt: "" },
-          { id: "tm-11", teamId: "2291", userId: "u-204", role: "MEMBER", joinedAt: "" },
-          { id: "tm-12", teamId: "2291", userId: "u-205", role: "MEMBER", joinedAt: "" },
-        ],
-        createdAt: "",
-        updatedAt: "",
-      },
-      submission: {
-        id: "sub-2291",
-        teamId: "2291",
-        competitionId: "1",
-        title: "High-Frequency Data Streaming Analytics",
-        description: "Dashboard for real-time financial time-series visualization.",
-        fileUrl: "https://example.com/drifters.pdf",
-        repoUrl: "https://github.com/drifters/analytics",
-        videoUrl: "https://youtube.com/watch?v=drifters",
-        status: "SUBMITTED",
-        submittedAt: "2026-10-16T09:00:00Z",
-        updatedAt: "2026-10-16T09:00:00Z",
-      },
-      category: "UI/UX",
-      status: "Scored",
-      icon: <Sparkles className="w-6 h-6 text-accent" />,
-    },
-  ];
-
-  // Client-side search filter
-  const filteredData = mockDirectoryData.filter(({ team }) => {
-    return (
-      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const rankings = data?.rankings ?? [];
+  // Finalis ditentukan panitia lewat perhitungan otomatis; null = belum dihitung.
+  const finalists = rankings.filter((r) => r.isFinalist === true);
 
   return (
-    <div className="space-y-8">
-      {/* 2. Section Title & Search/Filter Controls (Directly on Page Background) */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">
-            Participant Directory
-          </h1>
-          <p className="text-xs sm:text-sm text-text-secondary">
-            Jury overview of all participating teams and their current status.
-          </p>
-        </div>
-
-        {/* 3. Search Bar + Filter Button (Right-Aligned) */}
-        <div className="flex items-center gap-3 self-end md:self-auto">
-          {/* Search Input */}
-          <div className="relative w-64 sm:w-72">
-            <Search className="w-4 h-4 text-text-secondary absolute left-3.5 top-3" />
-            <input
-              type="text"
-              placeholder="Search teams..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-text-secondary/50 focus:outline-none focus:border-accent transition-colors font-mono"
-            />
-          </div>
-
-          {/* Filter Button */}
-          <Button
-            variant="outline"
-            className="bg-surface hover:bg-card-hover border-border text-white text-xs font-mono font-semibold px-4 h-10 rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
-          >
-            <Filter className="w-4 h-4 text-text-secondary" />
-            <span>Filter</span>
-          </Button>
-        </div>
+    <div className="relative isolate space-y-6">
+      {/* Blob warna redup di belakang supaya efek blur kaca kelihatan */}
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="absolute -top-10 left-[5%] h-72 w-72 rounded-full bg-[#7D8CFF]/15 blur-[110px]" />
+        <div className="absolute top-1/3 right-[0%] h-80 w-80 rounded-full bg-[#8B5CF6]/12 blur-[120px]" />
+        <div className="absolute bottom-0 left-[30%] h-72 w-72 rounded-full bg-[#2A3568]/35 blur-[110px]" />
       </div>
 
-      {/* 4. Grid Card Tim (3 Columns in Desktop) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredData.map(({ team, submission, category, status, icon }) => {
-          const memberCount = team.members?.length || 0;
-          const isScored = status === "Scored";
+      {/* Header */}
+      <div className={`${glass} p-6 lg:p-8 flex flex-col justify-center`}>
+        <h1 className="font-display text-4xl font-bold tracking-tight text-white mb-2">
+          List Finalists
+        </h1>
+        <p className="text-text-secondary text-sm">
+          {data?.competition?.name
+            ? `Tim yang lolos ke finalis pada ${data.competition.name}, ditentukan panitia dari skor akhir.`
+            : "This is all finalist that pass the final round."}
+        </p>
+      </div>
 
-          return (
-            <Link key={team.id} href={`/juri/team/${submission.id}`} className="block group">
-              <Card className="bg-card/90 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-6 flex flex-col justify-between hover:border-white/20 transition-all duration-300 min-h-[220px] shadow-sm">
-                {/* Top Part: Thumbnail + Team Info + Category Badge */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3.5">
-                    {/* Team Name & ID */}
-                    <div className="space-y-0.5">
-                      <h2 className="font-display font-bold text-lg text-white group-hover:text-accent transition-colors leading-snug">
-                        {team.name}
-                      </h2>
-                      <span className="font-mono text-xs text-text-secondary block">
-                        ID: #{team.id}
-                      </span>
-                    </div>
-                  </div>
+      <div className={`${glass} p-6 lg:p-8`}>
+        <div className="flex items-center gap-2 justify-between mb-6">
+          <h2 className="relative font-display text-2xl font-bold tracking-tight text-white">
+            List of Finalists
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className={`${glassControl} text-xs`}
+          >
+            Muat Ulang
+          </Button>
+        </div>
 
-                  {/* Category Badge */}
-                  <span className="border border-accent/30 text-accent font-mono text-[11px] font-semibold px-2.5 py-0.5 rounded shrink-0">
-                    {category}
-                  </span>
-                </div>
+        {/* Tabel */}
+        <div className="relative overflow-x-auto rounded-xl border border-white/10 bg-white/[0.015]">
+          <table className="w-full text-sm text-left text-text-secondary">
+            <thead className="text-xs text-white uppercase bg-white/[0.04] border-b border-white/10">
+              <tr>
+                <th scope="col" className="px-6 py-3">Team</th>
+                <th scope="col" className="px-6 py-3">Product Name</th>
+                <th scope="col" className="px-6 py-3">Team Leader Name</th>
+                <th scope="col" className="px-6 py-3">Submitted Date</th>
+                <th scope="col" className="px-6 py-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <Loader2 className="w-5 h-5 text-white/60 mx-auto mb-3 animate-spin" />
+                    <p className="text-sm text-white/70">Memuat daftar finalis...</p>
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <p className="text-sm font-semibold text-rose-400">
+                      Gagal memuat daftar finalis
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refetch()}
+                      className={`${glassControl} mt-3 text-xs`}
+                    >
+                      Coba Lagi
+                    </Button>
+                  </td>
+                </tr>
+              ) : finalists.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <Users className="w-8 h-8 text-white/40 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-white">
+                      Belum ada finalis
+                    </p>
+                    <p className="text-xs text-text-secondary mt-1">
+                      {data?.isCalculated === false
+                        ? "Finalis belum dihitung panitia. Daftar muncul setelah perhitungan final di menu admin."
+                        : "Belum ada tim yang lolos ke finalis."}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                finalists.map((participant) => (
+                  <tr
+                    key={participant.teamId}
+                    className="bg-transparent border-b border-white/5 last:border-b-0 hover:bg-white/[0.03] transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium text-white whitespace-nowrap">
+                      {participant.teamName}
+                    </td>
+                    <td className="px-6 py-4">{participant.projectTitle || "-"}</td>
+                    <td className="px-6 py-4">{participant.leaderName ?? "-"}</td>
+                    <td className="px-6 py-4">
+                      {participant.submittedAt
+                        ? formatSubmittedDate(participant.submittedAt)
+                        : "-"}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {participant.submissionId ? (
+                        <Link
+                          href={`/juri/team/${participant.submissionId}`}
+                          className="inline-flex items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-md p-2 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-white/40">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-                {/* Bottom Part: Members & Status Columns */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                  {/* Members Column */}
-                  <div className="space-y-1">
-                    <span className="font-mono text-xs text-text-secondary uppercase block">
-                      Members
-                    </span>
-                    <div className="flex items-center gap-2 font-display font-bold text-white text-base">
-                      <Users className="w-4 h-4 text-text-secondary" />
-                      <span>{memberCount}</span>
-                    </div>
-                  </div>
+        {/* Pagination */}
+        <div className="relative flex flex-col sm:flex-row items-center justify-between mt-6 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="flex items-center gap-2 text-sm text-text-secondary mb-4 sm:mb-0">
+            Showing{" "}
+            <span className="font-semibold text-white">{finalists.length}</span>{" "}
+            data out of{" "}
+            <span className="font-semibold text-white">{rankings.length}</span>
+          </div>
 
-                  {/* Status Column */}
-                  <div className="space-y-1">
-                    <span className="font-mono text-xs text-text-secondary uppercase block">
-                      Status
-                    </span>
-                    <div className="flex items-center gap-2 font-display font-bold text-white text-sm">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          isScored
-                            ? "bg-accent"
-                            : "bg-urgent"
-                        }`}
-                      />
-                      <span>{status}</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled
+              className={`${glassControl} opacity-40`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled
+              className={`${glassControl} opacity-40`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/playwright/.auth/
 
 # next.js
 /.next/
@@ -35,7 +38,8 @@ yarn-error.log*
 
 # vercel
 .vercel
-
+.agents
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.agents/
