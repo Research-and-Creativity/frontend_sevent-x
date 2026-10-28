@@ -47,6 +47,28 @@ const VERIFICATION_DOCS = [
   { type: "INSTAGRAM_FOLLOW", label: "Follow Instagram Sevent.tup" },
 ] as const;
 
+type VerificationDocType = (typeof VERIFICATION_DOCS)[number]["type"];
+
+// Tautan bantuan yang tampil di bawah input dokumen tertentu. `hideWhenUploaded`
+// dipakai untuk Twibbon karena tautannya cuma berguna sebelum peserta punya
+// twibbon; poster Post Story tetap ditampilkan supaya bisa diambil ulang.
+const DOC_HELPERS: Partial<
+  Record<
+    VerificationDocType,
+    { label: string; href: string; hideWhenUploaded?: boolean }
+  >
+> = {
+  TWIBBON: {
+    label: "Belum punya twibbon? Bikin di sini →",
+    href: "/twibbon",
+    hideWhenUploaded: true,
+  },
+  SHARE_STORY: {
+    label: "Link poster Post Story →",
+    href: "https://drive.google.com/drive/folders/1nsJsPeWydid4WilPhBEzM1FWVentQ64V?usp=drive_link",
+  },
+};
+
 const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   REVIEW: "Under review",
   APPROVE: "Approved",
@@ -517,6 +539,7 @@ export default function PesertaProfilePage() {
             const isUploading =
               uploadDocumentMutation.isPending && activeDocType === doc.type;
             const isPendingForThis = Boolean(pendingDocs[doc.type]);
+            const helper = DOC_HELPERS[doc.type];
 
             return (
               <div key={doc.type} className="space-y-1.5">
@@ -555,14 +578,14 @@ export default function PesertaProfilePage() {
                     {uploaded.rejectionReason}
                   </p>
                 )}
-                {doc.type === "TWIBBON" && !uploaded && (
+                {helper && !(helper.hideWhenUploaded && uploaded) && (
                   <Link
-                    href="/twibbon"
+                    href={helper.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
                   >
-                    Belum punya twibbon? Bikin di sini →
+                    {helper.label}
                   </Link>
                 )}
               </div>
