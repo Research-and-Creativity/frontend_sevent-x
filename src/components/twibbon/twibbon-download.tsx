@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { Download, Clipboard, ClipboardCheck, RotateCcw } from "lucide-react";
 import campaignData from "./campaign-data";
+import type { CampaignCompetition } from "./campaign-data";
 import type { CaptionValues } from "./types";
 
-const { caption, props: captionProps } = campaignData;
+const { captions, competitions, props: captionProps } = campaignData;
+const competitionKeys = Object.keys(competitions) as CampaignCompetition[];
 
+// Placeholder yang masih kosong dibiarkan apa adanya ("[Nama]", bukan "[nama]")
+// supaya peserta langsung tahu bagian mana yang perlu diisi.
 function fillCaption(template: string, values: CaptionValues) {
-  return template.replace(/\[(\w+)\]/g, (_, key) => values[key]?.trim() || `[${key}]`);
+  return template.replace(/\[(\w+)\]/g, (match, key) => values[key]?.trim() || match);
 }
 
 type DownloadProps = {
@@ -17,12 +21,15 @@ type DownloadProps = {
 };
 
 export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
+  const [competition, setCompetition] = useState<CampaignCompetition>(
+    campaignData.defaultCompetition,
+  );
   const [captionValues, setCaptionValues] = useState<CaptionValues>(() =>
     Object.fromEntries(captionProps.map((key) => [key, ""])),
   );
   const [isCopied, setIsCopied] = useState(false);
 
-  const filledCaption = fillCaption(caption, captionValues);
+  const filledCaption = fillCaption(captions[competition], captionValues);
 
   function handleDownload() {
     const canvas = canvasRef.current;
@@ -49,8 +56,8 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
   }
 
   const fieldLabels: Record<string, string> = {
-    nama: "Nama lengkap",
-    institusi: "Institusi / Kampus",
+    Nama: "Nama lengkap",
+    School: "Sekolah / Institusi",
   };
 
   return (
@@ -65,6 +72,30 @@ export default function TwibbonDownload({ canvasRef, onReset }: DownloadProps) {
       </div>
 
       <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-white/50">Kompetisi</span>
+          <div className="flex flex-wrap gap-2">
+            {competitionKeys.map((key) => {
+              const active = competition === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setCompetition(key)}
+                  aria-pressed={active}
+                  className={`cursor-pointer rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
+                    active
+                      ? "border-white bg-white text-[#7C83BC]"
+                      : "border-white/20 text-white/60 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {competitions[key]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {captionProps.map((key) => (
           <div key={key} className="flex flex-col gap-1.5">
             <label className="text-xs text-white/50">
