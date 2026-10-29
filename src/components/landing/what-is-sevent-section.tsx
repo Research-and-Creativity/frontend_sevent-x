@@ -12,7 +12,7 @@ if (typeof window !== "undefined") {
 }
 
 const stats = [
-  { value: "150+", label: "Participant" },
+  { value: "100+", label: "Participant" },
   { value: "20+", label: "Media Partner" },
   { value: "5+", label: "Sponsor" },
 ];
@@ -78,15 +78,7 @@ export function WhatIsSeventSection() {
               SOFTWARE ENGINEERING EVENT
             </h3>
             <p className="text-sm text-white/60 leading-relaxed drop-shadow-[0_0_6px_rgba(255,255,255,0.9)]">
-              SEVENT X (SEVENT) is an annual event organized by HIMSE Tekkom
-              Unsil University Pangandaran. SEVENT strives to host participants
-              with innovations in the fields of Software, Artificial
-              Intelligence (AI), Internet of Things (IoT), and Industry
-              Solutions. This event aims to provide participants with the
-              opportunity to create National-based innovations that will not
-              only enhance aesthetics and functionality, but also benefit
-              communities. We believe each participant will also practice and
-              impactful within their communities.
+              Software Engineering Event (SEVENT) is an annual event organized by HMSE Telkom University Purwokerto to celebrate the anniversary of the university&apos;s Software Engineering study program. Each year, SEVENT strives to host a prestigious and healthy competition for IT students across Indonesia. This year, the event features the theme &quot;Tech for Society: Building Smart, Scalable, and Intuitive Solutions.&quot; This theme aims to provide participants with the opportunity to create technological innovations that are not only technically excellent but also practical and impactful within their communities.
             </p>
           </div>
 

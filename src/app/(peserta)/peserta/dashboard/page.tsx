@@ -25,6 +25,7 @@ import {
   useNewsFeed,
   useProfileComplete,
   useSubmissionEligibility,
+  useUserDocuments,
   useUserMe,
   useUserSubmission,
   useUserTeam,
@@ -44,6 +45,13 @@ const pillButton =
 
 const statCard =
   "relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5";
+
+const documentLabels: Record<string, string> = {
+  TWIBBON: "Twibbon",
+  SHARE_STORY: "Post Story",
+  KTM: "Student ID",
+  INSTAGRAM_FOLLOW: "Follow Instagram Sevent.tup",
+};
 
 // Hitung mundur format "02d : 14h : 45m" dari tanggal target.
 function formatCountdown(target: Date) {
@@ -69,6 +77,7 @@ export default function PesertaDashboardPage() {
 
   const { data: user, isLoading: userLoading } = useUserMe();
   const { data: team } = useUserTeam();
+  const { data: userDocuments = [] } = useUserDocuments();
   const { data: submission } = useUserSubmission();
   const { data: timeline = [] } = useCompetitionTimeline(team?.competition?.slug);
   const { isComplete: profileComplete, isLoading: profileLoading } =
@@ -110,6 +119,11 @@ export default function PesertaDashboardPage() {
   const teamInfo = myAnnouncementsData?.team;
 
   const hasJoined = Boolean(team);
+  const rejectedDocuments = userDocuments.filter(
+    (document) => document.status.toUpperCase() === "REJECT",
+  );
+  const paymentRejected =
+    team?.paymentProof?.status?.toUpperCase() === "REJECT";
 
   // Status dokumen verifikasi per anggota. Selama ini data eligibility tidak
   // pernah ditampilkan di mana pun, padahal peserta baru tahu mereka harus
@@ -149,24 +163,53 @@ export default function PesertaDashboardPage() {
         </h1>
       </div>
 
-      {/* Banner: bukti pembayaran perlu direvisi (untuk semua anggota tim) */}
-      {team?.paymentProof?.status?.toUpperCase() === "REJECT" && (
-        <div className={`${glass} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8 !border-rose-500/30`}>
-          <div className="relative flex items-start gap-3">
-            <div>
-              <h2 className="font-display text-lg font-bold tracking-tight text-white">
-                Bukti Pembayaran Perlu Direvisi
-              </h2>
-              <p className="mt-1 text-sm text-text-secondary">
-                {team?.paymentProof?.rejectionReason
-                  ? team.paymentProof.rejectionReason
-                  : "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
-              </p>
+      {(rejectedDocuments.length > 0 || paymentRejected) && (
+        <div className={`${glass} space-y-4 border-rose-500/30 p-6 lg:p-8`}>
+          <h2 className="relative font-display text-lg font-bold tracking-tight text-white">
+            Perlu Tindakan: Revisi dari Panitia
+          </h2>
+          {rejectedDocuments.map((document) => (
+            <div
+              key={document.id}
+              className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Dokumen {documentLabels[document.type] ?? document.type} perlu direvisi
+                </h3>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {document.rejectionReason ||
+                    "Panitia meminta Anda mengunggah ulang dokumen ini."}
+                </p>
+              </div>
+              <Link href="/peserta/profile" className="shrink-0">
+                <Button className={pillButton}>Perbaiki Dokumen</Button>
+              </Link>
             </div>
-          </div>
-          <Link href={team?.competition?.slug ? `/peserta/competition/${team.competition.slug}` : "/peserta/competition"} className="shrink-0">
-            <Button className={pillButton}>Perbaiki &amp; Unggah Ulang</Button>
-          </Link>
+          ))}
+          {paymentRejected && (
+            <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Bukti pembayaran tim perlu direvisi
+                </h3>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {team.paymentProof?.rejectionReason ||
+                    "Panitia meminta Anda mengunggah ulang bukti pembayaran yang valid."}
+                </p>
+              </div>
+              <Link
+                href={
+                  team.competition?.slug
+                    ? `/peserta/competition/${team.competition.slug}`
+                    : "/peserta/competition"
+                }
+                className="shrink-0"
+              >
+                <Button className={pillButton}>Perbaiki Pembayaran</Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

@@ -104,11 +104,6 @@ export default function PesertaCompetitionPage() {
       return;
     }
 
-    if (name.length > 20) {
-      setError("Nama tim maksimal 20 karakter.");
-      return;
-    }
-
     try {
       const created = await createTeamMutation.mutateAsync({
         name,
@@ -391,7 +386,6 @@ export default function PesertaCompetitionPage() {
               type="text"
               placeholder="Team Name"
               value={teamName}
-              maxLength={20}
               onChange={(e) => {
                 setTeamName(e.target.value);
                 if (error) setError(null);
