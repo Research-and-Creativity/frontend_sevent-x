@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { PatternLanding1 } from "./pattern-landing1";
 import gsap from "gsap";
@@ -130,7 +131,7 @@ export function CompetitionsSection() {
                 className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.08)]"
               >
                 <div className="flex flex-col md:flex-row gap-5 items-center md:items-stretch">
-                  <img src={c.image} alt={c.title} className="w-32 md:w-44 shrink-0 rounded-sm md:self-stretch md:min-h-[140px] object-cover" />
+                  <Image src={c.image} alt={c.title} width={176} height={140} className="w-32 md:w-44 shrink-0 rounded-sm md:self-stretch md:min-h-[140px] object-cover" />
                   <div className="flex flex-col justify-center flex-1">
                     <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                       {c.title}

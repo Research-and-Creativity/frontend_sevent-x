@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -16,6 +16,51 @@ interface CalculatedRankItem {
   finalScore: number;
   isFinalist: boolean;
   isFullyScored?: boolean;
+}
+
+type PersistedResultsState = {
+  activeSlug: string;
+  roundName: "PENYISIHAN" | "FINAL";
+  rankings: CalculatedRankItem[];
+  hasCalculated: boolean;
+  isPublished: boolean;
+};
+
+const RESULTS_STORAGE_KEY = "adminResultsState";
+
+function subscribeToResultsStorage(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
+function getResultsStorageSnapshot() {
+  try {
+    return sessionStorage.getItem(RESULTS_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function parsePersistedResults(raw: string): PersistedResultsState | null {
+  if (!raw) return null;
+
+  try {
+    const saved: unknown = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") return null;
+    const state = saved as Record<string, unknown>;
+
+    return {
+      activeSlug: typeof state.activeSlug === "string" ? state.activeSlug : "",
+      roundName: state.roundName === "FINAL" ? "FINAL" : "PENYISIHAN",
+      rankings: Array.isArray(state.rankings)
+        ? (state.rankings as CalculatedRankItem[])
+        : [],
+      hasCalculated: state.hasCalculated === true,
+      isPublished: state.isPublished === true,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default function AdminResultsPage() {
@@ -34,40 +79,44 @@ export default function AdminResultsPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const [selectedCompSlug, setSelectedCompSlug] = useState("");
-  const activeSlug = selectedCompSlug || competitions[0]?.slug || "";
+  const persistedRaw = useSyncExternalStore(
+    subscribeToResultsStorage,
+    getResultsStorageSnapshot,
+    () => "",
+  );
+  const persistedState = useMemo(
+    () => parsePersistedResults(persistedRaw),
+    [persistedRaw],
+  );
 
-  const [roundName, setRoundName] = useState("PENYISIHAN");
+  const [selectedCompSlug, setSelectedCompSlug] = useState<string | null>(null);
+  const activeSlug =
+    selectedCompSlug ?? persistedState?.activeSlug ?? competitions[0]?.slug ?? "";
+
+  const [roundNameOverride, setRoundName] = useState<
+    PersistedResultsState["roundName"] | null
+  >(null);
+  const roundName =
+    roundNameOverride ?? persistedState?.roundName ?? "PENYISIHAN";
   const [isCalculating, setIsCalculating] = useState(false);
-  const [hasCalculated, setHasCalculated] = useState(false);
+  const [hasCalculatedOverride, setHasCalculated] = useState<boolean | null>(null);
+  const hasCalculated = hasCalculatedOverride ?? persistedState?.hasCalculated ?? false;
   const [isPublishing, setIsPublishing] = useState(false);
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublishedOverride, setIsPublished] = useState<boolean | null>(null);
+  const isPublished = isPublishedOverride ?? persistedState?.isPublished ?? false;
 
-  const [rankings, setRankings] = useState<CalculatedRankItem[]>([]);
+  const [rankingsOverride, setRankings] = useState<CalculatedRankItem[] | null>(null);
+  const rankings = useMemo(
+    () => rankingsOverride ?? persistedState?.rankings ?? [],
+    [rankingsOverride, persistedState?.rankings],
+  );
   const [isExporting, setIsExporting] = useState(false);
-
-  // Persist hasil kalkulasi di sessionStorage agar tidak hilang saat reload.
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("adminResultsState");
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (saved.activeSlug) setSelectedCompSlug(saved.activeSlug);
-        if (saved.roundName) setRoundName(saved.roundName);
-        if (Array.isArray(saved.rankings)) setRankings(saved.rankings);
-        if (saved.hasCalculated) setHasCalculated(true);
-        if (saved.isPublished) setIsPublished(true);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   useEffect(() => {
     if (!hasCalculated) return;
     try {
       sessionStorage.setItem(
-        "adminResultsState",
+        RESULTS_STORAGE_KEY,
         JSON.stringify({ activeSlug, roundName, rankings, hasCalculated, isPublished })
       );
     } catch {
@@ -96,7 +145,7 @@ export default function AdminResultsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success("Export CSV berhasil.");
-    } catch (err) {
+    } catch {
       toast.error("Gagal export CSV.");
     } finally {
       setIsExporting(false);
@@ -204,7 +253,7 @@ export default function AdminResultsPage() {
             <select
               value={roundName}
               onChange={(e) => {
-                setRoundName(e.target.value);
+                setRoundName(e.target.value as PersistedResultsState["roundName"]);
                 setHasCalculated(false);
                 setIsPublished(false);
               }}

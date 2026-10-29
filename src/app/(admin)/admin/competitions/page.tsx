@@ -15,7 +15,7 @@ export default function AdminCompetitionsPage() {
   const queryClient = useQueryClient();
 
   // 1. Fetch competitions list
-  const { data: competitions = [], refetch } = useQuery<Competition[]>({
+  const { data: competitions = [] } = useQuery<Competition[]>({
     queryKey: ["adminCompetitionsList"],
     queryFn: async () => {
       try {

@@ -18,9 +18,6 @@ const glassControl =
   "bg-white/[0.03] border-white/15 backdrop-blur-md " +
   "hover:bg-white/10 text-white/70 hover:text-white transition-colors";
 
-// Hanya dua peringkat teratas yang bergelar Juara 1 / Juara 2.
-const PODIUM_SIZE = 2;
-
 export default function JuriWinnerPage() {
   const { data, isLoading, isError, refetch } = useJudgeRankings();
   const competitionSlug = data?.competition?.slug;

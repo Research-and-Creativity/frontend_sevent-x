@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 import { useAnnouncementStore } from "@/store/announcement-store";
@@ -413,10 +413,11 @@ export function useAnnouncementNotifications() {
   }, [lastSeen, myAnnouncementsData, newsFeedData, markSeen]);
 
   // Kumpulkan item announcement yang published + news posts, dengan timestamp.
-  const publishedTeamAnns = (myAnnouncementsData?.announcements || []).filter(
-    (a) => a.publishedAt
+  const publishedTeamAnns = useMemo(
+    () => (myAnnouncementsData?.announcements || []).filter((a) => a.publishedAt),
+    [myAnnouncementsData?.announcements],
   );
-  const newsItems = newsFeedData?.news || [];
+  const newsItems = useMemo(() => newsFeedData?.news || [], [newsFeedData?.news]);
 
   const threshold = lastSeen ? new Date(lastSeen).getTime() : Infinity;
 
@@ -585,7 +586,6 @@ export function useUploadUserDocument() {
     },
   });
 }
-
 
 
 

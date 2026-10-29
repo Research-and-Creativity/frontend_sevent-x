@@ -57,7 +57,7 @@ export default function AdminCriteriaPage() {
     setSelectedCompId(competitions[0].id);
   }
 
-  const { data: criteria = [], refetch } = useQuery<ScoreCriteria[]>({
+  const { data: criteria = [] } = useQuery<ScoreCriteria[]>({
     queryKey: ["adminCriteria", selectedCompId, round],
     queryFn: async () => {
       if (!selectedCompId) return [];

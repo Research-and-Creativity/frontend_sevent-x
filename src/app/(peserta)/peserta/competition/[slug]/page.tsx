@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, Trash2, UploadCloud } from "lucide-react";
+import { Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -227,8 +227,6 @@ export default function CompetitionRegistrationPage() {
     teamMemberLimits.max,
   );
   const isLeader = members.some((m) => m.role === "LEADER" && m.userId === me?.id);
-  const leaderName = members.find((m) => m.role === "LEADER")?.name ?? "";
-  const otherMembers = members.filter((m) => m.role !== "LEADER");
 
   const handlePickProof = () => paymentInputRef.current?.click();
 
