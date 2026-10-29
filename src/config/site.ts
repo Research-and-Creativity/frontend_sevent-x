@@ -2,11 +2,9 @@
 // supaya tidak ambigu dan label bisa dibentuk otomatis.
 //
 // ⚠️ TEMPAT MENGUBAH JADWAL LOMBA.
-// File ini adalah SATU-SATUNYA sumber kebenaran jadwal:
-//   1. Landing & countdown hero membaca langsung (fallback bila API kosong).
-//   2. Database diisi lewat backend:  cd ../backend-seventx && npm run timeline:sync
-//      Setelah sync, tabel Timeline ikut → validasi backend (buat tim / submit
-//      karya) dan tampilan landing lewat API juga mengikuti.
+// File ini adalah sumber jadwal untuk timeline landing dan fallback countdown.
+// Sinkronkan ke database lewat backend agar validasi server juga menggunakan jadwal ini:
+//   cd ../backend-seventx && npm run timeline:sync
 // Fase REGISTRATION & UPLOAD_KARYA sengaja berbagi rentang tanggal yang sama:
 // landing menggabungkannya jadi satu kartu "Pendaftaran & Submission Lomba".
 
@@ -33,14 +31,14 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
     start: "2026-11-01T00:00:00+07:00",
     end: "2026-11-30T23:59:59+07:00",
     title: "Pendaftaran & Submission Lomba",
-    description: "Pendaftaran tim & submission karya (1 Oktober - 30 November)",
+    description: "Pendaftaran tim & submission karya (1 November - 30 November)",
   },
   {
     phase: "UPLOAD_KARYA",
-    start: "2026-10-01T00:00:00+07:00",
+    start: "2026-11-01T00:00:00+07:00",
     end: "2026-11-30T23:59:59+07:00",
     title: "Submission Karya",
-    description: "Pengumpulan karya (1 Oktober - 30 November)",
+    description: "Pengumpulan karya (1 November - 30 November)",
   },
   {
     phase: "PENJURIAN",

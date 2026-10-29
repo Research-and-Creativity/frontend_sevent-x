@@ -1,5 +1,3 @@
-import type { Competition, Timeline } from "@/types/api";
-
 export type LandingTimelineEvent = {
   start: string;
   end: string;
@@ -37,28 +35,5 @@ export function mergeLandingEvents<T extends LandingTimelineEvent>(
 
   return Array.from(byRange.values()).sort((a, b) =>
     a.start.localeCompare(b.start)
-  );
-}
-
-/**
- * Susun daftar event timeline landing dari data API (GET /api/competitions,
- * field `timelines`). Sumber kebenaran jadwal = site.ts, yang disinkronkan ke
- * database lewat `npm run timeline:sync`.
- *
- * Mengembalikan [] bila belum ada data — pemanggil yang menentukan fallback.
- */
-export function buildLandingTimeline(
-  competitions?: Competition[] | null
-): LandingTimelineEvent[] {
-  const rows: Timeline[] = (competitions ?? []).flatMap((c) => c.timelines ?? []);
-  if (rows.length === 0) return [];
-
-  return mergeLandingEvents(
-    rows.map((row) => ({
-      start: row.startDate,
-      end: row.endDate,
-      title: row.stageName?.trim() || row.phase,
-      phase: row.phase,
-    }))
   );
 }
