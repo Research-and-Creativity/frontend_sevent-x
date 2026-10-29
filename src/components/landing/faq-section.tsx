@@ -10,26 +10,90 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const para = "";
+
 const faqs = [
   {
     q: "Siapa yang boleh ikut dan berapa anggota timnya?",
-    a: "Siswa SMA/sederajat dan mahasiswa aktif S1/D4/D3 dari seluruh Indonesia dapat mengikuti kompetisi. Satu tim terdiri dari 3–5 orang untuk Software Development dan 1–3 orang untuk UI/UX Design. Seluruh anggota tim harus berasal dari institusi yang sama.",
+    a: (
+      <>
+        <p className={para}>
+          Siswa SMA/sederajat dan mahasiswa aktif S1/D4/D3 dari seluruh Indonesia
+          dapat mengikuti kompetisi.
+        </p>
+        <p className={para}>
+          Satu tim terdiri dari 3–5 orang untuk Software Development dan 1–3 orang
+          untuk UI/UX Design. Seluruh anggota tim harus berasal dari institusi
+          yang sama.
+        </p>
+      </>
+    ),
   },
   {
     q: "Subtema apa yang bisa dipilih?",
-    a: "Pilih satu subtema SDGs: Zero Hunger, Good Health and Well-being, Quality Education, Gender Equality, Decent Work and Economic Growth, atau Responsible Consumption and Production. Khusus Software Development, tersedia satu subtema tambahan: Industry, Innovation, and Infrastructure.",
+    a: (
+      <>
+        <p className={para}>
+          Pilih satu subtema SDGs: Zero Hunger, Good Health and Well-being,
+          Quality Education, Gender Equality, Decent Work and Economic Growth,
+          atau Responsible Consumption and Production.
+        </p>
+        <p className={para}>
+          Khusus Software Development, tersedia satu subtema tambahan: Industry,
+          Innovation, and Infrastructure.
+        </p>
+      </>
+    ),
   },
   {
     q: "Apa saja yang harus dikumpulkan?",
-    a: "Software Development kategori website: URL website yang aktif dan link repository GitHub publik. Kategori mobile: file .apk (.ipa opsional) dan link repository GitHub publik. UI/UX Design: link project Figma dan link prototype Figma (Mobile atau Desktop). Semua lomba juga wajib mengumpulkan proposal dan surat pernyataan orisinalitas menggunakan template dari panitia.",
+    a: (
+      <>
+        <p className={para}>
+          <span className="font-semibold text-white/90">Software Development</span>{" "}
+          — kategori website: URL website yang aktif dan link repository GitHub
+          publik. Kategori mobile: file .apk (.ipa opsional) dan link repository
+          GitHub publik.
+        </p>
+        <p className={para}>
+          <span className="font-semibold text-white/90">UI/UX Design</span> — link
+          project Figma dan link prototype Figma (Mobile atau Desktop).
+        </p>
+        <p className={para}>
+          Semua lomba juga wajib mengumpulkan proposal dan surat pernyataan
+          orisinalitas menggunakan template dari panitia.
+        </p>
+      </>
+    ),
   },
   {
     q: "Apa syarat teknis yang perlu diperhatikan?",
-    a: "Website harus aktif dan bisa diakses kapan saja; boleh menggunakan domain gratis maupun berbayar. File .apk harus bisa diinstal dan bebas malware. Repository GitHub wajib publik dan aktif selama perlombaan. Link Figma harus aktif, berstatus Public, dan memiliki akses View Only.",
+    a: (
+      <>
+        <p className={para}>
+          Website harus aktif dan bisa diakses kapan saja; boleh menggunakan domain
+          gratis maupun berbayar. File .apk harus bisa diinstal dan bebas malware.
+        </p>
+        <p className={para}>
+          Repository GitHub wajib publik dan aktif selama perlombaan. Link Figma
+          harus aktif, berstatus Public, dan memiliki akses View Only.
+        </p>
+      </>
+    ),
   },
   {
     q: "Berapa karya yang boleh dikirim dan apakah harus orisinal?",
-    a: "Setiap tim hanya boleh mengirim satu karya dan satu proposal. Karya harus merupakan ide asli tim tanpa plagiarisme. Keputusan juri bersifat final.",
+    a: (
+      <>
+        <p className={para}>
+          Setiap tim hanya boleh mengirim satu karya dan satu proposal.
+        </p>
+        <p className={para}>
+          Karya harus merupakan ide asli tim tanpa plagiarisme. Keputusan juri
+          bersifat final.
+        </p>
+      </>
+    ),
   },
   {
     q: "GUIDEBOOK",
@@ -105,7 +169,7 @@ export function FaqSection() {
               >
                 <div className="overflow-hidden">
                   <div className="border-t border-white/10 bg-white/[0.02] px-6 py-6 text-sm leading-relaxed text-white/75 sm:text-[15px]">
-                    <div className="max-w-prose">{f.a}</div>
+                    <div className="max-w-prose space-y-3">{f.a}</div>
                   </div>
                 </div>
               </div>
