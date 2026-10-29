@@ -51,12 +51,12 @@ const faqs = [
       <>
         <p className={para}>
           <span className="font-semibold text-white/90">Software Development</span>{" "}
-          — kategori website: URL website yang aktif dan link repository GitHub
+          - kategori website: URL website yang aktif dan link repository GitHub
           publik. Kategori mobile: file .apk (.ipa opsional) dan link repository
           GitHub publik.
         </p>
         <p className={para}>
-          <span className="font-semibold text-white/90">UI/UX Design</span> — link
+          <span className="font-semibold text-white/90">UI/UX Design</span> - link
           project Figma dan link prototype Figma (Mobile atau Desktop).
         </p>
         <p className={para}>
