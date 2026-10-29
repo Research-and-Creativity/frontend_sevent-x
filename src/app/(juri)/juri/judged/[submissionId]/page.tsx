@@ -14,6 +14,7 @@ import {
   externalLinks,
   memberNames,
   proposalFile,
+  originalityFile,
 } from "@/lib/juri-submission";
 
 const glass =
@@ -99,6 +100,7 @@ export default function JudgedDetailPage() {
         }}
         externalLinks={externalLinks(submission)}
         proposal={proposalFile(submission)}
+        originalityProposal={originalityFile(submission)}
         defaultOpen={false}
       />
 

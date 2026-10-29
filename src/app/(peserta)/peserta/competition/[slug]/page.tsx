@@ -52,6 +52,10 @@ const MEMBER_VERIFICATION_DOCS = [
 
 const ACCEPTED_UPLOAD_EXT = ".jpg,.jpeg,.png,.webp,.pdf,.zip,.rar";
 
+// Tautan template proposal. TODO: ganti dengan link asli ketika sudah siap.
+const PROPOSAL_KARYA_TEMPLATE_URL = "#";
+const PROPOSAL_ORISINALITAS_TEMPLATE_URL = "#";
+
 function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
 }
@@ -102,7 +106,6 @@ const LINK_FIELDS_BY_COMPETITION: Record<
   "ui-ux": [
     { name: "figmaUrl", label: "Figma Design", required: true },
     { name: "prototypeUrl", label: "Prototype", required: true },
-    { name: "demoVideoUrl", label: "Demonstration Video", required: true },
   ],
 };
 
@@ -145,8 +148,10 @@ export default function CompetitionRegistrationPage() {
 
   const paymentInputRef = useRef<HTMLInputElement>(null);
   const deliverableInputRef = useRef<HTMLInputElement>(null);
+  const originalityInputRef = useRef<HTMLInputElement>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [deliverableFile, setDeliverableFile] = useState<File | null>(null);
+  const [originalityFile, setOriginalityFile] = useState<File | null>(null);
   const [form, setForm] = useState<SubmissionForm>(EMPTY_FORM);
   const [formSourceId, setFormSourceId] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -185,6 +190,17 @@ export default function CompetitionRegistrationPage() {
       ? rawName
       : existingFileUrl
       ? "Proposal terlampir"
+      : null;
+
+  const existingOriginalityFileUrl = existingSubmission?.originalityFileUrl ?? null;
+  const rawOriginalityName = existingOriginalityFileUrl
+    ? existingOriginalityFileUrl.split("/").pop()
+    : null;
+  const existingOriginalityFileName =
+    rawOriginalityName && rawOriginalityName !== "view" && rawOriginalityName.length > 0
+      ? rawOriginalityName
+      : existingOriginalityFileUrl
+      ? "Proposal orisinalitas terlampir"
       : null;
 
   // Satu peserta hanya boleh punya satu tim, jadi halaman ini harus milik
@@ -266,6 +282,19 @@ export default function CompetitionRegistrationPage() {
     setDeliverableFile(file);
   };
 
+  const handlePickOriginality = () => originalityInputRef.current?.click();
+
+  const handleOriginalitySelected = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > SUBMISSION_DELIVERABLE_MAX_BYTES) {
+      toast.error(
+        `Ukuran file maksimal ${formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)}.`,
+      );
+      return;
+    }
+    setOriginalityFile(file);
+  };
+
   // Satu payload untuk dua aksi; yang membedakan hanya status yang dikirim.
   const saveWork = async (status: "DRAFT" | "SUBMITTED") => {
     if (status === "SUBMITTED" && members.length < teamMemberLimits.min) {
@@ -301,9 +330,14 @@ export default function CompetitionRegistrationPage() {
       toast.error("Lampirkan proposal karya terlebih dahulu.");
       return;
     }
+    if (status === "SUBMITTED" && !originalityFile && !existingOriginalityFileUrl) {
+      toast.error("Lampirkan proposal orisinalitas terlebih dahulu.");
+      return;
+    }
 
     const payload = new FormData();
     if (deliverableFile) payload.append("file", deliverableFile);
+    if (originalityFile) payload.append("originalityFile", originalityFile);
     payload.append("projectTitle", form.projectTitle.trim());
     payload.append("description", form.description.trim());
     payload.append("githubUrl", form.githubUrl.trim());
@@ -317,6 +351,7 @@ export default function CompetitionRegistrationPage() {
       await submissionMutation.mutateAsync(payload);
       // Lepas file lokal; nilai yang tampil kini diambil dari server.
       setDeliverableFile(null);
+      setOriginalityFile(null);
       toast.success(
         status === "SUBMITTED"
           ? "Karya berhasil dikirim dan tidak bisa diubah lagi."
@@ -633,10 +668,10 @@ export default function CompetitionRegistrationPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
             {/* Left column */}
             <div className="space-y-6">
-              {/* Proposal Submit */}
+              {/* Proposal Karya */}
               <div className={`${glass} p-6 lg:p-8`}>
                 <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
-                  Proposal Submit
+                  Proposal Karya
                 </h2>
                 <input
                   ref={deliverableInputRef}
@@ -686,6 +721,87 @@ export default function CompetitionRegistrationPage() {
                     )}
                   </span>
                 </button>
+                <a
+                  href={PROPOSAL_KARYA_TEMPLATE_URL}
+                  target={PROPOSAL_KARYA_TEMPLATE_URL !== "#" ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  onClick={PROPOSAL_KARYA_TEMPLATE_URL === "#" ? (e) => e.preventDefault() : undefined}
+                  className={`mt-3 inline-flex items-center gap-1 text-xs font-medium transition-colors ${
+                    PROPOSAL_KARYA_TEMPLATE_URL === "#"
+                      ? "cursor-default text-white/40"
+                      : "text-[#7D8CFF] hover:text-white"
+                  }`}
+                >
+                  Link template Proposal Karya →
+                </a>
+              </div>
+
+              {/* Proposal Orisinalitas */}
+              <div className={`${glass} p-6 lg:p-8`}>
+                <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
+                  Proposal Orisinalitas
+                </h2>
+                <input
+                  ref={originalityInputRef}
+                  type="file"
+                  accept={ACCEPTED_UPLOAD_EXT}
+                  className="hidden"
+                  onChange={(e) => handleOriginalitySelected(e.target.files?.[0])}
+                />
+                <button
+                  type="button"
+                  onClick={handlePickOriginality}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleOriginalitySelected(e.dataTransfer.files?.[0]);
+                  }}
+                  disabled={isLocked}
+                  className="relative mt-4 flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/[0.02] px-6 py-10 text-center transition-colors hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white/[0.02]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#7D8CFF]/20 text-[#7D8CFF]">
+                    <UploadCloud className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm text-white">
+                    {originalityFile
+                      ? originalityFile.name
+                      : existingOriginalityFileName ?? "Drag or Upload your files here"}
+                  </span>
+                  <span className="text-xs text-text-secondary">
+                    {originalityFile ? (
+                      <>
+                        A new file is ready to replace the previous proposal.
+                        <br />
+                        (Max 1 File and {formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)})
+                      </>
+                    ) : existingOriginalityFileName ? (
+                      <>
+                        Proposal already attached and will be sent along.
+                        <br />
+                        Pick a new file only if you want to replace it.
+                      </>
+                    ) : (
+                      <>
+                        Upload your project proposal.
+                        <br />
+                        (Max 1 File and {formatBytes(SUBMISSION_DELIVERABLE_MAX_BYTES)})
+                      </>
+                    )}
+                  </span>
+                </button>
+                <a
+                  href={PROPOSAL_ORISINALITAS_TEMPLATE_URL}
+                  target={PROPOSAL_ORISINALITAS_TEMPLATE_URL !== "#" ? "_blank" : undefined}
+                  rel="noopener noreferrer"
+                  onClick={PROPOSAL_ORISINALITAS_TEMPLATE_URL === "#" ? (e) => e.preventDefault() : undefined}
+                  className={`mt-3 inline-flex items-center gap-1 text-xs font-medium transition-colors ${
+                    PROPOSAL_ORISINALITAS_TEMPLATE_URL === "#"
+                      ? "cursor-default text-white/40"
+                      : "text-[#7D8CFF] hover:text-white"
+                  }`}
+                >
+                  Link template Proposal Orisinalitas →
+                </a>
               </div>
 
               {/* Action Button */}

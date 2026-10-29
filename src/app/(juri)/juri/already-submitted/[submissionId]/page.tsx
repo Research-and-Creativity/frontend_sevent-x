@@ -24,6 +24,7 @@ import {
   externalLinks,
   memberNames,
   proposalFile,
+  originalityFile,
 } from "@/lib/juri-submission";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -359,6 +360,7 @@ export default function AlreadySubmittedDetailPage() {
         }}
         externalLinks={externalLinks(submission)}
         proposal={proposalFile(submission)}
+        originalityProposal={originalityFile(submission)}
       />
 
       {/* key memaksa form dibangun ulang bila juri/data berganti, sehingga

@@ -17,6 +17,7 @@ import {
   memberNames,
   podiumLabel,
   proposalFile,
+  originalityFile,
 } from "@/lib/juri-submission";
 
 // Style glass yang sama dengan halaman juri lainnya
@@ -119,6 +120,7 @@ export default function WinnerDetailPage() {
         }}
         externalLinks={externalLinks(submission)}
         proposal={proposalFile(submission)}
+        originalityProposal={originalityFile(submission)}
         defaultOpen={false}
       />
 

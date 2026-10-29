@@ -33,6 +33,7 @@ export interface JudgeSubmissionItem {
   figmaUrl?: string | null;
   prototypeUrl?: string | null;
   fileUrl?: string | null;
+  originalityFileUrl?: string | null;
   submittedAt: string;
   updatedAt: string;
   team: {

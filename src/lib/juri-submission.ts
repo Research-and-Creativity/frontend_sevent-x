@@ -56,6 +56,16 @@ export function proposalFile(sub: JudgeSubmissionItem): {
   return { name, size: "-", url: sub.fileUrl };
 }
 
+export function originalityFile(sub: JudgeSubmissionItem): {
+  name: string;
+  size: string;
+  url: string;
+} | null {
+  if (!sub.originalityFileUrl) return null;
+  const name = sub.originalityFileUrl.split("/").pop() || "Deliverable";
+  return { name, size: "-", url: sub.originalityFileUrl };
+}
+
 export function competitionName(sub: JudgeSubmissionItem): string {
   return sub.team?.competition?.name || "Competition";
 }

@@ -114,6 +114,7 @@ export interface Submission {
   figmaUrl?: string | null;
   prototypeUrl?: string | null;
   fileUrl?: string | null;
+  originalityFileUrl?: string | null;
   linkUrl?: string | null;
   /** DRAFT = masih disimpan sebagai draf, SUBMITTED = sudah dikirim dan dikunci. */
   status: "DRAFT" | "SUBMITTED";

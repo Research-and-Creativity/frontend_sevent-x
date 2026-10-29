@@ -386,7 +386,7 @@ export default function PesertaCompetitionPage() {
               tim, ajak anggota lain dengan kode tim.
             </p>
             <label htmlFor="team-name" className="block text-sm text-white/60">
-              Team Name (maks. 20 karakter)
+              Team Name
             </label>
             <input
               id="team-name"

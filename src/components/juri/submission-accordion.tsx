@@ -27,6 +27,11 @@ interface SubmissionAccordionProps {
     size: string;
     url?: string;
   } | null;
+  originalityProposal?: {
+    name: string;
+    size: string;
+    url?: string;
+  } | null;
   defaultOpen?: boolean;
 }
 
@@ -35,6 +40,7 @@ export function SubmissionAccordion({
   product,
   externalLinks,
   proposal,
+  originalityProposal,
   defaultOpen = true,
 }: SubmissionAccordionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -138,35 +144,51 @@ export function SubmissionAccordion({
                 Deliverable
               </h2>
 
-              {proposal ? (
-                <a
-                  href={proposal.url ?? "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="relative flex items-center gap-4 w-full max-w-xs rounded-xl border border-white/40 bg-white/[0.03] p-4 hover:bg-white/[0.07] transition-colors"
-                >
-                  <span className="flex flex-col items-center leading-none shrink-0">
-                    <FileText
-                      className="w-9 h-9 text-red-500"
-                      strokeWidth={1.5}
-                    />
-                    <span className="-mt-5 mb-3 text-[7px] font-bold text-red-500">
-                      FILE
-                    </span>
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-white truncate">
-                      {proposal.name}
-                    </span>
-                    <span className="block text-xs text-white/60">
-                      {proposal.size}
-                    </span>
-                  </span>
-                </a>
+              {proposal || originalityProposal ? (
+                <div className="flex flex-col gap-3">
+                  {proposal && (
+                    <div className="space-y-1">
+                      <span className="block text-xs text-white/60">Proposal Karya</span>
+                      <a
+                        href={proposal.url ?? "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="relative flex items-center gap-4 w-full max-w-xs rounded-xl border border-white/40 bg-white/[0.03] p-4 hover:bg-white/[0.07] transition-colors"
+                      >
+                        <span className="flex flex-col items-center leading-none shrink-0">
+                          <FileText className="w-9 h-9 text-red-500" strokeWidth={1.5} />
+                          <span className="-mt-5 mb-3 text-[7px] font-bold text-red-500">FILE</span>
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-white truncate">{proposal.name}</span>
+                          <span className="block text-xs text-white/60">{proposal.size}</span>
+                        </span>
+                      </a>
+                    </div>
+                  )}
+                  {originalityProposal && (
+                    <div className="space-y-1">
+                      <span className="block text-xs text-white/60">Proposal Orisinalitas</span>
+                      <a
+                        href={originalityProposal.url ?? "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="relative flex items-center gap-4 w-full max-w-xs rounded-xl border border-white/40 bg-white/[0.03] p-4 hover:bg-white/[0.07] transition-colors"
+                      >
+                        <span className="flex flex-col items-center leading-none shrink-0">
+                          <FileText className="w-9 h-9 text-red-500" strokeWidth={1.5} />
+                          <span className="-mt-5 mb-3 text-[7px] font-bold text-red-500">FILE</span>
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-white truncate">{originalityProposal.name}</span>
+                          <span className="block text-xs text-white/60">{originalityProposal.size}</span>
+                        </span>
+                      </a>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <p className="text-sm text-white/50">
-                  Belum ada file yang diunggah peserta.
-                </p>
+                <p className="text-sm text-white/50">Belum ada file yang diunggah peserta.</p>
               )}
             </div>
           </div>
