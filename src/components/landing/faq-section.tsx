@@ -104,8 +104,8 @@ export function FaqSection() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <div className="border-t border-white/10 px-6 py-5 text-sm leading-relaxed text-white/70">
-                    {f.a}
+                  <div className="border-t border-white/10 bg-white/[0.02] px-6 py-6 text-sm leading-relaxed text-white/75 sm:text-[15px]">
+                    <div className="max-w-prose">{f.a}</div>
                   </div>
                 </div>
               </div>
