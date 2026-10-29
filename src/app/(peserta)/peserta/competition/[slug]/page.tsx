@@ -52,9 +52,12 @@ const MEMBER_VERIFICATION_DOCS = [
 
 const ACCEPTED_UPLOAD_EXT = ".jpg,.jpeg,.png,.webp,.pdf,.zip,.rar";
 
-// Tautan template proposal. TODO: ganti dengan link asli ketika sudah siap.
-const PROPOSAL_KARYA_TEMPLATE_URL = "#";
-const PROPOSAL_ORISINALITAS_TEMPLATE_URL = "#";
+// Tautan template proposal per kompetisi (satu folder berisi template Proposal Karya
+// dan Proposal Orisinalitas). Dipakai di bawah kedua dropzone proposal.
+const PROPOSAL_TEMPLATE_URLS: Record<string, string> = {
+  "software-development": "https://drive.google.com/drive/folders/1o53aIbEjoNmFIEcPOp-G_ncghdqOWBpq",
+  "ui-ux": "https://drive.google.com/drive/folders/1LyZZxsMfYACsdgcFIXzQvcOfwCuhmLWq",
+};
 
 function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
@@ -137,6 +140,8 @@ export default function CompetitionRegistrationPage() {
   const params = useParams();
   const router = useRouter();
   const slug = typeof params?.slug === "string" ? params.slug : "";
+  const proposalTemplateUrl =
+    PROPOSAL_TEMPLATE_URLS[slug] ?? PROPOSAL_TEMPLATE_URLS["software-development"];
 
   const { data: competition } = useCompetition(slug);
   const { data: team, isLoading: teamLoading } = useUserTeam();
@@ -722,15 +727,10 @@ export default function CompetitionRegistrationPage() {
                   </span>
                 </button>
                 <a
-                  href={PROPOSAL_KARYA_TEMPLATE_URL}
-                  target={PROPOSAL_KARYA_TEMPLATE_URL !== "#" ? "_blank" : undefined}
+                  href={proposalTemplateUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
-                  onClick={PROPOSAL_KARYA_TEMPLATE_URL === "#" ? (e) => e.preventDefault() : undefined}
-                  className={`mt-3 inline-flex items-center gap-1 text-xs font-medium transition-colors ${
-                    PROPOSAL_KARYA_TEMPLATE_URL === "#"
-                      ? "cursor-default text-white/40"
-                      : "text-[#7D8CFF] hover:text-white"
-                  }`}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
                 >
                   Link template Proposal Karya →
                 </a>
@@ -790,15 +790,10 @@ export default function CompetitionRegistrationPage() {
                   </span>
                 </button>
                 <a
-                  href={PROPOSAL_ORISINALITAS_TEMPLATE_URL}
-                  target={PROPOSAL_ORISINALITAS_TEMPLATE_URL !== "#" ? "_blank" : undefined}
+                  href={proposalTemplateUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
-                  onClick={PROPOSAL_ORISINALITAS_TEMPLATE_URL === "#" ? (e) => e.preventDefault() : undefined}
-                  className={`mt-3 inline-flex items-center gap-1 text-xs font-medium transition-colors ${
-                    PROPOSAL_ORISINALITAS_TEMPLATE_URL === "#"
-                      ? "cursor-default text-white/40"
-                      : "text-[#7D8CFF] hover:text-white"
-                  }`}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
                 >
                   Link template Proposal Orisinalitas →
                 </a>
