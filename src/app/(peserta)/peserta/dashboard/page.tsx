@@ -31,6 +31,7 @@ import {
   useUserTeam,
 } from "@/hooks/use-peserta";
 import { useAnnouncementStore } from "@/store/announcement-store";
+import { getTeamMemberLimits } from "@/lib/team-member-limits";
 
 // Style glass yang sama dengan halaman peserta lainnya
 const glass =
@@ -134,9 +135,12 @@ export default function PesertaDashboardPage() {
     eligibility?.requirements.allMembersDocumentsApproved ?? false;
 
   const memberCount = team?.members?.length ?? 0;
-  const maxMembers = team?.competition?.maxMember ?? 0;
+  const memberLimits = getTeamMemberLimits(team?.competition?.slug);
+  const maxMembers = team?.competition
+    ? Math.min(team.competition.maxMember, memberLimits.max)
+    : undefined;
   const memberProgress =
-    maxMembers > 0
+    maxMembers && maxMembers > 0
       ? Math.min(100, Math.round((memberCount / maxMembers) * 100))
       : 0;
 
@@ -285,10 +289,16 @@ export default function PesertaDashboardPage() {
                 <Users className="h-4 w-4 text-text-secondary" />
               </div>
               <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
-                {memberCount}{" "}
-                <span className="text-base font-normal text-text-secondary">
-                  / {maxMembers}
-                </span>
+                {maxMembers ? (
+                  <>
+                    {memberCount}{" "}
+                    <span className="text-base font-normal text-text-secondary">
+                      / {maxMembers}
+                    </span>
+                  </>
+                ) : (
+                  "-"
+                )}
               </div>
               <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                 <div
@@ -333,18 +343,30 @@ export default function PesertaDashboardPage() {
           </div>
         </>
       ) : (
-        /* Competition (belum join) */
-        <div className={`${glass} p-6 lg:p-8`}>
-          <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
-            Competition
-          </h2>
-          <p className="relative text-sm text-text-secondary mb-6">
-            You haven&apos;t registered in any competition or any team.
-          </p>
-          <Link href="/peserta/competition">
-            <Button className={pillButton}>Join Now!</Button>
-          </Link>
-        </div>
+        <>
+          <div className={`${glass} ${statCard} md:max-w-sm`}>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                Team Members
+              </span>
+              <Users className="h-4 w-4 text-text-secondary" />
+            </div>
+            <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
+              -
+            </div>
+          </div>
+          <div className={`${glass} p-6 lg:p-8`}>
+            <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
+              Competition
+            </h2>
+            <p className="relative text-sm text-text-secondary mb-6">
+              You haven&apos;t registered in any competition or any team.
+            </p>
+            <Link href="/peserta/competition">
+              <Button className={pillButton}>Join Now!</Button>
+            </Link>
+          </div>
+        </>
       )}
 
       {/* Dokumen verifikasi — arahan singkat begitu tim terbentuk. Rincian

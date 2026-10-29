@@ -8,6 +8,7 @@ import { Trophy, Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessageWithDefault } from "@/lib/errors";
+import { getTeamMemberLimits } from "@/lib/team-member-limits";
 import { Competition } from "@/types/api";
 
 export default function AdminCompetitionsPage() {
@@ -31,13 +32,15 @@ export default function AdminCompetitionsPage() {
   const [newCompName, setNewCompName] = useState("");
   const [newCompSlug, setNewCompSlug] = useState("");
   const [newCompDesc, setNewCompDesc] = useState("");
-  const [newMaxMember, setNewMaxMember] = useState<number>(3);
+  const [newMaxMember, setNewMaxMember] = useState<number>(5);
+  const newMemberLimits = getTeamMemberLimits(newCompSlug);
 
   // Edit State Modal
   const [editingComp, setEditingComp] = useState<Competition | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
-  const [editMaxMember, setEditMaxMember] = useState<number>(3);
+  const [editMaxMember, setEditMaxMember] = useState<number>(5);
+  const editMemberLimits = getTeamMemberLimits(editingComp?.slug);
 
   // Create Competition Mutation (POST /api/competitions)
   const createMutation = useMutation({
@@ -82,23 +85,44 @@ export default function AdminCompetitionsPage() {
       return;
     }
     const slug = newCompSlug.trim() || newCompName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const limits = getTeamMemberLimits(slug);
+    if (
+      !Number.isInteger(newMaxMember) ||
+      newMaxMember < limits.min ||
+      newMaxMember > limits.max
+    ) {
+      toast.error(
+        `Jumlah anggota tim harus diatur antara ${limits.min} dan ${limits.max} orang.`,
+      );
+      return;
+    }
     createMutation.mutate({
       name: newCompName.trim(),
       slug,
       description: newCompDesc.trim(),
-      maxMember: Number(newMaxMember) || 3,
+      maxMember: newMaxMember,
     });
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingComp) return;
+    if (
+      !Number.isInteger(editMaxMember) ||
+      editMaxMember < editMemberLimits.min ||
+      editMaxMember > editMemberLimits.max
+    ) {
+      toast.error(
+        `Jumlah anggota tim harus diatur antara ${editMemberLimits.min} dan ${editMemberLimits.max} orang.`,
+      );
+      return;
+    }
     editMutation.mutate({
       slug: editingComp.slug,
       payload: {
         name: editName.trim(),
         description: editDesc.trim(),
-        maxMember: Number(editMaxMember) || 3,
+        maxMember: editMaxMember,
       },
     });
   };
@@ -107,12 +131,13 @@ export default function AdminCompetitionsPage() {
     setEditingComp(comp);
     setEditName(comp.name);
     setEditDesc(comp.description || "");
-    setEditMaxMember(comp.maxMember || 3);
+    const limits = getTeamMemberLimits(comp.slug);
+    setEditMaxMember(Math.min(limits.max, Math.max(limits.min, comp.maxMember || limits.max)));
   };
 
   const displayList = competitions.length > 0 ? competitions : [
     { id: "1", name: "National Web Development Competition 2026", slug: "web-development", description: "Kompetisi pembuatan aplikasi web inovatif.", maxMember: 5, isActive: true, createdAt: "", updatedAt: "" },
-    { id: "2", name: "National UI/UX Design Challenge 2026", slug: "ui-ux-design", description: "Tantangan eksplorasi antarmuka dan pengalaman pengguna.", maxMember: 3, isActive: true, createdAt: "", updatedAt: "" },
+    { id: "2", name: "National UI/UX Design Challenge 2026", slug: "ui-ux", description: "Tantangan eksplorasi antarmuka dan pengalaman pengguna.", maxMember: 3, isActive: true, createdAt: "", updatedAt: "" },
   ];
 
   return (
@@ -143,7 +168,12 @@ export default function AdminCompetitionsPage() {
               onChange={(e) => {
                 setNewCompName(e.target.value);
                 if (!newCompSlug) {
-                  setNewCompSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+                  const slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                  const limits = getTeamMemberLimits(slug);
+                  setNewCompSlug(slug);
+                  setNewMaxMember((current) =>
+                    Math.min(limits.max, Math.max(limits.min, current)),
+                  );
                 }
               }}
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -157,17 +187,26 @@ export default function AdminCompetitionsPage() {
               required
               placeholder="misal: mobile-app-dev"
               value={newCompSlug}
-              onChange={(e) => setNewCompSlug(e.target.value)}
+              onChange={(e) => {
+                const slug = e.target.value;
+                const limits = getTeamMemberLimits(slug);
+                setNewCompSlug(slug);
+                setNewMaxMember((current) =>
+                  Math.min(limits.max, Math.max(limits.min, current)),
+                );
+              }}
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-accent"
             />
           </div>
 
           <div className="sm:col-span-3 space-y-1.5">
-            <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">Maks Anggota / Tim</label>
+            <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">Maks Anggota per Tim ({newMemberLimits.min}–{newMemberLimits.max})</label>
             <input
               type="number"
-              min={1}
-              max={10}
+              min={newMemberLimits.min}
+              max={newMemberLimits.max}
+              step={1}
+              required
               value={newMaxMember}
               onChange={(e) => setNewMaxMember(Number(e.target.value))}
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -209,7 +248,9 @@ export default function AdminCompetitionsPage() {
                   </span>
                 </div>
                 <p className="text-xs text-text-secondary line-clamp-1">{c.description || "Tidak ada deskripsi."}</p>
-                <p className="text-[10px] text-text-secondary font-mono">Maks: {c.maxMember || 3} Anggota</p>
+                <p className="text-[10px] text-text-secondary font-mono">
+                  Maks saat ini: {c.maxMember} (aturan {getTeamMemberLimits(c.slug).min}–{getTeamMemberLimits(c.slug).max})
+                </p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
@@ -265,11 +306,12 @@ export default function AdminCompetitionsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">Maks Anggota per Tim</label>
+                <label className="block text-xs font-mono font-semibold uppercase text-text-secondary">Maks Anggota per Tim ({editMemberLimits.min}–{editMemberLimits.max})</label>
                 <input
                   type="number"
-                  min={1}
-                  max={10}
+                  min={editMemberLimits.min}
+                  max={editMemberLimits.max}
+                  step={1}
                   required
                   value={editMaxMember}
                   onChange={(e) => setEditMaxMember(Number(e.target.value))}

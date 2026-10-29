@@ -14,6 +14,7 @@ import {
   useProfileComplete,
   useUserTeam,
 } from "@/hooks/use-peserta";
+import { getTeamMemberLimits } from "@/lib/team-member-limits";
 import type { Competition } from "@/types/api";
 
 // Style glass yang sama dengan halaman peserta lainnya
@@ -75,6 +76,7 @@ export default function PesertaCompetitionPage() {
   const [teamName, setTeamName] = useState("");
   const [teamCode, setTeamCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const activeMemberLimits = getTeamMemberLimits(activeSlug);
 
   const openCreate = (slug: string) => {
     setActiveSlug(slug);
@@ -378,6 +380,11 @@ export default function PesertaCompetitionPage() {
           </div>
 
           <form onSubmit={handleCreateSubmit} className="space-y-2">
+            <p className="text-sm text-white/60">
+              Satu tim harus terdiri dari {activeMemberLimits.min}–
+              {activeMemberLimits.max} orang termasuk ketua. Setelah membuat
+              tim, ajak anggota lain dengan kode tim.
+            </p>
             <label htmlFor="team-name" className="block text-sm text-white/60">
               Team Name (maks. 20 karakter)
             </label>
@@ -431,6 +438,10 @@ export default function PesertaCompetitionPage() {
           </div>
 
           <form onSubmit={handleJoinSubmit} className="space-y-2">
+            <p className="text-sm text-white/60">
+              Satu tim harus terdiri dari {activeMemberLimits.min}–
+              {activeMemberLimits.max} orang termasuk ketua.
+            </p>
             <label htmlFor="team-code" className="block text-sm text-white/60">
               Team Code
             </label>

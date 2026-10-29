@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
 import type { Submission } from "@/types/api";
+import { getTeamMemberLimits } from "@/lib/team-member-limits";
 import {
   useCompetition,
   useCreateOrUpdateSubmission,
@@ -220,6 +221,11 @@ export default function CompetitionRegistrationPage() {
     [team],
   );
 
+  const teamMemberLimits = getTeamMemberLimits(slug);
+  const maxTeamMembers = Math.min(
+    competition?.maxMember ?? teamMemberLimits.max,
+    teamMemberLimits.max,
+  );
   const isLeader = members.some((m) => m.role === "LEADER" && m.userId === me?.id);
   const leaderName = members.find((m) => m.role === "LEADER")?.name ?? "";
   const otherMembers = members.filter((m) => m.role !== "LEADER");
@@ -264,6 +270,17 @@ export default function CompetitionRegistrationPage() {
 
   // Satu payload untuk dua aksi; yang membedakan hanya status yang dikirim.
   const saveWork = async (status: "DRAFT" | "SUBMITTED") => {
+    if (status === "SUBMITTED" && members.length < teamMemberLimits.min) {
+      toast.error(
+        `Tim harus memiliki minimal ${teamMemberLimits.min} anggota termasuk ketua sebelum mengirim karya.`,
+      );
+      return;
+    }
+    if (status === "SUBMITTED" && members.length > maxTeamMembers) {
+      toast.error(`Tim maksimal terdiri dari ${maxTeamMembers} anggota termasuk ketua.`);
+      return;
+    }
+
     // Block submit kalau dokumen verifikasi belum semua disetujui
     if (status === "SUBMITTED" && !allDocsApproved) {
       toast.error("Dokumen verifikasi belum lengkap atau belum disetujui admin. Silakan lengkapi di halaman Profile.");
@@ -380,11 +397,17 @@ export default function CompetitionRegistrationPage() {
           <h2 className="font-display text-xl font-bold tracking-tight text-white">
             Team Information
           </h2>
-          <span className="font-mono text-xs text-text-secondary">
-            Team Code{" "}
-            <span className="text-white">• {team?.teamCode ?? "..."}</span>
-          </span>
+          <div className="flex items-center gap-4 font-mono text-xs text-text-secondary">
+            <span>{members.length} / {maxTeamMembers} anggota</span>
+            <span>
+              Team Code • <span className="text-white">{team?.teamCode ?? "..."}</span>
+            </span>
+          </div>
         </div>
+        <p className="relative mb-4 text-sm text-text-secondary">
+          Tim wajib beranggotakan {teamMemberLimits.min}–
+          {maxTeamMembers} orang termasuk ketua sebelum karya dikirim.
+        </p>
 
         <div className="relative space-y-3">
           {/* Semua anggota memakai container full-width yang sama, ketua
