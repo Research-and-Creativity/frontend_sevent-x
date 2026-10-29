@@ -120,7 +120,9 @@ export default function JuriLayout({
   const { data: submissions } = useJudgeSubmissions();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
-  const pendingCount = submissions?.length ?? 0;
+  const pendingCount =
+    submissions?.filter((submission) => !submission.evaluationStatus?.isEvaluated)
+      .length ?? 0;
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {

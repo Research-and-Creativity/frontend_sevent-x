@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
-import { useUserMe, useUserTeam } from "@/hooks/use-peserta";
+import { useUserDocuments, useUserMe, useUserTeam } from "@/hooks/use-peserta";
 import { toast } from "sonner";
 import { LayoutGrid, LogOut, Medal, User, Menu, X } from "lucide-react";
 import { useAnnouncementNotifications } from "@/hooks/use-peserta";
@@ -92,11 +92,81 @@ export default function PesertaLayout({
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const { unreadCount: unreadAnnouncements } = useAnnouncementNotifications();
-  const { data: userTeam } = useUserTeam();
+  const {
+    data: userTeam,
+    isSuccess: isUserTeamLoaded,
+    isFetching: isUserTeamFetching,
+  } = useUserTeam();
+  const {
+    data: userDocuments = [],
+    isSuccess: areUserDocumentsLoaded,
+    isFetching: areUserDocumentsFetching,
+  } = useUserDocuments();
+  const previousDocumentRevisions = useRef<Set<string> | null>(null);
+  const previousPaymentRevision = useRef<string | null | undefined>(undefined);
   const paymentRejected =
     userTeam?.paymentProof?.status?.toUpperCase() === "REJECT";
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
+
+  useEffect(() => {
+    if (
+      areUserDocumentsLoaded &&
+      (!areUserDocumentsFetching || previousDocumentRevisions.current !== null)
+    ) {
+      const currentRevisions = new Set(
+        userDocuments
+          .filter((document) => document.status.toUpperCase() === "REJECT")
+          .map(
+            (document) =>
+              `${document.id}:${document.lastRejectedAt ?? document.reviewCount ?? ""}`,
+          ),
+      );
+
+      if (previousDocumentRevisions.current === null) {
+        previousDocumentRevisions.current = currentRevisions;
+      } else {
+        const newRevisionCount = [...currentRevisions].filter(
+          (revision) => !previousDocumentRevisions.current?.has(revision),
+        ).length;
+
+        if (newRevisionCount > 0) {
+          toast.info(
+            `Ada revisi baru pada ${newRevisionCount} dokumen. Cek Overview untuk detail.`,
+          );
+        }
+        previousDocumentRevisions.current = currentRevisions;
+      }
+    }
+
+    if (
+      isUserTeamLoaded &&
+      (!isUserTeamFetching || previousPaymentRevision.current !== undefined)
+    ) {
+      const paymentRevision =
+        userTeam?.paymentProof?.status?.toUpperCase() === "REJECT"
+          ? `${userTeam.paymentProof.id}:${userTeam.paymentProof.lastRejectedAt ?? userTeam.paymentProof.reviewCount ?? ""}`
+          : null;
+
+      if (previousPaymentRevision.current === undefined) {
+        previousPaymentRevision.current = paymentRevision;
+      } else {
+        if (paymentRevision && paymentRevision !== previousPaymentRevision.current) {
+          toast.info(
+            "Ada revisi baru pada bukti pembayaran. Cek Overview untuk detail.",
+          );
+        }
+        previousPaymentRevision.current = paymentRevision;
+      }
+    }
+  }, [
+    areUserDocumentsLoaded,
+    areUserDocumentsFetching,
+    isUserTeamLoaded,
+    isUserTeamFetching,
+    userDocuments,
+    userTeam,
+  ]);
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {
