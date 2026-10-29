@@ -61,11 +61,11 @@ const DOC_HELPERS: Partial<
   TWIBBON: {
     label: "Belum punya twibbon? Bikin di sini →",
     href: "/twibbon",
-    hideWhenUploaded: true,
+    hideWhenUploaded: false,
   },
   SHARE_STORY: {
     label: "Link poster Post Story →",
-    href: "https://drive.google.com/drive/folders/1nsJsPeWydid4WilPhBEzM1FWVentQ64V?usp=drive_link",
+    href: "https://drive.google.com/drive/folders/17MUE13_qlRSbaMmxtkSfiFK9JUWyerAO",
   },
 };
 
