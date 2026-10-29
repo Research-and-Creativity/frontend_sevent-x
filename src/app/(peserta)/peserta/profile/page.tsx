@@ -67,6 +67,10 @@ const DOC_HELPERS: Partial<
     label: "Link poster Post Story →",
     href: "https://drive.google.com/drive/folders/17MUE13_qlRSbaMmxtkSfiFK9JUWyerAO",
   },
+  INSTAGRAM_FOLLOW: {
+    label: "Follow Instagram →",
+    href: "https://www.instagram.com/sevent.tup"
+  }
 };
 
 const DOCUMENT_STATUS_LABEL: Record<string, string> = {
