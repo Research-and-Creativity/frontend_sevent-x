@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,25 +34,26 @@ const faqs = [
   {
     q: "GUIDEBOOK",
     a: (
-      <>
+      <div className="flex flex-wrap gap-3">
         <a
           href="https://drive.google.com/drive/folders/1xr8xSS393c1DegO7hpV10VEEa_CS3bnS?usp=drive_link"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline underline-offset-4 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.05] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/40"
         >
           UI/UX Rulebook
+          <ExternalLink className="h-4 w-4" />
         </a>
-        <br />
         <a
           href="https://drive.google.com/drive/folders/1BbCrFSz9n7cMKORzgoKFoXP-wuEAeP2n?usp=drive_link"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline underline-offset-4 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/[0.05] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 hover:border-white/40"
         >
           Softdev Rulebook
+          <ExternalLink className="h-4 w-4" />
         </a>
-      </>
+      </div>
     ),
   },
 ];
@@ -69,23 +70,44 @@ export function FaqSection() {
   );
 
   return (
-    <section id="faq" ref={containerRef} className="relative py-12 px-4 md:py-24 md:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white text-center mb-8 md:mb-14 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">FAQ</h2>
-        <div className="faq-list flex flex-col gap-4">
+    <section
+      id="faq"
+      ref={containerRef}
+      className="relative px-4 py-12 md:px-8 md:py-24"
+    >
+      <div className="mx-auto max-w-3xl">
+        <h2 className="mb-8 text-center font-display text-4xl font-bold tracking-tight text-white sm:text-5xl md:mb-12">
+          FAQ
+        </h2>
+        <div className="flex flex-col gap-3">
           {faqs.map((f, i) => (
-            <div key={i} className="faq-item border border-white/40 bg-white/[0.06] overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.06)] rounded-[2rem]">
+            <div
+              key={i}
+              className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.04] transition-colors hover:bg-white/[0.06]"
+            >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="cursor-pointer w-full flex items-center justify-between px-7 py-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left"
               >
-                <span className="text-base font-semibold tracking-widest text-white/90">{f.q}</span>
-                <Plus className={`w-5 h-5 text-white/70 transition-transform duration-300 ${open === i ? "rotate-45" : ""}`} />
+                <span className="text-base font-semibold text-white/95 sm:text-lg">
+                  {f.q}
+                </span>
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-white/60 transition-transform duration-300 ${
+                    open === i ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-              <div className={`grid transition-all duration-300 ease-in-out ${open === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                <p className="overflow-hidden px-7 text-sm text-white/50 leading-relaxed">
-                  <span className="block pb-5">{f.a}</span>
-                </p>
+              <div
+                className={`grid transition-all duration-300 ease-in-out ${
+                  open === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="border-t border-white/10 px-6 py-5 text-sm leading-relaxed text-white/70">
+                    {f.a}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
