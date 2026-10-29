@@ -403,7 +403,7 @@ export default function PesertaProfilePage() {
               <span className="text-sm text-white/60">+62</span>
               <input
                 id="profile-phone"
-                type="tel"
+                type="number"
                 placeholder="812-3456-7890"
                 value={form.phone}
                 onChange={(e) => updateField("phone", e.target.value)}
@@ -427,6 +427,14 @@ export default function PesertaProfilePage() {
               onChange={(e) => updateField("discordId", e.target.value)}
               className={glassInput}
             />
+            <a
+              href="https://discord.gg/hRfxxfarVe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
+            >
+              Belum punya / belum join server Discord? Gabung di sini →
+            </a>
           </div>
         </div>
 
