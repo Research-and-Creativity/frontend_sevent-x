@@ -263,109 +263,95 @@ export default function PesertaDashboardPage() {
         )}
       </div>
 
-      {hasJoined ? (
-        <>
-          {/* Competition (title) */}
-          <div className={`${glass} px-6 py-5 lg:px-8`}>
-            <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
-              Competition
-              {team?.competition?.name && (
-                <span className="ml-3 text-sm font-normal text-text-secondary">
-                  • {team.competition.name}
-                </span>
-              )}
-            </h2>
-          </div>
-
-          {/* Competition metrics */}
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {/* Team Members */}
-            <div className={`${glass} ${statCard}`}>
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
-                  Team Members
-                </span>
-                <Users className="h-4 w-4 text-text-secondary" />
-              </div>
-              <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
-                {maxMembers ? (
-                  <>
-                    {memberCount}{" "}
-                    <span className="text-base font-normal text-text-secondary">
-                      / {maxMembers}
-                    </span>
-                  </>
-                ) : (
-                  "-"
-                )}
-              </div>
-              <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-[#7D8CFF]"
-                  style={{ width: `${memberProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Submission Status */}
-            <div className={`${glass} ${statCard}`}>
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
-                  Submission Status
-                </span>
-                <RotateCcw className="h-4 w-4 text-text-secondary" />
-              </div>
-              <div
-                className={`font-display text-xl sm:text-2xl font-bold ${
-                  submission ? "text-emerald-400" : "text-rose-500"
-                }`}
-              >
-                {submission ? "Submitted" : "Not Submitted"}
-              </div>
-            </div>
-
-            {/* Time Remaining */}
-            <div className={`${glass} ${statCard}`}>
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
-                  Time Remaining
-                </span>
-                <Clock className="h-4 w-4 text-text-secondary" />
-              </div>
-              <div className="font-display text-xl sm:text-2xl font-bold tracking-wide text-white">
-                {deadline ? formatCountdown(deadline) : "--"}
-              </div>
-              <p className="relative mt-2 text-[11px] text-text-secondary">
-                Until submission deadline
-              </p>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className={`${glass} ${statCard} md:max-w-sm`}>
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
-                Team Members
+      {hasJoined && (
+        <div className={`${glass} px-6 py-5 lg:px-8`}>
+          <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
+            Competition
+            {team?.competition?.name && (
+              <span className="ml-3 text-sm font-normal text-text-secondary">
+                • {team.competition.name}
               </span>
-              <Users className="h-4 w-4 text-text-secondary" />
-            </div>
-            <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
-              -
-            </div>
+            )}
+          </h2>
+        </div>
+      )}
+
+      {/* Competition metrics — selalu tampil, meski belum bergabung tim */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {/* Team Members */}
+        <div className={`${glass} ${statCard}`}>
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+              Team Members
+            </span>
+            <Users className="h-4 w-4 text-text-secondary" />
           </div>
-          <div className={`${glass} p-6 lg:p-8`}>
-            <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
-              Competition
-            </h2>
-            <p className="relative text-sm text-text-secondary mb-6">
-              You haven&apos;t registered in any competition or any team.
-            </p>
-            <Link href="/peserta/competition">
-              <Button className={pillButton}>Join Now!</Button>
-            </Link>
+          <div className="font-display text-2xl sm:text-3xl font-bold leading-none text-white">
+            {maxMembers ? (
+              <>
+                {memberCount}{" "}
+                <span className="text-base font-normal text-text-secondary">
+                  / {maxMembers}
+                </span>
+              </>
+            ) : (
+              "-"
+            )}
           </div>
-        </>
+          <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-[#7D8CFF]"
+              style={{ width: `${memberProgress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Submission Status */}
+        <div className={`${glass} ${statCard}`}>
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+              Submission Status
+            </span>
+            <RotateCcw className="h-4 w-4 text-text-secondary" />
+          </div>
+          <div
+            className={`font-display text-xl sm:text-2xl font-bold ${
+              submission ? "text-emerald-400" : "text-rose-500"
+            }`}
+          >
+            {submission ? "Submitted" : "Not Submitted"}
+          </div>
+        </div>
+
+        {/* Time Remaining */}
+        <div className={`${glass} ${statCard}`}>
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+              Time Remaining
+            </span>
+            <Clock className="h-4 w-4 text-text-secondary" />
+          </div>
+          <div className="font-display text-xl sm:text-2xl font-bold tracking-wide text-white">
+            {deadline ? formatCountdown(deadline) : "--"}
+          </div>
+          <p className="relative mt-2 text-[11px] text-text-secondary">
+            Until submission deadline
+          </p>
+        </div>
+      </div>
+
+{!hasJoined && (
+        <div className={`${glass} p-6 lg:p-8`}>
+          <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
+            Competition
+          </h2>
+          <p className="relative text-sm text-text-secondary mb-6">
+            You haven&apos;t registered in any competition or any team.
+          </p>
+          <Link href="/peserta/competition">
+            <Button className={pillButton}>Join Now!</Button>
+          </Link>
+        </div>
       )}
 
       {/* Dokumen verifikasi — arahan singkat begitu tim terbentuk. Rincian
