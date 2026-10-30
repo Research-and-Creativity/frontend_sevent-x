@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -33,6 +34,11 @@ const glassButton =
   "bg-white/[0.03] border border-white/15 rounded-lg p-1.5 backdrop-blur-md hover:bg-white/10 transition-colors";
 
 export default function JuriDashboardPage() {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe } = useUserMe();
   const { data: submissions = [] } = useJudgeSubmissions();
@@ -159,8 +165,8 @@ export default function JuriDashboardPage() {
               </span>
               <Clock className="w-5 h-5 text-white/70" />
             </div>
-            <p className="relative font-display text-3xl sm:text-4xl font-bold">
-              {deadline ? formatCountdown(deadline) : "--"}
+            <p className="relative font-display text-2xl sm:text-3xl font-bold tabular-nums">
+              {deadline ? formatCountdown(deadline, now) : "--"}
             </p>
             <p className="relative text-xs text-white/50 mt-2">
               {activeStage

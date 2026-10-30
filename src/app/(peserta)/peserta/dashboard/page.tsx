@@ -53,21 +53,27 @@ const documentLabels: Record<string, string> = {
   INSTAGRAM_FOLLOW: "Follow Instagram Sevent.tup",
 };
 
-// Hitung mundur format "02d : 14h : 45m" dari tanggal target.
-function formatCountdown(target: Date) {
-  const diffMs = target.getTime() - Date.now();
+// Hitung mundur format "02d : 14h : 45m : 30s" dari tanggal target.
+function formatCountdown(target: Date, currentNow = Date.now()) {
+  const diffMs = target.getTime() - currentNow;
   if (diffMs <= 0) return "Closed";
 
-  const totalMinutes = Math.floor(diffMs / 60000);
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m`;
+  return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`;
 }
 
 export default function PesertaDashboardPage() {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
   // Reset badge "unread" di sidebar begitu overview dibuka. Dulu tugas ini
   // dipegang halaman Announcements yang kini sudah digabung ke sini.
   const markSeen = useAnnouncementStore((s) => s.markSeen);
@@ -331,8 +337,8 @@ export default function PesertaDashboardPage() {
             </span>
             <Clock className="h-4 w-4 text-text-secondary" />
           </div>
-          <div className="font-display text-xl sm:text-2xl font-bold tracking-wide text-white">
-            {deadline ? formatCountdown(deadline) : "--"}
+          <div className="font-display text-lg sm:text-xl font-bold tracking-wide text-white tabular-nums">
+            {deadline ? formatCountdown(deadline, now) : "--"}
           </div>
           <p className="relative mt-2 text-[11px] text-text-secondary">
             Until submission deadline

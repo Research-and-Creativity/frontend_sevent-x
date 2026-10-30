@@ -94,13 +94,14 @@ export function byTotalScoreDesc(
   );
 }
 
-export function formatCountdown(target: Date): string {
-  const diffMs = target.getTime() - Date.now();
+export function formatCountdown(target: Date, currentNow = Date.now()): string {
+  const diffMs = target.getTime() - currentNow;
   if (diffMs <= 0) return "Closed";
-  const totalMinutes = Math.floor(diffMs / 60000);
-  const days = Math.floor(totalMinutes / (60 * 24));
-  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-  const minutes = totalMinutes % 60;
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m`;
+  return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`;
 }
