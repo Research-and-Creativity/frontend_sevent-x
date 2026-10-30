@@ -62,7 +62,7 @@ export function Navbar() {
       ref={navRef}
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-5 px-4 md:px-8 bg-transparent"
     >
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 items-center">
+      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-[1fr_auto_1fr] items-center gap-x-4">
         <div className="flex justify-start">
           <Link href="/" className="flex items-center gap-2 group">
             <span className="font-display text-xl font-extrabold tracking-tight text-white group-hover:opacity-80 transition-opacity flex items-center gap-2">
@@ -78,20 +78,20 @@ export function Navbar() {
           </Link>
         </div>
 
-        <nav className="hidden md:flex justify-center items-center gap-8">
+        <nav className="hidden md:flex justify-center items-center gap-5 lg:gap-8 z-10">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="text-sm font-medium text-white/60 hover:text-white transition-colors"
+              className="text-sm font-medium text-white/60 hover:text-white transition-colors whitespace-nowrap"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden md:flex justify-end">
-          <Link href="/login" tabIndex={-1}>
+        <div className="hidden md:flex justify-end pointer-events-none">
+          <Link href="/login" tabIndex={-1} className="pointer-events-auto">
             <button className="cursor-pointer bg-white text-black text-sm font-semibold px-6 py-2 rounded-full hover:bg-white/90 transition-colors">
               Login
             </button>
