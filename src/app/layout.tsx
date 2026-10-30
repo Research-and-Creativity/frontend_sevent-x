@@ -6,6 +6,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { LenisProvider } from "@/components/providers/lenis-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -14,16 +15,46 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
-  title: "SEVENT X",
+  title: {
+    default: "SEVENT X — National Software Engineering Event & Competition",
+    template: "%s | SEVENT X",
+  },
   description:
-    "SEVENT X adalah kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Ikuti kategori Software Development atau UI/UX Design dengan tema SDGs.",
+    "SEVENT X adalah kompetisi Software Engineering nasional tahunan yang diselenggarakan oleh HIMA Software Engineering Telkom University untuk siswa SMA/sederajat dan mahasiswa. Ikuti cabang lomba Software Development dan UI/UX Design.",
   applicationName: "SEVENT X",
   category: "education",
+  keywords: [
+    "SEVENT",
+    "SEVENT X",
+    "SEVENT 2026",
+    "SEVENT Telkom University",
+    "kompetisi software engineering",
+    "lomba software development",
+    "lomba UI/UX",
+    "lomba UI UX nasional",
+    "lomba IT mahasiswa",
+    "lomba SMA SMK IT",
+    "HIMA SE",
+    "HIMA Software Engineering",
+    "Telkom University",
+    "zetech",
+  ],
+  authors: [
+    {
+      name: "HIMA Software Engineering Telkom University",
+      url: "https://sevent.zetech.id",
+    },
+  ],
+  creator: "HIMA Software Engineering Telkom University",
+  publisher: "SEVENT X",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "id_ID",
     siteName: "SEVENT X",
-    title: "SEVENT X",
+    title: "SEVENT X — National Software Engineering Event & Competition",
     description:
       "Kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Kembangkan inovasi digital di kategori Software Development atau UI/UX Design.",
     images: [
@@ -37,7 +68,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SEVENT X",
+    title: "SEVENT X — National Software Engineering Event & Competition",
     description:
       "Kompetisi Software Engineering nasional untuk siswa SMA/sederajat dan mahasiswa. Kembangkan inovasi digital di kategori Software Development atau UI/UX Design.",
     images: ["/opengraph-image"],
@@ -74,6 +105,7 @@ export default function RootLayout({
             </LenisProvider>
           </SessionProvider>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   );
