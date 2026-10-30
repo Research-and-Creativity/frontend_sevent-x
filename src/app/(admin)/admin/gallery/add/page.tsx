@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState, DragEvent, ChangeEvent } from "react";
+import { useRef, useState, DragEvent, ChangeEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, Loader2 } from "lucide-react";
+import { UploadCloud, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateGalleryItem } from "@/hooks/use-admin";
 import { getErrorMessageWithDefault } from "@/lib/errors";
@@ -21,6 +21,12 @@ export default function AdminGalleryAddPage() {
   const allowed = ["image/jpeg", "image/png", "image/jpg"];
   const maxSize = 5 * 1024 * 1024;
   const maxFiles = 10;
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [previewUrls]);
 
   const handleFiles = (list: FileList | null) => {
     if (!list) return;
@@ -60,6 +66,13 @@ export default function AdminGalleryAddPage() {
     else setError("");
     setFiles(accepted);
     setFileNames(names);
+  };
+
+  const removeFile = (index: number) => {
+    URL.revokeObjectURL(previewUrls[index]);
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFileNames((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -113,24 +126,54 @@ export default function AdminGalleryAddPage() {
 
           <div>
             <label className="text-sm text-white/70">Upload Image</label>
-            <div className="mt-2 w-full bg-neutral-200/90 rounded-lg overflow-hidden p-2">
-              {previewUrls.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {previewUrls.map((u, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={i}
-                      src={u}
-                      alt={`Preview ${i + 1}`}
-                      className="w-full aspect-square object-cover rounded"
-                    />
-                  ))}
+            <div className="mt-2 w-full bg-black/30 border border-white/10 rounded-2xl overflow-hidden p-4">
+              {previewUrls.length === 0 ? (
+                <div className="aspect-[16/6] flex flex-col items-center justify-center text-white/40 text-sm gap-1">
+                  <span>Belum ada gambar yang dipilih</span>
+                  <span className="text-xs text-white/20">
+                    Pilih atau drag & drop file pada area di bawah
+                  </span>
+                </div>
+              ) : previewUrls.length === 1 ? (
+                <div className="relative group max-h-96 w-full flex items-center justify-center overflow-hidden rounded-xl bg-black/40 border border-white/5 p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrls[0]}
+                    alt="Preview"
+                    className="max-h-80 w-auto max-w-full rounded-lg object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFile(0)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 hover:bg-red-500 text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg cursor-pointer"
+                    title="Hapus gambar"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               ) : (
-                <div className="aspect-video flex items-center justify-center">
-                  <span className="text-neutral-500 text-sm">
-                    No image selected
-                  </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {previewUrls.map((u, i) => (
+                    <div
+                      key={i}
+                      className="relative group aspect-square rounded-xl overflow-hidden border border-white/10 bg-black/40"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={u}
+                        alt={`Preview ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 hover:bg-red-500 text-white flex items-center justify-center transition-colors border border-white/20 shadow-md cursor-pointer"
+                        title="Hapus gambar"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -151,7 +194,7 @@ export default function AdminGalleryAddPage() {
               </p>
               {fileNames.length > 0 && (
                 <p className="text-xs text-[#7FA7F5] mt-3">
-                  Selected: {fileNames.length} file(s) — {fileNames.join(", ")}
+                  Selected: {fileNames.length} file(s) – {fileNames.join(", ")}
                 </p>
               )}
               {error && <p className="text-xs text-red-400 mt-3">{error}</p>}
