@@ -83,11 +83,13 @@ export default function AdminOverviewDashboardPage() {
 
   const remaining = useMemo(() => {
     if (!deadline) return null;
-    const diff = Math.max(0, deadline - now);
+    const diff = deadline - now;
+    if (diff <= 0) return "Closed";
     const d = Math.floor(diff / 86_400_000);
     const h = Math.floor((diff % 86_400_000) / 3_600_000);
     const m = Math.floor((diff % 3_600_000) / 60_000);
-    return `${String(d).padStart(2, "0")}d : ${String(h).padStart(2, "0")}h : ${String(m).padStart(2, "0")}m`;
+    const s = Math.floor((diff % 60_000) / 1000);
+    return `${String(d).padStart(2, "0")}d : ${String(h).padStart(2, "0")}h : ${String(m).padStart(2, "0")}m : ${String(s).padStart(2, "0")}s`;
   }, [deadline, now]);
 
   const totalTeams = overview?.totalTeams ?? teams.length;
@@ -147,7 +149,7 @@ export default function AdminOverviewDashboardPage() {
             </div>
           ) : (
             <>
-              <p className="font-display text-5xl font-bold">
+              <p className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight tabular-nums">
                 {remaining ?? "—"}
               </p>
               <p className="text-xs text-white/50 mt-2">
