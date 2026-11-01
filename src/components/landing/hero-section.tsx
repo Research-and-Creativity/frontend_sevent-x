@@ -115,7 +115,7 @@ export function HeroSection() {
       {/* Ambient glow */}
       <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#1E3A8A]/30 rounded-full blur-[140px]" />
       <Image
-        src="/assets/image/logo_putih.svg"
+        src="/assets/image/logo_putih.webp"
         alt=""
         width={1000}
         height={1262}

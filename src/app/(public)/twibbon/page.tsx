@@ -44,7 +44,7 @@ export default function TwibbonPage() {
       <main className="relative flex-1 flex flex-col items-center pt-32 pb-24 px-4 w-full">
         <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#1E3A8A]/30 rounded-full blur-[140px] pointer-events-none" />
         <Image
-          src="/assets/image/logo_putih.svg"
+          src="/assets/image/logo_putih.webp"
           alt=""
           width={1000}
           height={1262}

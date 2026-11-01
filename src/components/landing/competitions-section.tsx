@@ -24,8 +24,8 @@ type CompetitionCard = {
 
 // Logo dipetakan dari slug kompetisi. Bila slug belum dikenal, pakai logo brand.
 const LOGO_BY_SLUG: Record<string, string> = {
-  "software-development": "/assets/image/logo_softdev.svg",
-  "ui-ux": "/assets/image/logo_uiux.svg",
+  "software-development": "/assets/image/logo_softdev.webp",
+  "ui-ux": "/assets/image/logo_uiux.webp",
 };
 
 // Tampilan cadangan bila API belum mengembalikan data (mis. backend belum jalan),
@@ -34,14 +34,14 @@ const FALLBACK_CARDS: CompetitionCard[] = [
   {
     key: "software-development",
     title: "SOFTDEV",
-    image: "/assets/image/logo_softdev.svg",
+    image: "/assets/image/logo_softdev.webp",
     description:
       "Software Development challenges, participants to develop their own ideas and turn them into technical applications.",
   },
   {
     key: "ui-ux",
     title: "UI/UX DESIGN",
-    image: "/assets/image/logo_uiux.svg",
+    image: "/assets/image/logo_uiux.webp",
     description:
       "UI/UX Design challenges participants to create interface that not only aesthetics and functionality, but also benefiting the user experience.",
   },
@@ -51,7 +51,7 @@ function toCard(competition: Competition): CompetitionCard {
   return {
     key: competition.slug,
     title: competition.name.toUpperCase(),
-    image: LOGO_BY_SLUG[competition.slug] ?? "/assets/image/logo_biru.svg",
+    image: LOGO_BY_SLUG[competition.slug] ?? "/assets/image/logo_biru.webp",
     description: competition.description,
   };
 }

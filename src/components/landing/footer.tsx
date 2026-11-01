@@ -9,7 +9,7 @@ export function Footer() {
         <div>
           <Link href="/" className="flex items-center gap-3 mb-4">
             <Image
-              src="/assets/image/logo_putih.svg"
+              src="/assets/image/logo_putih.webp"
               alt="SEVENT X"
               width={34}
               height={44}

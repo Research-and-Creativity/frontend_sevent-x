@@ -67,7 +67,7 @@ export function Navbar() {
           <Link href="/" className="flex items-center gap-2 group">
             <span className="font-display text-xl font-extrabold tracking-tight text-white group-hover:opacity-80 transition-opacity flex items-center gap-2">
               <Image
-                src="/assets/image/logo_putih.svg"
+                src="/assets/image/logo_putih.webp"
                 alt="SEVENT X"
                 width={20}
                 height={26}
