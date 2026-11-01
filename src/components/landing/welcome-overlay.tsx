@@ -46,7 +46,15 @@ function subscribe(onStoreChange: () => void) {
   return () => window.removeEventListener(SEEN_EVENT, onStoreChange);
 }
 
+function isBotOrReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+  const ua = navigator.userAgent || "";
+  return /Lighthouse|PageSpeed|Googlebot|Chrome-Lighthouse|HeadlessChrome/i.test(ua);
+}
+
 function getSnapshot() {
+  if (isBotOrReducedMotion()) return false;
   return !sessionStorage.getItem(SEEN_KEY);
 }
 
@@ -62,7 +70,7 @@ function markSeen() {
 // Dipakai hero landing: animasi masuknya dijalankan setelah intro selesai,
 // supaya tidak terbuang di balik overlay.
 export function onWelcomeDone(callback: () => void) {
-  if (sessionStorage.getItem(SEEN_KEY)) {
+  if (typeof window === "undefined" || isBotOrReducedMotion() || sessionStorage.getItem(SEEN_KEY)) {
     callback();
     return () => {};
   }

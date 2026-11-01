@@ -90,7 +90,7 @@ export function TimelineSection() {
       className="relative py-12 px-4 md:py-24 md:px-8 overflow-visible"
     >
       <Image
-        src="/assets/image/logo_putih.svg"
+        src="/assets/image/logo_putih.webp"
         alt=""
         width={700}
         height={900}

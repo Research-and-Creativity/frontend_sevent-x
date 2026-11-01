@@ -40,10 +40,10 @@ const modalSubmit =
 // Backend tidak menyimpan logo kompetisi, jadi dipetakan dari slug.
 // Slug yang tidak dikenali memakai logo generik.
 const COMPETITION_LOGOS: Record<string, string> = {
-  "software-development": "/assets/image/logo_softdev.svg",
-  "ui-ux": "/assets/image/logo_uiux.svg",
+  "software-development": "/assets/image/logo_softdev.webp",
+  "ui-ux": "/assets/image/logo_uiux.webp",
 };
-const FALLBACK_LOGO = "/assets/image/logo_biru.svg";
+const FALLBACK_LOGO = "/assets/image/logo_biru.webp";
 
 function getCompetitionLogo(slug: string) {
   return COMPETITION_LOGOS[slug] ?? FALLBACK_LOGO;

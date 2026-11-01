@@ -58,7 +58,7 @@ export default function LandingPage() {
                 className="absolute inset-x-0 top-0 w-full h-auto opacity-30 pattern-sway pointer-events-none"
               />
               <Image
-                src="/assets/image/logo_putih.svg"
+                src="/assets/image/logo_putih.webp"
                 alt=""
                 width={1000}
                 height={1262}

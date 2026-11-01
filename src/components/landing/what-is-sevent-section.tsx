@@ -64,7 +64,7 @@ export function WhatIsSeventSection() {
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_1.25fr] gap-4 md:gap-12 items-center">
         <div className="wis-left flex items-center justify-center">
           <Image
-            src="/assets/image/logo_biru.svg"
+            src="/assets/image/logo_biru.webp"
             alt="SEVENT X logo"
             width={320}
             height={408}

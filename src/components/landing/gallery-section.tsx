@@ -88,7 +88,7 @@ export function GallerySection() {
                 {/* no-referrer wajib: Google membalas 429 bila permintaan membawa Referer. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.imageUrl}
+                  src={item.imageUrl.includes("=w800") ? item.imageUrl.replace("=w800", "=w400") : item.imageUrl}
                   alt={item.title}
                   loading="lazy"
                   referrerPolicy="no-referrer"
