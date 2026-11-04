@@ -437,7 +437,7 @@ export default function PesertaProfilePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-medium text-[#7D8CFF] transition-colors hover:text-white"
             >
-              Belum punya / belum join server Discord? Gabung di sini →
+              Belum join server Discord? Gabung di sini →
             </a>
           </div>
         </div>

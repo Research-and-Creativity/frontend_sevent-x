@@ -17,7 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
   title: {
-    default: "SEVENT X — National Software Engineering Event & Competition",
+    default: "SEVENT X - National Software Engineering Event & Competition",
     template: "%s | SEVENT X",
   },
   description:

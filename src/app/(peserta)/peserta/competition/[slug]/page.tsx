@@ -32,14 +32,7 @@ const glassInput =
   "h-14 w-full rounded-full border border-white/25 bg-white/[0.03] px-6 text-sm text-white " +
   "placeholder:text-white/40 focus:outline-none focus:border-[#7D8CFF]/70 transition-colors";
 
-// Rekening tujuan. Backend tidak memodelkan data ini di database, jadi nilainya
-// ditahan di frontend sebagai konfigurasi organisasi sampai ada endpoint resmi.
-const PAYMENT_ACCOUNT = {
-  amount: "Rp80.000,-",
-  bank: "BNI",
-  accountNumber: "0010293810",
-  accountName: "Salumita Ardiana",
-};
+const PAYMENT_AMOUNT = "Rp80.000,-";
 
 // Label dan flag-nya mengikuti slot unggah di halaman Profile. Keempat dokumen
 // ini juga menjadi syarat kelayakan mengirim karya.
@@ -1023,23 +1016,17 @@ export default function CompetitionRegistrationPage() {
           )}
 
           <div className="relative mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Bank Account */}
             <div>
               <h3 className="font-display text-lg font-bold text-white">
-                Bank Account
+                Pembayaran QRIS
               </h3>
               <p className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                {PAYMENT_ACCOUNT.amount}
+                {PAYMENT_AMOUNT}
               </p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-text-secondary">
-                <span>
-                  <span className="text-white">{PAYMENT_ACCOUNT.bank}</span>
-                  <span className="mx-1.5">•</span>
-                  {PAYMENT_ACCOUNT.accountNumber}
-                </span>
-                <span>a.n. {PAYMENT_ACCOUNT.accountName}</span>
-              </div>
-
+              <p className="mt-2 text-sm text-text-secondary">
+                Scan QRIS resmi dari panitia melalui Guidebook, lalu unggah bukti pembayaran di
+                samping.
+              </p>
               <span className="mt-5 inline-flex items-center rounded-full border border-rose-500/60 px-4 py-1.5 text-xs font-semibold text-rose-500">
                 {team?.paymentProof?.status ?? "Not Submitted"}
               </span>
