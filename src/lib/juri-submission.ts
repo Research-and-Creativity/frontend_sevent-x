@@ -94,7 +94,8 @@ export function byTotalScoreDesc(
   );
 }
 
-export function formatCountdown(target: Date, currentNow = Date.now()): string {
+export function formatCountdown(target: Date, currentNow = 0): string {
+  if (currentNow === 0) return "--";
   const diffMs = target.getTime() - currentNow;
   if (diffMs <= 0) return "Closed";
   const totalSeconds = Math.floor(diffMs / 1000);
