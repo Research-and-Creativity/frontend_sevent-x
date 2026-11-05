@@ -98,12 +98,14 @@ export function TimelineSection() {
       />
       <div className="max-w-[110rem] mx-auto">
         <div className="tl-header text-center max-w-3xl mx-auto mb-8 md:mb-16">
-          <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
-            TIMELINE
-          </h2>
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <h2 className="font-display text-5xl sm:text-6xl font-extrabold tracking-wide text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
+              TIMELINE
+            </h2>
+          </div>
           <p className="text-sm text-white/50 leading-relaxed">
-            The competition will be conducted in several stages, starting with
-            registration, the uploading of documents and entries, the
+            The competition will be conducted online in several stages, starting
+            with registration, the uploading of documents and entries, the
             preliminary round, and the final presentation to determine the
             winners.
           </p>
@@ -126,11 +128,14 @@ export function TimelineSection() {
                 <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] z-10" />
                 {e.side === "top" ? (
                   <>
-                    <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-28 flex flex-col justify-center">
+                    <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-32 flex flex-col justify-center items-center">
                       <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                         {e.date}
                       </p>
-                      <p className="text-base text-white/60 mt-1">{e.title}</p>
+                      <p className="text-sm text-white/70 mt-1">{e.title}</p>
+                      <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                        Online
+                      </span>
                     </div>
                     <div className="hidden md:block w-px h-12 bg-white/25" />
                   </>
@@ -139,20 +144,24 @@ export function TimelineSection() {
                     <div className="md:hidden" />
                     <div className="hidden md:flex md:flex-col md:items-center md:justify-end md:h-full md:w-full">
                       <div className="w-px h-12 bg-white/25" />
-                      <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-28 flex flex-col justify-center">
+                      <div className="w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] md:h-32 flex flex-col justify-center items-center">
                         <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                           {e.date}
                         </p>
-                        <p className="text-base text-white/60 mt-1">
-                          {e.title}
-                        </p>
+                        <p className="text-sm text-white/70 mt-1">{e.title}</p>
+                        <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                          Online
+                        </span>
                       </div>
                     </div>
-                    <div className="md:hidden w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] flex flex-col justify-center">
+                    <div className="md:hidden w-full border border-white/25 rounded-xl px-4 py-5 text-center bg-white/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.08)] flex flex-col justify-center items-center">
                       <p className="font-display text-lg font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                         {e.date}
                       </p>
-                      <p className="text-base text-white/60 mt-1">{e.title}</p>
+                      <p className="text-sm text-white/70 mt-1">{e.title}</p>
+                      <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                        Online
+                      </span>
                     </div>
                   </>
                 )}

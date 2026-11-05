@@ -70,3 +70,14 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
 export const REGISTRATION_DEADLINE =
   TIMELINE_EVENTS.find((e) => e.phase === "REGISTRATION")?.end ??
   TIMELINE_EVENTS[0].end;
+
+export const RULEBOOK_LINKS: Record<string, { label: string; url: string }> = {
+  "software-development": {
+    label: "Softdev Rulebook",
+    url: "https://drive.google.com/drive/folders/1BbCrFSz9n7cMKORzgoKFoXP-wuEAeP2n?usp=drive_link",
+  },
+  "ui-ux": {
+    label: "UI/UX Rulebook",
+    url: "https://drive.google.com/drive/folders/1xr8xSS393c1DegO7hpV10VEEa_CS3bnS?usp=drive_link",
+  },
+};

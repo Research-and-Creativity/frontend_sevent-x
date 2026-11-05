@@ -9,6 +9,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { prefersReducedMotion } from "@/lib/accessibility";
 import { useCompetitions } from "@/hooks/use-peserta";
+import { RULEBOOK_LINKS } from "@/config/site";
 import type { Competition } from "@/types/api";
 
 if (typeof window !== "undefined") {
@@ -125,29 +126,44 @@ export function CompetitionsSection() {
           </div>
         ) : (
           <div className="comp-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-            {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => (
-              <div
-                key={c.key}
-                className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.08)]"
-              >
-                <div className="flex flex-col md:flex-row gap-5 items-center md:items-stretch">
-                  <Image src={c.image} alt={c.title} width={176} height={140} className="w-32 md:w-44 shrink-0 rounded-sm md:self-stretch md:min-h-[140px] object-cover" />
-                  <div className="flex flex-col justify-center flex-1">
-                    <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                      {c.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/50 leading-relaxed mb-4">
-                      {c.description}
-                    </p>
-                    <Link href="/register" className="block w-full">
-                      <button className="cursor-pointer w-full bg-white text-[#7C83BC] text-xs font-semibold px-8 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all">
-                        Register Now!
-                      </button>
-                    </Link>
+            {(cards.length > 0 ? cards : FALLBACK_CARDS).map((c) => {
+              const rulebook = RULEBOOK_LINKS[c.key];
+              return (
+                <div
+                  key={c.key}
+                  className="comp-card border border-white/20 rounded-lg p-6 bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.08)]"
+                >
+                  <div className="flex flex-col md:flex-row gap-5 items-center md:items-stretch">
+                    <Image src={c.image} alt={c.title} width={176} height={140} className="w-32 md:w-52 shrink-0 rounded-sm md:self-stretch md:min-h-[140px] object-cover" />
+                    <div className="flex flex-col justify-center flex-1">
+                      <h3 className="font-display text-xl font-bold tracking-widest text-white mb-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                        {c.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-white/50 leading-relaxed mb-4">
+                        {c.description}
+                      </p>
+                      <div className="flex flex-col gap-2.5 w-full mt-1">
+                        <Link href="/register" className="flex-1">
+                          <button className="cursor-pointer w-full bg-white text-[#7C83BC] text-xs font-semibold px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(180,190,255,0.6)] hover:bg-white/90 transition-all text-center">
+                            Register Now!
+                          </button>
+                        </Link>
+                        {rulebook && (
+                          <a
+                            href={rulebook.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center flex-1 rounded-full border border-white/25 bg-white/[0.05] px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10 hover:border-white/40 transition-all text-center"
+                          >
+                            Guidebook
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
