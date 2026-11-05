@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
@@ -94,6 +94,17 @@ interface ProfileForm {
 
 export default function PesertaProfilePage() {
   const { data: user, isLoading: userLoading } = useUserMe();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const el = document.querySelector(window.location.hash);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 150);
+      }
+    }
+  }, []);
   const {
     isComplete: isProfileComplete,
     missingFields,
@@ -421,16 +432,19 @@ export default function PesertaProfilePage() {
               htmlFor="profile-discord"
               className="block text-sm text-text-secondary"
             >
-              Discord ID <span className="text-[#7D8CFF]">*</span>
+              Discord Username <span className="text-[#7D8CFF]">*</span>
             </label>
             <input
               id="profile-discord"
               type="text"
-              placeholder="Discord ID"
+              placeholder="Username Discord (bukan Display Name)"
               value={form.discordId}
               onChange={(e) => updateField("discordId", e.target.value)}
               className={glassInput}
             />
+            <p className="text-[11px] text-text-secondary">
+              *Gunakan <span className="text-white font-medium">Username Discord</span> asli Anda (contoh: <span className="text-white font-mono">username</span>), bukan Display Name / nama server.
+            </p>
             <a
               href="https://discord.gg/hRfxxfarVe"
               target="_blank"
@@ -529,7 +543,7 @@ export default function PesertaProfilePage() {
       </div>
 
       {/* Verification Document */}
-      <div className={`${glass} p-6 lg:p-8`}>
+      <div id="verification-document" className={`${glass} p-6 lg:p-8 scroll-mt-6`}>
         <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-6">
           Verification Document
         </h2>

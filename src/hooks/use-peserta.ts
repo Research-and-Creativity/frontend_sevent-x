@@ -164,7 +164,7 @@ export const PROFILE_REQUIRED_FIELDS = [
   { key: "phone", label: "Phone Number" },
   { key: "birthDate", label: "Birth Date" },
   { key: "domicile", label: "Domicile" },
-  { key: "discordId", label: "Discord ID" },
+  { key: "discordId", label: "Discord Username" },
 ] as const satisfies ReadonlyArray<{ key: keyof User; label: string }>;
 
 // Kelengkapan profil dipakai sebagai gerbang masuk fitur kompetisi. Dokumen
