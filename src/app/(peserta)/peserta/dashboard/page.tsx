@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+function subscribeClock(callback: () => void) {
+  const id = setInterval(callback, 1000);
+  return () => clearInterval(id);
+}
+
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   Users,
   RotateCcw,
   Clock,
-  Check,
   Trophy,
   Award,
   Sparkles,
@@ -15,7 +19,14 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  ExternalLink,
+  Copy,
 } from "lucide-react";
+import { toast } from "sonner";
+import { RULEBOOK_LINKS } from "@/config/site";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -23,6 +34,7 @@ import {
   useMyAnnouncements,
   useNewsFeed,
   useProfileComplete,
+  PROFILE_REQUIRED_FIELDS,
   useSubmissionEligibility,
   useUserDocuments,
   useUserMe,
@@ -54,7 +66,8 @@ const documentLabels: Record<string, string> = {
 };
 
 // Hitung mundur format "02d : 14h : 45m : 30s" dari tanggal target.
-function formatCountdown(target: Date, currentNow = Date.now()) {
+function formatCountdown(target: Date, currentNow = 0) {
+  if (currentNow === 0) return "--";
   const diffMs = target.getTime() - currentNow;
   if (diffMs <= 0) return "Closed";
 
@@ -69,11 +82,7 @@ function formatCountdown(target: Date, currentNow = Date.now()) {
 }
 
 export default function PesertaDashboardPage() {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useSyncExternalStore(subscribeClock, () => Date.now(), () => 0);
   // Reset badge "unread" di sidebar begitu overview dibuka. Dulu tugas ini
   // dipegang halaman Announcements yang kini sudah digabung ke sini.
   const markSeen = useAnnouncementStore((s) => s.markSeen);
@@ -86,7 +95,7 @@ export default function PesertaDashboardPage() {
   const { data: userDocuments = [] } = useUserDocuments();
   const { data: submission } = useUserSubmission();
   const { data: timeline = [] } = useCompetitionTimeline(team?.competition?.slug);
-  const { isComplete: profileComplete, isLoading: profileLoading } =
+  const { isComplete: profileComplete, isLoading: profileLoading, missingFields } =
     useProfileComplete();
 
   // 1. Pengumuman hasil tim (lolos finalis / gugur) — bagian ini sebelumnya
@@ -191,7 +200,7 @@ export default function PesertaDashboardPage() {
                     "Panitia meminta Anda mengunggah ulang dokumen ini."}
                 </p>
               </div>
-              <Link href="/peserta/profile" className="shrink-0">
+              <Link href="/peserta/profile#verification-document" className="shrink-0">
                 <Button className={pillButton}>Perbaiki Dokumen</Button>
               </Link>
             </div>
@@ -237,48 +246,126 @@ export default function PesertaDashboardPage() {
             </div>
           </div>
           <Link href="/peserta/profile" className="shrink-0">
-            <Button className={pillButton}>Add Discord ID</Button>
+            <Button className={pillButton}>Add Discord Username</Button>
           </Link>
         </div>
       )}
 
       {/* Profile */}
       <div className={`${glass} p-6 lg:p-8`}>
-        <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-4">
-          Profile
-        </h2>
-        <ul className="relative space-y-1.5 mb-6">
-          <li className="flex items-start gap-2 text-sm text-text-secondary">
-            <span className="text-white">•</span>
-            <span>
-              {!profileLoading && profileComplete ? (
-                <>
-                  Your profile has been verified
-                  <Check className="ml-1 inline h-4 w-4 text-white" />
-                </>
-              ) : (
-                "Please complete your identity"
-              )}
+        <div className="relative flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="font-display text-xl font-bold tracking-tight text-white">
+              Profile
+            </h2>
+            <span
+              className={`rounded-full border px-3 py-0.5 text-xs font-semibold ${
+                !profileLoading && profileComplete
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                  : "border-white/15 bg-white/[0.05] text-white/70"
+              }`}
+            >
+              {PROFILE_REQUIRED_FIELDS.length - (missingFields?.length ?? 0)}/
+              {PROFILE_REQUIRED_FIELDS.length} terisi
             </span>
-          </li>
+          </div>
+          {!profileLoading && !profileComplete && (
+            <Link href="/peserta/profile">
+              <Button className={pillButton}>Complete Profile</Button>
+            </Link>
+          )}
+        </div>
+
+        <p className="relative mb-4 text-sm text-text-secondary">
+          {!profileLoading && profileComplete
+            ? "Profil sudah lengkap dan terverifikasi."
+            : "Lengkapi data identitas berikut untuk memenuhi syarat pendaftaran kompetisi."}
+        </p>
+
+        <ul className="relative grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {PROFILE_REQUIRED_FIELDS.map((field) => {
+            const isFilled = Boolean(user?.[field.key]);
+            return (
+              <li
+                key={field.key}
+                className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5"
+              >
+                {isFilled ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                ) : (
+                  <Circle className="h-4 w-4 shrink-0 text-white/30" />
+                )}
+                <span
+                  className={
+                    isFilled ? "text-sm text-white" : "text-sm text-text-secondary"
+                  }
+                >
+                  {field.label}
+                </span>
+              </li>
+            );
+          })}
         </ul>
-        {!profileLoading && !profileComplete && (
-          <Link href="/peserta/profile">
-            <Button className={pillButton}>Complete Now!</Button>
-          </Link>
-        )}
       </div>
+
+      {/* Sofdev Member Warning if < 3 */}
+      {hasJoined && team?.competition?.slug === "software-development" && memberCount < 3 && (
+        <div className={`${glass} border-amber-500/40 bg-amber-500/[0.06] p-6 lg:p-7 flex items-start gap-4`}>
+          <AlertCircle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <h3 className="font-display text-base font-bold text-white">
+              Pemberitahuan: Anggota Tim Software Development Minimal 3 Orang
+            </h3>
+            <p className="text-white/80 mt-1 leading-relaxed">
+              Tim Anda saat ini beranggotakan <span className="font-bold text-amber-300">{memberCount} orang</span>. Sesuai ketentuan, tim Software Development wajib memiliki minimal 3 anggota (termasuk ketua) sebelum dapat mengumpulkan karya.
+            </p>
+            {team?.teamCode && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-white/80">Kode Tim:</span>
+                <span className="px-2.5 py-1 bg-white/10 rounded-md font-mono text-xs font-bold text-white tracking-widest border border-white/15">
+                  {team.teamCode}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(team.teamCode);
+                    toast.success("Kode tim berhasil disalin!");
+                  }}
+                  className="cursor-pointer text-xs font-sans px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5 transition-colors border border-white/15"
+                >
+                  <Copy className="h-3 w-3" />
+                  <span>Salin Kode</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {hasJoined && (
         <div className={`${glass} px-6 py-5 lg:px-8`}>
-          <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
-            Competition
-            {team?.competition?.name && (
-              <span className="ml-3 text-sm font-normal text-text-secondary">
-                • {team.competition.name}
-              </span>
+          <div>
+            <h2 className="relative font-display text-xl sm:text-2xl font-bold tracking-tight text-white flex flex-wrap items-center gap-3">
+              <span>Competition</span>
+              {team?.competition?.name && (
+                <>
+                  <span className="text-white/40">•</span>
+                  <span>{team.competition.name}</span>
+                </>
+              )}
+            </h2>
+            {team?.competition?.slug && RULEBOOK_LINKS[team.competition.slug] && (
+              <a
+                href={RULEBOOK_LINKS[team.competition.slug].url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.05] px-4 py-1.5 text-xs font-semibold text-white hover:bg-white/10 hover:border-white/40 transition-all shadow-sm"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-[#7D8CFF]" />
+                {RULEBOOK_LINKS[team.competition.slug].label}
+              </a>
             )}
-          </h2>
+          </div>
         </div>
       )}
 
@@ -310,22 +397,65 @@ export default function PesertaDashboardPage() {
               style={{ width: `${memberProgress}%` }}
             />
           </div>
+          {team?.teamCode && (
+            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+              <span className="text-[11px] font-mono text-text-secondary">
+                Code: <span className="font-bold text-white tracking-wider">{team.teamCode}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(team.teamCode);
+                  toast.success("Kode tim berhasil disalin!");
+                }}
+                className="cursor-pointer text-[11px] text-[#7D8CFF] hover:text-white flex items-center gap-1 transition-colors"
+                title="Salin Kode Tim"
+              >
+                <Copy className="h-3 w-3" />
+                <span>Salin</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Submission Status */}
-        <div className={`${glass} ${statCard}`}>
-          <div className="mb-4 flex items-center justify-between">
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
-              Submission Status
-            </span>
-            <RotateCcw className="h-4 w-4 text-text-secondary" />
+        <div className={`${glass} ${statCard} flex flex-col justify-between`}>
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                Submission Status
+              </span>
+              <RotateCcw className="h-4 w-4 text-text-secondary" />
+            </div>
+            <div
+              className={`font-display text-xl sm:text-2xl font-bold ${
+                hasJoined && !(eligibility?.requirements.paymentApproved)
+                  ? "text-amber-400"
+                  : submission
+                  ? "text-emerald-400"
+                  : "text-rose-500"
+              }`}
+            >
+              {hasJoined && !(eligibility?.requirements.paymentApproved)
+                ? "Waiting for payment"
+                : submission
+                ? "Submitted"
+                : "Not Submitted"}
+            </div>
           </div>
-          <div
-            className={`font-display text-xl sm:text-2xl font-bold ${
-              submission ? "text-emerald-400" : "text-rose-500"
-            }`}
-          >
-            {submission ? "Submitted" : "Not Submitted"}
+          <div className="mt-4 pt-2">
+            <Link
+              href={
+                team?.competition?.slug
+                  ? `/peserta/competition/${team.competition.slug}`
+                  : "/peserta/competition"
+              }
+              className="block"
+            >
+              <Button className="w-full text-xs font-semibold rounded-full bg-white text-[#1B235E] hover:bg-white/90 cursor-pointer shadow-sm">
+                Submission Karya →
+              </Button>
+            </Link>
           </div>
         </div>
 
