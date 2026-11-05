@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Plus, X } from "lucide-react";
+import { ArrowRight, Plus, X, ExternalLink } from "lucide-react";
+import { RULEBOOK_LINKS } from "@/config/site";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -70,6 +71,12 @@ export default function PesertaCompetitionPage() {
   } = useProfileComplete();
   const createTeamMutation = useCreateTeam();
   const joinTeamMutation = useJoinTeam();
+
+  useEffect(() => {
+    if (userTeam?.competition?.slug) {
+      router.replace(`/peserta/competition/${userTeam.competition.slug}`);
+    }
+  }, [userTeam, router]);
 
   const [modalType, setModalType] = useState<"create" | "join" | null>(null);
   const [activeSlug, setActiveSlug] = useState("");
@@ -228,9 +235,25 @@ export default function PesertaCompetitionPage() {
 
       {/* Header */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
-          Competition
-        </h1>
+        <div>
+          <h1 className="relative font-display text-2xl lg:text-3xl font-bold tracking-tight text-white">
+            Competition
+          </h1>
+          <div className="mt-3 flex flex-wrap gap-2.5">
+            {Object.entries(RULEBOOK_LINKS).map(([slug, r]) => (
+              <a
+                key={slug}
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.05] px-4 py-1.5 text-xs font-semibold text-white hover:bg-white/10 hover:border-white/40 transition-all shadow-sm"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-[#7D8CFF]" />
+                {r.label}
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Instruction */}

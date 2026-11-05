@@ -24,12 +24,14 @@ function SidebarContent({
   onLogout,
   unreadAnnouncements = 0,
   paymentRejected = false,
+  userTeamSlug,
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
   unreadAnnouncements?: number;
   paymentRejected?: boolean;
+  userTeamSlug?: string | null;
 }) {
   return (
     <>
@@ -48,10 +50,15 @@ function SidebarContent({
             // leader/anggota notice tanpa harus buka halaman team dulu.
             const showPaymentDot =
               l.href === "/peserta/dashboard" && paymentRejected;
+            const targetHref =
+              l.href === "/peserta/competition" && userTeamSlug
+                ? `/peserta/competition/${userTeamSlug}`
+                : l.href;
+
             return (
               <Link
                 key={l.href}
-                href={l.href}
+                href={targetHref}
                 onClick={onNavigate}
                 className={`cursor-pointer flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith(l.href) ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
               >
@@ -222,6 +229,7 @@ export default function PesertaLayout({
                 onLogout={() => router.push("/login")}
                 unreadAnnouncements={unreadAnnouncements}
                 paymentRejected={paymentRejected}
+                userTeamSlug={userTeam?.competition?.slug}
               />
             </div>
           </div>
@@ -244,6 +252,7 @@ export default function PesertaLayout({
             onLogout={() => router.push("/login")}
             unreadAnnouncements={unreadAnnouncements}
             paymentRejected={paymentRejected}
+            userTeamSlug={userTeam?.competition?.slug}
           />
         </div>
       </aside>

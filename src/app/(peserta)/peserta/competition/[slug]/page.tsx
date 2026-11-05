@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, UploadCloud } from "lucide-react";
+import { Trash2, UploadCloud, ExternalLink, Copy } from "lucide-react";
+import { RULEBOOK_LINKS } from "@/config/site";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -153,6 +154,7 @@ export default function CompetitionRegistrationPage() {
   const [form, setForm] = useState<SubmissionForm>(EMPTY_FORM);
   const [formSourceId, setFormSourceId] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
 
   // Isi form dari submission yang sudah pernah dikirim. Penyesuaian dilakukan
   // saat render (bukan effect) supaya tidak ada flash form kosong dan tidak
@@ -175,6 +177,7 @@ export default function CompetitionRegistrationPage() {
   const isLocked = existingSubmission?.status === "SUBMITTED";
 
   const linkFields = linkFieldsFor(slug, existingSubmission);
+  const rulebook = RULEBOOK_LINKS[slug];
 
   // Proposal yang sudah tersimpan di server. Ditampilkan kembali di kotak
   // unggah sebagai bukti terlampir, supaya peserta tidak mengira filenya
@@ -415,24 +418,62 @@ export default function CompetitionRegistrationPage() {
 
       {/* Header */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
-          Competition
-          <span className="mx-3 text-white/60">•</span>
-          {competition?.name ?? "..."}
-        </h1>
+        <div>
+          <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
+            Competition
+            <span className="mx-3 text-white/60">•</span>
+            {competition?.name ?? "..."}
+          </h1>
+          {rulebook && (
+            <a
+              href={rulebook.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.05] px-4 py-1.5 text-xs font-semibold text-white hover:bg-white/10 hover:border-white/40 transition-all shadow-sm"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-[#7D8CFF]" />
+              {rulebook.label}
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Team Information */}
       <div className={`${glass} p-6 lg:p-8`}>
-        <div className="relative mb-6 flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold tracking-tight text-white">
-            Team Information
-          </h2>
-          <div className="flex items-center gap-4 font-mono text-xs text-text-secondary">
-            <span>{members.length} / {maxTeamMembers} anggota</span>
-            <span>
-              Team Code • <span className="text-white">{team?.teamCode ?? "..."}</span>
+        <div className="relative mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div>
+            <h2 className="font-display text-xl font-bold tracking-tight text-white">
+              Team Information
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-white/90">
+              Team Name • <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-xs px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.03] text-text-secondary">
+              <span className="text-white font-semibold">{members.length}</span> / {maxTeamMembers} anggota
             </span>
+            {team?.teamCode && (
+              <div className="flex items-center gap-2 rounded-xl border border-[#7D8CFF]/40 bg-[#7D8CFF]/10 px-3.5 py-1.5 shadow-[0_0_15px_rgba(125,140,255,0.15)]">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-white/70">
+                  Team Code:
+                </span>
+                <span className="font-mono text-sm font-extrabold tracking-widest text-white">
+                  {team.teamCode}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(team.teamCode);
+                    toast.success("Kode tim berhasil disalin!");
+                  }}
+                  title="Salin Kode Tim"
+                  className="cursor-pointer ml-1 p-1 rounded-md text-white/70 hover:text-white hover:bg-white/15 transition-colors"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <p className="relative mb-4 text-sm text-text-secondary">
@@ -481,7 +522,7 @@ export default function CompetitionRegistrationPage() {
           untuk siapa, lengkap dengan tautan ke halaman pengunggahannya. */}
       <div className={`${glass} p-6 lg:p-8`}>
         <h2 className="relative mb-1 font-display text-xl font-bold tracking-tight text-white">
-          Dokumen Verifikasi Tim
+          Dokumen Verifikasi Anggota Tim
         </h2>
         <p className="relative text-sm text-text-secondary">
           Keempat dokumen di bawah diunggah per anggota melalui halaman Profile.
@@ -534,7 +575,7 @@ export default function CompetitionRegistrationPage() {
         <div className="relative mt-5">
           <Button
             type="button"
-            onClick={() => router.push("/peserta/profile")}
+            onClick={() => router.push("/peserta/profile#verification-document")}
             className="rounded-full border border-white/20 bg-white/[0.05] px-5 h-9 text-xs font-semibold text-white hover:bg-white/[0.1]"
           >
             Unggah Dokumen di Profile
@@ -586,7 +627,7 @@ export default function CompetitionRegistrationPage() {
                 <p className="text-sm text-text-secondary">
                   <span className="font-semibold text-white">Belum bisa mengumpulkan karya.</span>{" "}
                   {!allDocsApproved
-                    ? "Semua dokumen verifikasi tim harus diupload dan disetujui oleh Admin terlebih dahulu."
+                    ? "Semua dokumen verifikasi anggota tim harus diupload dan disetujui oleh Admin terlebih dahulu."
                     : !paymentApproved
                     ? "Pembayaran tim harus disetujui oleh Admin terlebih dahulu."
                     : "Lengkapi semua syarat di atas sebelum mengirim karya."}
@@ -594,7 +635,7 @@ export default function CompetitionRegistrationPage() {
                 {!allDocsApproved && (
                   <Button
                     type="button"
-                    onClick={() => router.push("/peserta/profile")}
+                    onClick={() => router.push("/peserta/profile#verification-document")}
                     className="mt-3 rounded-full border border-white/20 bg-white/[0.05] px-5 h-9 text-xs font-semibold text-white hover:bg-white/[0.1]"
                   >
                     Lengkapi Dokumen di Profile
@@ -814,6 +855,9 @@ export default function CompetitionRegistrationPage() {
                           })}. `
                         : ""}
                       Karya ini sudah terkunci dan tidak bisa diubah lagi.
+                    </p>
+                    <p className="mt-2 text-xs text-text-secondary/80 border-t border-white/5 pt-2">
+                      Pengumuman tahap berikutnya &amp; finalis akan diumumkan melalui server Discord dan tab Pengumuman sesuai jadwal timeline.
                     </p>
                   </div>
                 ) : (
@@ -1070,13 +1114,32 @@ export default function CompetitionRegistrationPage() {
           <div className="relative mt-8 flex justify-end">
             <Button
               type="button"
-              onClick={handleSubmitPayment}
+              onClick={() => {
+                if (!proofFile) {
+                  toast.error("Pilih bukti pembayaran terlebih dahulu.");
+                  return;
+                }
+                setShowPaymentConfirm(true);
+              }}
               disabled={paymentProofMutation.isPending}
-              className="rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-sm hover:bg-white/90 disabled:opacity-60"
+              className="cursor-pointer rounded-full bg-white px-6 h-10 text-xs font-semibold text-[#1B235E] shadow-sm hover:bg-white/90 disabled:opacity-60"
             >
               {paymentProofMutation.isPending ? "Uploading..." : "Submit Payment"}
             </Button>
           </div>
+
+          <ConfirmModal
+            open={showPaymentConfirm}
+            onOpenChange={setShowPaymentConfirm}
+            title="Kirim Bukti Pembayaran?"
+            description="Pastikan nominal dan bukti transfer sudah sesuai dan jelas terbaca. Setelah dikirim, bukti pembayaran akan ditinjau oleh panitia."
+            confirmText={paymentProofMutation.isPending ? "Mengirim..." : "Kirim Sekarang"}
+            cancelText="Batal"
+            onConfirm={async () => {
+              await handleSubmitPayment();
+              setShowPaymentConfirm(false);
+            }}
+          />
         </div>
       )}
     </div>
