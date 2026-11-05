@@ -1,11 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
-function subscribeClock(callback: () => void) {
-  const id = setInterval(callback, 1000);
-  return () => clearInterval(id);
-}
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -39,7 +34,14 @@ const glassButton =
   "bg-white/[0.03] border border-white/15 rounded-lg p-1.5 backdrop-blur-md hover:bg-white/10 transition-colors";
 
 export default function JuriDashboardPage() {
-  const now = useSyncExternalStore(subscribeClock, () => Date.now(), () => 0);
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    const updateNow = () => setNow(Date.now());
+    updateNow();
+    const id = window.setInterval(updateNow, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe } = useUserMe();
   const { data: submissions = [] } = useJudgeSubmissions();

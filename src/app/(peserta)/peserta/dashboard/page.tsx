@@ -1,11 +1,6 @@
 "use client";
 
-function subscribeClock(callback: () => void) {
-  const id = setInterval(callback, 1000);
-  return () => clearInterval(id);
-}
-
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -82,7 +77,14 @@ function formatCountdown(target: Date, currentNow = 0) {
 }
 
 export default function PesertaDashboardPage() {
-  const now = useSyncExternalStore(subscribeClock, () => Date.now(), () => 0);
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    const updateNow = () => setNow(Date.now());
+    updateNow();
+    const id = window.setInterval(updateNow, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
   // Reset badge "unread" di sidebar begitu overview dibuka. Dulu tugas ini
   // dipegang halaman Announcements yang kini sudah digabung ke sini.
   const markSeen = useAnnouncementStore((s) => s.markSeen);

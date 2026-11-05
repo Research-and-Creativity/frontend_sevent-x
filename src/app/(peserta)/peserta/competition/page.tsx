@@ -16,6 +16,7 @@ import {
   useUserTeam,
 } from "@/hooks/use-peserta";
 import { getTeamMemberLimits } from "@/lib/team-member-limits";
+import { apiClient } from "@/lib/api-client";
 import type { Competition } from "@/types/api";
 
 // Style glass yang sama dengan halaman peserta lainnya
@@ -83,6 +84,12 @@ export default function PesertaCompetitionPage() {
   const [teamName, setTeamName] = useState("");
   const [teamCode, setTeamCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingJoin, setPendingJoin] = useState<{
+    code: string;
+    teamName: string;
+    competitionName: string;
+    competitionSlug: string;
+  } | null>(null);
   const activeMemberLimits = getTeamMemberLimits(activeSlug);
 
   const openCreate = (slug: string) => {
@@ -126,6 +133,16 @@ export default function PesertaCompetitionPage() {
     }
   };
 
+  const doJoin = async (code: string) => {
+    const joined = await joinTeamMutation.mutateAsync({ teamCode: code });
+    closeModal();
+    setPendingJoin(null);
+    toast.success(`Berhasil bergabung dengan "${joined?.teamName ?? code}"`);
+    // Tim yang diikuti bisa saja milik kompetisi lain, jadi andalkan slug
+    // dari respons server, bukan competitionslug yang sedang aktif.
+    router.push(`/peserta/competition/${joined?.competition?.slug ?? activeSlug}`);
+  };
+
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = teamCode.trim().toUpperCase();
@@ -136,12 +153,22 @@ export default function PesertaCompetitionPage() {
     }
 
     try {
-      const joined = await joinTeamMutation.mutateAsync({ teamCode: code });
-      closeModal();
-      toast.success(`Berhasil bergabung dengan "${joined?.teamName ?? code}"`);
-      // Tim yang diikuti bisa saja milik kompetisi lain, jadi andalkan slug
-      // dari respons server, bukan competitionslug yang sedang aktif.
-      router.push(`/peserta/competition/${joined?.competition?.slug ?? activeSlug}`);
+      // Cek info tim dulu agar bisa memberi konfirmasi bila kompetisinya
+      // berbeda dengan yang sedang dipilih (join lintas kompetisi).
+      const lookupRes = await apiClient.get("/api/teams/lookup", {
+        params: { teamCode: code },
+      });
+      const info = lookupRes.data?.data;
+      if (info?.competition?.slug && info.competition.slug !== activeSlug) {
+        setPendingJoin({
+          code,
+          teamName: info.teamName ?? code,
+          competitionName: info.competition.name ?? info.competition.slug,
+          competitionSlug: info.competition.slug,
+        });
+        return;
+      }
+      await doJoin(code);
     } catch (err) {
       setError(getErrorMessage(err, "Gagal bergabung dengan tim."));
     }
@@ -491,6 +518,49 @@ export default function PesertaCompetitionPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Konfirmasi join lintas kompetisi */}
+      <Dialog
+        open={!!pendingJoin}
+        onOpenChange={(open) => !open && setPendingJoin(null)}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-lg rounded-3xl border border-white/20 bg-[#1A1D24]/90 p-8 text-white shadow-[0_0_60px_rgba(125,140,255,0.25)] backdrop-blur-xl"
+        >
+          <DialogTitle className="font-display text-2xl font-extrabold tracking-tight text-white">
+            Konfirmasi Kompetisi
+          </DialogTitle>
+          <p className="mt-3 text-sm text-white/70">
+            Kode <span className="font-bold">{pendingJoin?.code}</span> milik tim{" "}
+            <span className="font-bold">{pendingJoin?.teamName}</span> pada kompetisi{" "}
+            <span className="font-bold">{pendingJoin?.competitionName}</span>. Anda sedang
+            memilih kompetisi{" "}
+            <span className="font-bold">
+              {competitions.find((c) => c.slug === activeSlug)?.name ?? activeSlug}
+            </span>
+            . Tetap bergabung ke kompetisi{" "}
+            <span className="font-bold">{pendingJoin?.competitionName}</span>?
+          </p>
+          <div className="flex justify-end gap-3 pt-6">
+            <Button
+              type="button"
+              onClick={() => setPendingJoin(null)}
+              className="rounded-full border border-white/30 bg-transparent text-white hover:bg-white/10"
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              disabled={joinTeamMutation.isPending}
+              onClick={() => pendingJoin && doJoin(pendingJoin.code)}
+              className={modalSubmit}
+            >
+              {joinTeamMutation.isPending ? "Joining..." : "Tetap Bergabung"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
