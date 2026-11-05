@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Users, Search, AlertCircle } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
+import { getGreeting } from "@/lib/greeting";
 import { Team } from "@/types/api";
 import {
   docStatusInfo,
@@ -17,6 +19,7 @@ import {
 } from "@/lib/admin-team-status";
 
 export default function AdminDocumentsPage() {
+  const storeUser = useAuthStore((state) => state.user);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [timeSort, setTimeSort] = useState("newest");
@@ -64,7 +67,9 @@ export default function AdminDocumentsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
-        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
+        <h1 className="font-display text-3xl font-bold">
+          {getGreeting(storeUser?.fullName, "Admin")}
+        </h1>
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">

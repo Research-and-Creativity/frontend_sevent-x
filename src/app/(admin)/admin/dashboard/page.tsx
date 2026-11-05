@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
+import { getGreeting } from "@/lib/greeting";
 import { useAdminOverview } from "@/hooks/use-admin";
 import { useCompetitions } from "@/hooks/use-peserta";
 import {
@@ -104,6 +106,7 @@ export default function AdminOverviewDashboardPage() {
     safePage * PAGE_SIZE,
   );
 
+  const storeUser = useAuthStore((state) => state.user);
   const statusCards = [
     { label: "NEED REVIEW", value: counts.needReview },
     { label: "NEED REVISE", value: counts.revise },
@@ -115,7 +118,9 @@ export default function AdminOverviewDashboardPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Greeting */}
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
-        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
+        <h1 className="font-display text-3xl font-bold">
+          {getGreeting(storeUser?.fullName, "Admin")}
+        </h1>
       </div>
 
       {/* Top stats */}

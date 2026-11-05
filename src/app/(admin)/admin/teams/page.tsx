@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
+import { getGreeting } from "@/lib/greeting";
 import {
   docStatusInfo,
   payStatusInfo,
@@ -24,6 +26,7 @@ import { Team } from "@/types/api";
 import { useCompetitions } from "@/hooks/use-peserta";
 
 export default function AdminTeamsPage() {
+  const storeUser = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompSlug, setSelectedCompSlug] = useState<string>("");
@@ -121,7 +124,9 @@ export default function AdminTeamsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
-        <h1 className="font-display text-3xl font-bold">Good Morning, Admin</h1>
+        <h1 className="font-display text-3xl font-bold">
+          {getGreeting(storeUser?.fullName, "Admin")}
+        </h1>
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">

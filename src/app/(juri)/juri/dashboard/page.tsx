@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
+import { getGreeting } from "@/lib/greeting";
 import { useJudgeSubmissions } from "@/hooks/use-juri";
 import { useCompetitionTimeline } from "@/hooks/use-peserta";
 import { apiClient } from "@/lib/api-client";
@@ -97,7 +98,7 @@ export default function JuriDashboardPage() {
         <div className={`${glass} p-6`}>
           <div className="relative flex flex-wrap items-center justify-between gap-3">
             <h1 className="font-display text-2xl sm:text-3xl font-bold">
-              Good Morning, {name}
+              {getGreeting(name, "Juri")}
             </h1>
             <div className="flex items-center gap-2">
               <button
