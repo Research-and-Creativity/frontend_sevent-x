@@ -30,6 +30,10 @@ export default function AdminDocumentsPage() {
       const list = res.data?.data || res.data;
       return Array.isArray(list) ? list : [];
     },
+    staleTime: 5 * 1000,
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   // Arsip: hanya tim yang SUDAH verified (dokumen anggota Approved + pembayaran

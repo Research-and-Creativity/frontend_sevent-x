@@ -30,6 +30,7 @@ export function payStatusInfo(t: Team): StatusInfo {
  * Tim dianggap "sudah verified" bila SEMUA syarat berikut terpenuhi:
  *   1. Dokumen seluruh anggota berstatus Approved (keempat dokumen wajib), DAN
  *   2. Bukti pembayaran tim berstatus Paid.
+ *   3. Untuk cabang Software Development, tim harus beranggotakan minimal 3 orang.
  *
  * Dua syarat ini persis yang ditampilkan di kolom Status Document & Status
  * Payment, sehingga filter tidak pernah bertentangan dengan badge di layar.
@@ -40,6 +41,15 @@ export function payStatusInfo(t: Team): StatusInfo {
  *   /admin/documents  -> tim yang SUDAH verified (arsip, read-only)
  */
 export function isVerifiedTeam(t: Team): boolean {
+  // Tim software-development harus memiliki minimal 3 anggota untuk bisa diverifikasi
+  const isSoftdev =
+    t.competition?.slug === "software-development" ||
+    t.competition?.name?.toLowerCase().includes("software");
+
+  if (isSoftdev && (t.members?.length ?? 0) < 3) {
+    return false;
+  }
+
   return (
     docStatusInfo(t).label === "Approved" && payStatusInfo(t).label === "Paid"
   );

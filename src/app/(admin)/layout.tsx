@@ -142,10 +142,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     const added = pendingReview - prevReviewRef.current;
     if (added > 0) {
-    toast.info(`${added} tim baru menunggu verifikasi dokumen & pembayaran`);
+      toast.info(`${added} berkas tim baru/revisi siap diverifikasi`, {
+        description: "Ada peserta yang baru mendaftar atau mengunggah dokumen revisi.",
+        action: {
+          label: "Buka",
+          onClick: () => router.push("/admin/teams"),
+        },
+      });
     }
     prevReviewRef.current = pendingReview;
-  }, [isLoading, pendingReview]);
+  }, [isLoading, pendingReview, router]);
 
   useEffect(() => {
     if (!isUserLoading && currentUser) {

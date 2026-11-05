@@ -52,6 +52,10 @@ export default function AdminOverviewDashboardPage() {
       const list = res.data?.data || res.data;
       return Array.isArray(list) ? list : [];
     },
+    staleTime: 5 * 1000,
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   const counts = useMemo(() => {

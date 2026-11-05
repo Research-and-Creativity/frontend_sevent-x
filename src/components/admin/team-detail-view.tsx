@@ -78,6 +78,10 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
   }
 
   const totalRequired = team.members.length * REQUIRED_DOC_LABELS.length;
+  const isSoftdev =
+    team.competition?.slug === "software-development" ||
+    team.competition?.name?.toLowerCase().includes("software");
+  const isSoftdevMemberUnderLimit = isSoftdev && team.members.length < 3;
   const approvedDocs = team.members.reduce(
     (acc, m) => acc + m.user.documents.filter((d) => d.status === "APPROVE").length,
     0
@@ -260,7 +264,7 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
                     {[
                       ["Institution/University/School", member.user.institution],
                       ["Phone Number", member.user.phone],
-                      ["Discord ID", member.user.discordId],
+                      ["Discord Username", member.user.discordId],
                     ].map(([label, value]) => (
                       <div key={label}>
                         <p className="text-xs text-white/50 mb-1">{label}</p>
@@ -369,29 +373,49 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         )}
 
         {mode === "registered" && (
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
-              onClick={() => setRevisePay(true)}
-              className="cursor-pointer px-8 py-2.5 rounded-full border border-[#F0C969] text-[#F0C969] text-sm font-semibold hover:bg-[#F0C969]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Revise
-            </button>
-            <button
-              disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
-              onClick={() => setVerifyPay(true)}
-              className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {updatePay.isPending ? (
-                <>
-                  <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
-                  Memproses...
-                </>
-              ) : (
-                "Verification"
-              )}
-            </button>
-          </div>
+          <>
+            {isSoftdevMemberUnderLimit && (
+              <div className="mt-5 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>
+                  Tim Software Development saat ini hanya memiliki {team.members.length} anggota. Minimal 3 anggota diperlukan agar tim dapat lolos verifikasi.
+                </span>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
+                onClick={() => setRevisePay(true)}
+                className="cursor-pointer px-8 py-2.5 rounded-full border border-[#F0C969] text-[#F0C969] text-sm font-semibold hover:bg-[#F0C969]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Revise
+              </button>
+              <button
+                disabled={
+                  !team.paymentProof ||
+                  payStatus === "APPROVE" ||
+                  updatePay.isPending ||
+                  isSoftdevMemberUnderLimit
+                }
+                title={
+                  isSoftdevMemberUnderLimit
+                    ? "Tim Software Development harus memiliki minimal 3 anggota untuk verifikasi"
+                    : undefined
+                }
+                onClick={() => setVerifyPay(true)}
+                className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#7C83BC] text-sm font-semibold shadow-[0_0_20px_rgba(180,190,255,0.5)] hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {updatePay.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Verification"
+                )}
+              </button>
+            </div>
+          </>
         )}
       </div>
 
