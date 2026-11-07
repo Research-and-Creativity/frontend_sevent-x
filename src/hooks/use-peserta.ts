@@ -308,6 +308,22 @@ export function useTransferLeadership() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
+    },
+  });
+}
+
+// Hook 13: Kick Member DELETE /api/teams/:teamId/members/:memberId
+export function useKickMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ teamId, memberId }: { teamId: string; memberId: string }) => {
+      const res = await apiClient.delete(`/api/teams/${teamId}/members/${memberId}`);
+      return res.data?.data || res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["submissionEligibility"] });
     },
   });
 }

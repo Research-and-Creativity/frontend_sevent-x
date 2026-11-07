@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, UploadCloud, ExternalLink, Copy } from "lucide-react";
+import { Trash2, UploadCloud, ExternalLink, Copy, Pencil, Crown } from "lucide-react";
 import { RULEBOOK_LINKS } from "@/config/site";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { Submission } from "@/types/api";
 import { getTeamMemberLimits } from "@/lib/team-member-limits";
 import {
@@ -17,6 +18,9 @@ import {
   useUserMe,
   useUserSubmission,
   useUserTeam,
+  useUpdateTeamName,
+  useTransferLeadership,
+  useKickMember,
   PAYMENT_PROOF_MAX_BYTES,
   SUBMISSION_DELIVERABLE_MAX_BYTES,
 } from "@/hooks/use-peserta";
@@ -144,6 +148,9 @@ export default function CompetitionRegistrationPage() {
   const { data: existingSubmission } = useUserSubmission();
   const paymentProofMutation = useUploadPaymentProof();
   const submissionMutation = useCreateOrUpdateSubmission();
+  const updateTeamNameMutation = useUpdateTeamName();
+  const transferLeadershipMutation = useTransferLeadership();
+  const kickMemberMutation = useKickMember();
 
   const paymentInputRef = useRef<HTMLInputElement>(null);
   const deliverableInputRef = useRef<HTMLInputElement>(null);
@@ -155,6 +162,22 @@ export default function CompetitionRegistrationPage() {
   const [formSourceId, setFormSourceId] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
+  const [editTeamNameInput, setEditTeamNameInput] = useState("");
+  const [showTransferConfirm, setShowTransferConfirm] = useState(false);
+  const [targetMemberForTransfer, setTargetMemberForTransfer] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    userId: string;
+  } | null>(null);
+  const [showKickConfirm, setShowKickConfirm] = useState(false);
+  const [targetMemberForKick, setTargetMemberForKick] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    userId: string;
+  } | null>(null);
 
   // Isi form dari submission yang sudah pernah dikirim. Penyesuaian dilakukan
   // saat render (bukan effect) supaya tidak ada flash form kosong dan tidak
@@ -267,6 +290,53 @@ export default function CompetitionRegistrationPage() {
       toast.success("Bukti pembayaran terkirim dan menunggu review.");
     } catch (err) {
       toast.error(getErrorMessage(err, "Gagal mengunggah bukti pembayaran."));
+    }
+  };
+
+  const handleUpdateTeamName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = editTeamNameInput.trim();
+    if (!trimmed) {
+      toast.error("Nama tim tidak boleh kosong.");
+      return;
+    }
+    if (trimmed === team?.teamName) {
+      setShowEditTeamModal(false);
+      return;
+    }
+    try {
+      await updateTeamNameMutation.mutateAsync(trimmed);
+      toast.success("Nama tim berhasil diubah!");
+      setShowEditTeamModal(false);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal mengubah nama tim."));
+    }
+  };
+
+  const handleTransferLeadership = async () => {
+    if (!targetMemberForTransfer) return;
+    try {
+      await transferLeadershipMutation.mutateAsync(targetMemberForTransfer.userId);
+      toast.success(
+        `Kepemimpinan berhasil dialihkan kepada ${targetMemberForTransfer.name}!`,
+      );
+      setTargetMemberForTransfer(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal mengalihkan kepemimpinan tim."));
+    }
+  };
+
+  const handleKickMember = async () => {
+    if (!targetMemberForKick || !team) return;
+    try {
+      await kickMemberMutation.mutateAsync({
+        teamId: team.id,
+        memberId: targetMemberForKick.id,
+      });
+      toast.success(`${targetMemberForKick.name} berhasil dikeluarkan dari tim.`);
+      setTargetMemberForKick(null);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Gagal mengeluarkan anggota tim."));
     }
   };
 
@@ -445,9 +515,25 @@ export default function CompetitionRegistrationPage() {
             <h2 className="font-display text-xl font-bold tracking-tight text-white">
               Team Information
             </h2>
-            <p className="mt-1 text-sm font-semibold text-white/90">
-              Team Name • <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
-            </p>
+            <div className="mt-1 flex items-center gap-2.5 flex-wrap">
+              <p className="text-sm font-semibold text-white/90">
+                Team Name • <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
+              </p>
+              {isLeader && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditTeamNameInput(team?.teamName ?? "");
+                    setShowEditTeamModal(true);
+                  }}
+                  title="Ubah Nama Tim"
+                  className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-xs font-semibold text-[#7D8CFF] hover:bg-[#7D8CFF]/20 hover:text-white transition-all shadow-sm"
+                >
+                  <Pencil className="h-3 w-3" />
+                  <span>Ubah Nama</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-mono text-xs px-3 py-1.5 rounded-xl border border-white/15 bg-white/[0.03] text-text-secondary">
@@ -486,31 +572,63 @@ export default function CompetitionRegistrationPage() {
               tampil lebih dulu. */}
           {members.map((member) => {
             const isMemberLeader = member.role === "LEADER";
+            const isSelf = member.userId === me?.id;
             return (
               <div
                 key={member.id}
-                className="flex h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-5"
+                className="flex min-h-[3.25rem] py-2 items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/[0.03] px-5 transition-colors hover:bg-white/[0.05]"
               >
-                <span className="text-sm text-white">{member.name}</span>
-                {isMemberLeader ? (
-                  <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
-                    Leader
-                  </span>
-                ) : (
-                  /* Hanya ketua yang boleh mengeluarkan anggota, dan backend
-                     menolak mengeluarkan diri sendiri. */
-                  isLeader && (
-                    <button
-                      type="button"
-                      disabled
-                      aria-label={`Remove ${member.name}`}
-                      title="Keluarkan anggota belum tersedia di halaman ini"
-                      className="cursor-not-allowed text-rose-500/30"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )
-                )}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-sm font-medium text-white truncate">{member.name}</span>
+                  {isSelf && (
+                    <span className="text-[11px] font-semibold text-[#7D8CFF] shrink-0">
+                      (Anda)
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {isMemberLeader ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-300">
+                      <Crown className="h-3 w-3 text-amber-400" />
+                      Leader
+                    </span>
+                  ) : (
+                    <>
+                      <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+                        Anggota
+                      </span>
+                      {isLeader && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetMemberForTransfer(member);
+                              setShowTransferConfirm(true);
+                            }}
+                            title={`Jadikan ${member.name} sebagai Ketua Tim`}
+                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-xs font-semibold text-[#7D8CFF] hover:bg-[#7D8CFF]/25 hover:text-white transition-all shadow-sm"
+                          >
+                            <Crown className="h-3 w-3" />
+                            <span className="hidden sm:inline">Jadikan Ketua</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetMemberForKick(member);
+                              setShowKickConfirm(true);
+                            }}
+                            aria-label={`Keluarkan ${member.name}`}
+                            title={`Keluarkan ${member.name} dari tim`}
+                            className="cursor-pointer p-1.5 rounded-lg border border-rose-500/25 bg-rose-500/10 text-rose-400 hover:bg-rose-500/25 hover:text-rose-300 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -1142,6 +1260,89 @@ export default function CompetitionRegistrationPage() {
           />
         </div>
       )}
+
+      {/* Modal Ubah Nama Tim */}
+      <Dialog open={showEditTeamModal} onOpenChange={setShowEditTeamModal}>
+        <DialogContent
+          className="bg-[#1A1D24]/95 backdrop-blur-xl border border-white/20 text-white max-w-md rounded-2xl p-8 shadow-[0_0_60px_rgba(125,140,255,0.15)]"
+          showCloseButton={false}
+        >
+          <div className="flex items-start justify-between">
+            <DialogTitle className="text-white text-2xl font-extrabold tracking-tight">
+              Ubah Nama Tim
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setShowEditTeamModal(false)}
+              className="cursor-pointer w-8 h-8 rounded-full border border-white/30 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <DialogDescription className="text-white/60 text-sm leading-relaxed -mt-2">
+            Masukkan nama baru untuk tim Anda. Nama tim harus unik dalam cabang lomba ini.
+          </DialogDescription>
+
+          <form onSubmit={handleUpdateTeamName} className="mt-4 space-y-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
+                Nama Tim Baru
+              </label>
+              <input
+                type="text"
+                value={editTeamNameInput}
+                onChange={(e) => setEditTeamNameInput(e.target.value)}
+                placeholder="Masukkan nama tim..."
+                maxLength={50}
+                className="h-12 w-full rounded-xl border border-white/20 bg-white/[0.05] px-4 text-sm text-white placeholder:text-white/30 focus:border-[#7D8CFF] focus:outline-none transition-colors"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEditTeamModal(false)}
+                className="cursor-pointer px-6 py-2.5 rounded-full border border-white/20 text-white/70 text-sm font-semibold hover:text-white transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={updateTeamNameMutation.isPending || !editTeamNameInput.trim()}
+                className="cursor-pointer px-8 py-2.5 rounded-full bg-white text-[#3B5BFF] text-sm font-bold shadow-[0_0_30px_rgba(59,91,255,0.35)] hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {updateTeamNameMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Konfirmasi Transfer Kepemimpinan */}
+      <ConfirmModal
+        open={showTransferConfirm}
+        onOpenChange={setShowTransferConfirm}
+        title="Transfer Kepemimpinan Tim"
+        description={`Apakah Anda yakin ingin menyerahkan posisi Ketua Tim kepada ${targetMemberForTransfer?.name}? Anda akan menjadi anggota biasa dan kehilangan hak manajerial tim.`}
+        confirmText={transferLeadershipMutation.isPending ? "Mengalihkan..." : "Ya, Jadikan Ketua"}
+        cancelText="Batal"
+        onConfirm={handleTransferLeadership}
+      />
+
+      {/* Modal Konfirmasi Keluarkan Anggota */}
+      <ConfirmModal
+        open={showKickConfirm}
+        onOpenChange={setShowKickConfirm}
+        title="Keluarkan Anggota Tim"
+        description={`Apakah Anda yakin ingin mengeluarkan ${targetMemberForKick?.name} dari tim? Anggota yang dikeluarkan dapat bergabung kembali menggunakan kode tim jika kuota tim masih mencukupi.`}
+        confirmText={kickMemberMutation.isPending ? "Mengeluarkan..." : "Ya, Keluarkan"}
+        cancelText="Batal"
+        onConfirm={handleKickMember}
+      />
     </div>
   );
 }
