@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, UploadCloud, ExternalLink, Copy, Pencil, Crown } from "lucide-react";
+import { Trash2, UploadCloud, ExternalLink, Copy, Pencil } from "lucide-react";
 import { RULEBOOK_LINKS } from "@/config/site";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -515,7 +515,7 @@ export default function CompetitionRegistrationPage() {
             <h2 className="font-display text-xl font-bold tracking-tight text-white">
               Team Information
             </h2>
-            <div className="mt-1 flex items-center gap-2.5 flex-wrap">
+            <div className="mt-1 flex items-center gap-2">
               <p className="text-sm font-semibold text-white/90">
                 Team Name • <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
               </p>
@@ -526,11 +526,11 @@ export default function CompetitionRegistrationPage() {
                     setEditTeamNameInput(team?.teamName ?? "");
                     setShowEditTeamModal(true);
                   }}
+                  aria-label="Ubah Nama Tim"
                   title="Ubah Nama Tim"
-                  className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-xs font-semibold text-[#7D8CFF] hover:bg-[#7D8CFF]/20 hover:text-white transition-all shadow-sm"
+                  className="cursor-pointer p-1 rounded-md text-white/60 hover:text-white hover:bg-white/15 transition-colors"
                 >
-                  <Pencil className="h-3 w-3" />
-                  <span>Ubah Nama</span>
+                  <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
@@ -572,63 +572,46 @@ export default function CompetitionRegistrationPage() {
               tampil lebih dulu. */}
           {members.map((member) => {
             const isMemberLeader = member.role === "LEADER";
-            const isSelf = member.userId === me?.id;
             return (
               <div
                 key={member.id}
-                className="flex min-h-[3.25rem] py-2 items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/[0.03] px-5 transition-colors hover:bg-white/[0.05]"
+                className="flex h-12 items-center justify-between rounded-xl border border-white/15 bg-white/[0.03] px-5"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-sm font-medium text-white truncate">{member.name}</span>
-                  {isSelf && (
-                    <span className="text-[11px] font-semibold text-[#7D8CFF] shrink-0">
-                      (Anda)
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {isMemberLeader ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-300">
-                      <Crown className="h-3 w-3 text-amber-400" />
-                      Leader
-                    </span>
-                  ) : (
-                    <>
-                      <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
-                        Anggota
-                      </span>
-                      {isLeader && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTargetMemberForTransfer(member);
-                              setShowTransferConfirm(true);
-                            }}
-                            title={`Jadikan ${member.name} sebagai Ketua Tim`}
-                            className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-xs font-semibold text-[#7D8CFF] hover:bg-[#7D8CFF]/25 hover:text-white transition-all shadow-sm"
-                          >
-                            <Crown className="h-3 w-3" />
-                            <span className="hidden sm:inline">Jadikan Ketua</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTargetMemberForKick(member);
-                              setShowKickConfirm(true);
-                            }}
-                            aria-label={`Keluarkan ${member.name}`}
-                            title={`Keluarkan ${member.name} dari tim`}
-                            className="cursor-pointer p-1.5 rounded-lg border border-rose-500/25 bg-rose-500/10 text-rose-400 hover:bg-rose-500/25 hover:text-rose-300 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
+                <span className="text-sm text-white">{member.name}</span>
+                {isMemberLeader ? (
+                  <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+                    Leader
+                  </span>
+                ) : (
+                  /* Hanya ketua yang boleh mengeluarkan anggota atau transfer leadership */
+                  isLeader && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetMemberForTransfer(member);
+                          setShowTransferConfirm(true);
+                        }}
+                        title={`Jadikan ${member.name} sebagai Ketua Tim`}
+                        className="cursor-pointer rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-text-secondary hover:border-white/30 hover:text-white transition-colors"
+                      >
+                        Jadikan Ketua
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetMemberForKick(member);
+                          setShowKickConfirm(true);
+                        }}
+                        aria-label={`Remove ${member.name}`}
+                        title={`Keluarkan ${member.name} dari tim`}
+                        className="cursor-pointer p-1 text-rose-500/60 hover:text-rose-400 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )
+                )}
               </div>
             );
           })}

@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+interface MockTeamMember {
+  id: string;
+  userId: string;
+  role: string;
+  user: { id: string; fullName: string };
+}
+
 test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
   const mockUserMe = {
     id: 'user-leader-id',
@@ -39,12 +46,12 @@ test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
         role: 'MEMBER',
         user: { id: 'user-member-3-id', fullName: 'Siti Rahma' },
       },
-    ],
+    ] as MockTeamMember[],
     paymentProof: { status: 'APPROVE' },
   };
 
   test('Leader dapat mengubah nama tim, mentransfer kepemimpinan, dan mengeluarkan anggota', async ({ page }) => {
-    let currentTeam = JSON.parse(JSON.stringify(initialTeam));
+    const currentTeam = JSON.parse(JSON.stringify(initialTeam));
 
     // Mock API Auth & Profile
     await page.route('**/api/user/me', async (route) => {
@@ -86,7 +93,7 @@ test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
               teamApproved: true,
               paymentApproved: true,
               allMembersDocumentsApproved: true,
-              members: currentTeam.members.map((m: any) => ({
+              members: currentTeam.members.map((m: MockTeamMember) => ({
                 userId: m.userId,
                 fullName: m.user.fullName,
                 role: m.role,
@@ -152,7 +159,7 @@ test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
     await page.route('**/api/teams/me/transfer-leadership', async (route) => {
       const body = JSON.parse(route.request().postData() || '{}');
       const targetUserId = body.newLeaderUserId;
-      currentTeam.members = currentTeam.members.map((m: any) => {
+      currentTeam.members = currentTeam.members.map((m: MockTeamMember) => {
         if (m.userId === targetUserId) return { ...m, role: 'LEADER' };
         if (m.userId === mockUserMe.id) return { ...m, role: 'MEMBER' };
         return m;
@@ -168,7 +175,7 @@ test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
       const url = route.request().url();
       const parts = url.split('/');
       const memberId = parts[parts.length - 1];
-      currentTeam.members = currentTeam.members.filter((m: any) => m.id !== memberId && m.userId !== memberId);
+      currentTeam.members = currentTeam.members.filter((m: MockTeamMember) => m.id !== memberId && m.userId !== memberId);
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -212,4 +219,3 @@ test.describe('Team Management - Edit Team & Transfer Leadership E2E', () => {
     await expect(page.getByRole('button', { name: /jadikan ketua/i })).not.toBeVisible();
   });
 });
-
