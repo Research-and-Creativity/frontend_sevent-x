@@ -64,7 +64,7 @@ const DOC_HELPERS: Partial<
     hideWhenUploaded: false,
   },
   SHARE_STORY: {
-    label: "Link poster Post Story →",
+    label: "Unduh poster Post Story →",
     href: "https://drive.google.com/drive/folders/17MUE13_qlRSbaMmxtkSfiFK9JUWyerAO",
   },
   INSTAGRAM_FOLLOW: {
@@ -80,7 +80,7 @@ const DOCUMENT_STATUS_LABEL: Record<string, string> = {
 };
 
 function formatBytes(bytes: number) {
-  return `${Math.round(bytes / (1024 * 1024))}MB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
 interface ProfileForm {
@@ -219,8 +219,62 @@ export default function PesertaProfilePage() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(`Ukuran file maksimal ${formatBytes(5 * 1024 * 1024)}.`);
+    const docLabel = VERIFICATION_DOCS.find((d) => d.type === type)?.label ?? type;
+    const fileName = file.name.toLowerCase();
+    const ext = fileName.includes(".") ? fileName.split(".").pop() ?? "" : "";
+    const mimeType = file.type.toLowerCase();
+
+    // 1. Deteksi file video
+    if (
+      mimeType.startsWith("video/") ||
+      ["mp4", "mov", "avi", "mkv", "webm", "3gp"].includes(ext)
+    ) {
+      toast.error(
+        `File video tidak didukung untuk ${docLabel}. Mohon unggah tangkapan layar (screenshot) bukti.`,
+      );
+      setActiveDocType(null);
+      return;
+    }
+
+    // 2. Deteksi format HEIC/HEIF (kamera/screenshot iPhone)
+    if (
+      mimeType === "image/heic" ||
+      mimeType === "image/heif" ||
+      ["heic", "heif"].includes(ext)
+    ) {
+      toast.error(
+        `Format .heic belum didukung untuk ${docLabel}. Mohon simpan atau convert ke format JPG/PNG terlebih dahulu.`,
+      );
+      setActiveDocType(null);
+      return;
+    }
+
+    // 3. Validasi format yang diizinkan (JPG, PNG, WEBP, PDF)
+    const allowedExtensions = ["jpg", "jpeg", "png", "webp", "pdf"];
+    const allowedMimes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
+
+    const isExtAllowed = allowedExtensions.includes(ext);
+    const isMimeAllowed = !mimeType || allowedMimes.includes(mimeType);
+
+    if (!isExtAllowed || !isMimeAllowed) {
+      toast.error(
+        `Format file .${ext || "unknown"} tidak didukung. Hanya diperbolehkan format JPG, PNG, WEBP, atau PDF.`,
+      );
+      setActiveDocType(null);
+      return;
+    }
+
+    // 4. Validasi ukuran file (Maks 5MB)
+    const MAX_DOC_BYTES = 5 * 1024 * 1024;
+    if (file.size > MAX_DOC_BYTES) {
+      toast.error(
+        `Ukuran file ${docLabel} melebihi batas maksimal 5MB (${formatBytes(file.size)}).`,
+      );
       setActiveDocType(null);
       return;
     }
@@ -252,20 +306,34 @@ export default function PesertaProfilePage() {
     }
 
     // Upload semua file yang pending secara berurutan.
+    let successCount = 0;
     for (const type of pendingTypes) {
       const file = pendingDocs[type];
+      if (!file) continue;
+
+      const docLabel = VERIFICATION_DOCS.find((d) => d.type === type)?.label ?? type;
       const payload = new FormData();
       payload.append("type", type);
       payload.append("file", file);
+
       try {
         await uploadDocumentMutation.mutateAsync(payload);
+        successCount++;
+        // Hapus dokumen yang sudah sukses dari pendingDocs agar tidak terkirim ulang saat retry
+        setPendingDocs((prev) => {
+          const next = { ...prev };
+          delete next[type];
+          return next;
+        });
       } catch (err) {
-        toast.error(getErrorMessage(err, `Gagal mengunggah ${type}.`));
+        toast.error(getErrorMessage(err, `Gagal mengunggah ${docLabel}.`));
         return;
       }
     }
-    toast.success("Semua dokumen terkirim dan menunggu review.");
-    setPendingDocs({});
+
+    if (successCount > 0) {
+      toast.success("Semua dokumen terkirim dan menunggu review.");
+    }
   };
 
   return (
@@ -544,14 +612,20 @@ export default function PesertaProfilePage() {
 
       {/* Verification Document */}
       <div id="verification-document" className={`${glass} p-6 lg:p-8 scroll-mt-6`}>
-        <h2 className="relative font-display text-xl font-bold tracking-tight text-white mb-6">
-          Verification Document
-        </h2>
+        <div className="relative mb-6 space-y-1">
+          <h2 className="font-display text-xl font-bold tracking-tight text-white">
+            Verification Document
+          </h2>
+          <p className="text-xs text-text-secondary leading-relaxed">
+            Format yang didukung: <span className="text-white/80 font-medium">JPG, PNG, WEBP, PDF</span> (Maks. 5MB).
+            File video (<span className="text-white/60 font-mono">.mp4, .mov</span>) dan format iOS <span className="text-white/60 font-mono">.heic</span> tidak didukung.
+          </p>
+        </div>
 
         <input
           ref={fileInputRef}
           type="file"
-          accept=".jpg,.jpeg,.png,.webp,.pdf,.zip,.rar"
+          accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf"
           className="hidden"
           onChange={(e) => handleDocumentSelected(e.target.files?.[0])}
         />
