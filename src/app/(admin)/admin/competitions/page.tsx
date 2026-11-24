@@ -243,19 +243,23 @@ export default function AdminCompetitionsPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
                   <h4 className="font-bold text-white text-sm">{c.name}</h4>
-                  <span className="font-mono text-[10px] text-accent bg-accent/10 px-2 py-0.5 rounded">
-                    slug: {c.slug}
+                  <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-0.5 text-xs font-medium text-white/60">
+                    {c.slug}
                   </span>
                 </div>
                 <p className="text-xs text-text-secondary line-clamp-1">{c.description || "Tidak ada deskripsi."}</p>
-                <p className="text-[10px] text-text-secondary font-mono">
+                <p className="text-xs text-text-secondary">
                   Maks saat ini: {c.maxMember} (aturan {getTeamMemberLimits(c.slug).min}–{getTeamMemberLimits(c.slug).max})
                 </p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
-                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold px-3 py-1 rounded-md">
-                  {c.isActive ? "ACTIVE" : "INACTIVE"}
+                <span
+                  className={`inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-0.5 text-xs font-medium ${
+                    c.isActive ? "text-emerald-400" : "text-white/40"
+                  }`}
+                >
+                  {c.isActive ? "Aktif" : "Nonaktif"}
                 </span>
                 <Button
                   size="sm"

@@ -33,6 +33,7 @@ export interface Competition {
   description: string;
   maxMember: number;
   isActive: boolean;
+  activeRound?: "PENYISIHAN" | "FINAL";
   prizePool?: string | null;
   twibbonFrameUrl?: string | null;
   twibbonCaption?: string | null;
@@ -104,7 +105,22 @@ export interface Submission {
     id: string;
     teamName: string;
     teamCode: string;
-    competition?: { id: string; name: string; slug: string };
+    competition?: {
+      id: string;
+      name: string;
+      slug: string;
+      activeRound?: "PENYISIHAN" | "FINAL";
+    };
+    members?: Array<{
+      id?: string;
+      role: "LEADER" | "MEMBER";
+      user: {
+        id: string;
+        fullName: string;
+        email?: string;
+        institution?: string | null;
+      };
+    }>;
   };
   projectTitle?: string;
   description?: string;
@@ -114,7 +130,11 @@ export interface Submission {
   figmaUrl?: string | null;
   prototypeUrl?: string | null;
   fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
   originalityFileUrl?: string | null;
+  originalityFileName?: string | null;
+  originalityFileSize?: number | null;
   linkUrl?: string | null;
   /** DRAFT = masih disimpan sebagai draf, SUBMITTED = sudah dikirim dan dikunci. */
   status: "DRAFT" | "SUBMITTED";
@@ -123,17 +143,28 @@ export interface Submission {
   // Data penilaian (hanya ada setelah juri menilai).
   scores?: Array<{
     id: string;
+    judgeId?: string;
     score: number;
     note?: string | null;
     isLocked: boolean;
-    criteria: { id: string; name: string; maxScore: number; group?: string | null };
-    judge: { user: { fullName: string } };
+    criteria: {
+      id: string;
+      name: string;
+      maxScore: number;
+      weight?: number;
+      order?: number;
+      round?: "PENYISIHAN" | "FINAL";
+      group?: string | null;
+    };
+    judge: { id?: string; user: { fullName: string } };
   }>;
   judgeEvaluations?: Array<{
     id: string;
+    judgeId?: string;
+    round?: "PENYISIHAN" | "FINAL";
     recommendation?: string | null;
     feedback?: string | null;
-    judge: { user: { fullName: string } };
+    judge: { id?: string; user: { fullName: string } };
   }>;
   createdAt?: string;
   updatedAt?: string;
@@ -202,6 +233,45 @@ export interface Announcement {
   updatedAt: string;
 }
 
+export interface EvaluationCriteriaScore {
+  criteriaId: string;
+  criteriaName: string;
+  score: number;
+  maxScore: number;
+  weight: number;
+  note: string | null;
+}
+
+export interface EvaluationJudgeBreakdown {
+  judgeId: string;
+  judgeName: string;
+  criteriaCount: number;
+  averageScore: number;
+  feedback?: string | null;
+  criteriaScores?: EvaluationCriteriaScore[];
+}
+
+export interface TieBreakerInfo {
+  status: "WON" | "LOST";
+  rank: number;
+  comparedRank: number;
+  score: number;
+  submittedAt: string | null;
+  comparedSubmittedAt: string | null;
+  rule?: "CRITERIA_SCORE" | "SUBMISSION_TIME";
+  criteriaName?: string | null;
+  criteriaScore?: number | null;
+  comparedCriteriaScore?: number | null;
+}
+
+export interface TeamAnnouncementEvaluation {
+  finalScore: number;
+  isFullyScored: boolean;
+  judgeBreakdown: EvaluationJudgeBreakdown[];
+  submittedAt?: string | null;
+  tieBreaker?: TieBreakerInfo | null;
+}
+
 export interface TeamAnnouncementItem {
   id: string;
   competitionId: string;
@@ -213,7 +283,7 @@ export interface TeamAnnouncementItem {
   round: string;
   publishedAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   competition?: {
     id: string;
     name: string;
@@ -224,6 +294,7 @@ export interface TeamAnnouncementItem {
     teamName: string;
     teamCode: string;
   };
+  evaluation?: TeamAnnouncementEvaluation | null;
 }
 
 export interface MyAnnouncementResponse {

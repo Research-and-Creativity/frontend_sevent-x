@@ -233,20 +233,18 @@ export default function AdminCriteriaPage() {
           </p>
         </div>
         <span
-          className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
-            isValid
-              ? "border-[#3CB578]/40 text-[#63CFA0]"
-              : "border-rose-500/40 text-rose-400"
+          className={`text-xs font-medium px-3.5 py-1 rounded-full border border-white/10 bg-white/[0.03] ${
+            isValid ? "text-emerald-400" : "text-rose-300"
           }`}
         >
           {isValid ? "Rubrik sah (100%)" : "Belum sah (wajib 100%)"}
         </span>
       </div>
 
-      {/* Table */}
-      <div className={`${glass} overflow-x-auto`}>
-        <table className="w-full text-sm text-left text-text-secondary">
-          <thead className="text-xs text-white uppercase border-b border-white/10">
+      {/* Table (Desktop) / Cards (Mobile) */}
+      <div className={`${glass} lg:overflow-x-auto`}>
+        <table className="block w-full text-sm text-left text-text-secondary lg:table">
+          <thead className="hidden text-xs text-white uppercase border-b border-white/10 lg:table-header-group">
             <tr>
               <th className="py-3 pr-4">#</th>
               <th className="py-3 pr-4">Nama</th>
@@ -257,21 +255,41 @@ export default function AdminCriteriaPage() {
               <th className="py-3 pr-4 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block space-y-3 lg:table-row-group lg:space-y-0">
             {criteria
               .slice()
               .sort((a, b) => a.order - b.order)
               .map((c) => (
-                <tr key={c.id} className="border-b border-white/5 last:border-0">
-                  <td className="py-3 pr-4 text-white/60">{c.order}</td>
-                  <td className="py-3 pr-4 font-medium text-white">{c.name}</td>
-                  <td className="py-3 pr-4 text-white/60">{c.group || "-"}</td>
-                  <td className="py-3 pr-4 text-center text-white">{c.weight}%</td>
-                  <td className="py-3 pr-4 text-center text-white/60">{c.maxScore}</td>
-                  <td className="py-3 pr-4 text-white/50 max-w-xs truncate">
-                    {c.description || "-"}
+                <tr
+                  key={c.id}
+                  className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-2 lg:table-row lg:rounded-none lg:border-0 lg:border-b lg:border-white/5 lg:bg-transparent lg:p-0 lg:space-y-0 lg:last:border-0"
+                >
+                  <td className="flex items-center justify-between gap-3 py-0.5 text-white/60 lg:table-cell lg:py-3 lg:pr-4">
+                    <span className="text-xs text-white/50 lg:hidden">Urutan</span>
+                    <span>#{c.order}</span>
                   </td>
-                  <td className="py-3 pr-4 text-right">
+                  <td className="flex items-start justify-between gap-3 py-0.5 font-medium text-white lg:table-cell lg:py-3 lg:pr-4">
+                    <span className="text-xs font-normal text-white/50 shrink-0 lg:hidden">Nama</span>
+                    <span className="min-w-0 text-right lg:text-left break-words">{c.name}</span>
+                  </td>
+                  <td className="flex items-center justify-between gap-3 py-0.5 text-white/60 lg:table-cell lg:py-3 lg:pr-4">
+                    <span className="text-xs text-white/50 shrink-0 lg:hidden">Grup</span>
+                    <span className="min-w-0 text-right lg:text-left break-words">{c.group || "-"}</span>
+                  </td>
+                  <td className="flex items-center justify-between gap-3 py-0.5 text-white lg:table-cell lg:py-3 lg:pr-4 lg:text-center">
+                    <span className="text-xs text-white/50 lg:hidden">Bobot</span>
+                    <span>{c.weight}%</span>
+                  </td>
+                  <td className="flex items-center justify-between gap-3 py-0.5 text-white/60 lg:table-cell lg:py-3 lg:pr-4 lg:text-center">
+                    <span className="text-xs text-white/50 lg:hidden">Max</span>
+                    <span>{c.maxScore}</span>
+                  </td>
+                  <td className="block py-0.5 text-white/50 lg:table-cell lg:py-3 lg:pr-4 lg:max-w-xs lg:truncate">
+                    <span className="text-xs text-white/50 block mb-0.5 lg:hidden">Deskripsi</span>
+                    <span className="text-xs sm:text-sm line-clamp-2 lg:line-clamp-none">{c.description || "-"}</span>
+                  </td>
+                  <td className="flex items-center justify-between gap-3 pt-2 border-t border-white/10 lg:border-t-0 lg:table-cell lg:py-3 lg:pr-4 lg:text-right">
+                    <span className="text-xs text-white/50 lg:hidden">Aksi</span>
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openEdit(c)}
@@ -290,9 +308,9 @@ export default function AdminCriteriaPage() {
                 </tr>
               ))}
             {criteria.length === 0 && (
-              <tr>
-                <td colSpan={7} className="py-8 text-center text-white/40">
-                  Belum ada kriteria untuk kompetisi & tahap ini.
+              <tr className="block lg:table-row">
+                <td colSpan={7} className="block py-8 text-center text-white/40 lg:table-cell">
+                  Belum ada kriteria untuk kompetisi &amp; tahap ini.
                 </td>
               </tr>
             )}

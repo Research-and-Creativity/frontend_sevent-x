@@ -7,11 +7,10 @@ import {
   Users,
   Clock,
   Eye,
-  ChevronLeft,
-  ChevronRight,
   AlertCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination, paginateItems } from "@/components/shared/table-pagination";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 import { getGreeting } from "@/lib/greeting";
@@ -25,10 +24,9 @@ import {
 } from "@/lib/admin-team-status";
 import { Team } from "@/types/api";
 
-const PAGE_SIZE = 10;
-
 export default function AdminOverviewDashboardPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -99,12 +97,7 @@ export default function AdminOverviewDashboardPage() {
   }, [deadline, now]);
 
   const totalTeams = overview?.totalTeams ?? teams.length;
-  const totalPages = Math.max(1, Math.ceil(teams.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageRows = teams.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE,
-  );
+  const { pageItems: pageRows } = paginateItems(teams, page, pageSize);
 
   const storeUser = useAuthStore((state) => state.user);
   const statusCards = [
@@ -234,50 +227,64 @@ export default function AdminOverviewDashboardPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
+            <div className="lg:overflow-x-auto">
+              <table className="block w-full text-sm lg:table">
+                <thead className="hidden lg:table-header-group">
                   <tr className="text-left text-white/70 border-b border-white/10">
-                    <th className="pb-3 font-semibold">Team</th>
-                    <th className="pb-3 font-semibold">Team Leader Name</th>
-                    <th className="pb-3 font-semibold">Time Registration</th>
-                    <th className="pb-3 font-semibold">Status Document</th>
-                    <th className="pb-3 font-semibold">Status Payment</th>
-                    <th className="pb-3 font-semibold">Action</th>
+                    <th className="pb-3 font-semibold whitespace-nowrap">Team</th>
+                    <th className="pb-3 font-semibold whitespace-nowrap">Team Leader Name</th>
+                    <th className="pb-3 font-semibold whitespace-nowrap">Time Registration</th>
+                    <th className="pb-3 font-semibold text-center whitespace-nowrap">Status Document</th>
+                    <th className="pb-3 font-semibold text-center whitespace-nowrap">Status Payment</th>
+                    <th className="pb-3 font-semibold text-center whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="block space-y-3 lg:table-row-group lg:space-y-0">
                   {pageRows.map((t) => {
                     const doc = docStatusInfo(t);
                     const pay = payStatusInfo(t);
                     return (
-                      <tr key={t.id} className="border-b border-white/5">
-                        <td className="py-4">{t.teamName}</td>
-                        <td className="py-4">{teamLeaderName(t)}</td>
-                        <td className="py-4">
-                          {formatRegistrationDate(t.createdAt)}
+                      <tr
+                        key={t.id}
+                        className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5 lg:table-row lg:rounded-none lg:border-0 lg:border-b lg:border-white/5 lg:bg-transparent lg:p-0 lg:space-y-0"
+                      >
+                        <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-4 lg:pr-4 lg:whitespace-nowrap font-medium text-white">
+                          <span className="text-xs font-normal text-white/50 shrink-0 lg:hidden">Team</span>
+                          <span className="min-w-0 text-right lg:text-left break-words">{t.teamName}</span>
                         </td>
-                        <td className="py-4">
+                        <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-4 lg:pr-4 lg:whitespace-nowrap text-white/80">
+                          <span className="text-xs text-white/50 shrink-0 lg:hidden">Leader</span>
+                          <span className="min-w-0 text-right lg:text-left break-words">{teamLeaderName(t)}</span>
+                        </td>
+                        <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-4 lg:pr-4 lg:whitespace-nowrap text-white/70">
+                          <span className="text-xs text-white/50 shrink-0 lg:hidden">Registered</span>
+                          <span className="min-w-0 text-right lg:text-left">{formatRegistrationDate(t.createdAt)}</span>
+                        </td>
+                        <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-4 lg:text-center lg:whitespace-nowrap">
+                          <span className="text-xs text-white/50 shrink-0 lg:hidden">Document</span>
                           <span
-                            className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}
+                            className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}
                           >
                             {doc.label}
                           </span>
                         </td>
-                        <td className="py-4">
+                        <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-4 lg:text-center lg:whitespace-nowrap">
+                          <span className="text-xs text-white/50 shrink-0 lg:hidden">Payment</span>
                           <span
-                            className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}
+                            className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}
                           >
                             {pay.label}
                           </span>
                         </td>
-                        <td className="py-4">
+                        <td className="flex items-center justify-between gap-3 pt-2 border-t border-white/10 lg:border-t-0 lg:table-cell lg:py-4 lg:text-center lg:whitespace-nowrap">
+                          <span className="text-xs text-white/50 lg:hidden">Action</span>
                           <Link
                             href={`/admin/teams/${t.id}`}
-                            className="text-white/60 hover:text-white"
+                            className="inline-flex items-center gap-1.5 text-white/70 hover:text-white"
                             title="Lihat detail tim"
                           >
                             <Eye className="w-5 h-5" />
+                            <span className="text-xs font-medium lg:hidden">Detail</span>
                           </Link>
                         </td>
                       </tr>
@@ -286,32 +293,13 @@ export default function AdminOverviewDashboardPage() {
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between pt-5 text-xs text-white/50">
-              <span>
-                Showing {pageRows.length} data out of {teams.length}
-              </span>
-              <div className="flex items-center gap-3">
-                <span>
-                  Page {safePage} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage(Math.max(1, safePage - 1))}
-                  disabled={safePage <= 1}
-                  className="border border-white/20 rounded-lg p-1.5 disabled:opacity-40"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, safePage + 1))}
-                  disabled={safePage >= totalPages}
-                  className="border border-white/20 rounded-lg p-1.5 disabled:opacity-40"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <TablePagination
+              totalItems={teams.length}
+              currentPage={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </>
         )}
       </div>

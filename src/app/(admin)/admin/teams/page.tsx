@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin-team-status";
 import { Team } from "@/types/api";
 import { useCompetitions } from "@/hooks/use-peserta";
+import { TablePagination, paginateItems } from "@/components/shared/table-pagination";
 
 export default function AdminTeamsPage() {
   const storeUser = useAuthStore((state) => state.user);
@@ -36,6 +37,8 @@ export default function AdminTeamsPage() {
   const [payFilter, setPayFilter] = useState("all");
   const [timeSort, setTimeSort] = useState("newest");
   const [nameSort, setNameSort] = useState("az");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // 1. Fetch competitions list for filter dropdown
   const { data: competitions = [] } = useCompetitions();
@@ -140,7 +143,10 @@ export default function AdminTeamsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={selectedCompSlug}
-              onChange={(e) => setSelectedCompSlug(e.target.value)}
+              onChange={(e) => {
+                setSelectedCompSlug(e.target.value);
+                setPage(1);
+              }}
               className="cursor-pointer bg-transparent border border-white/20 rounded-full pl-4 pr-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-white/50"
             >
               <option value="" className="bg-[#15161A]">
@@ -171,7 +177,10 @@ export default function AdminTeamsPage() {
                 type="text"
                 placeholder="Search"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full sm:w-64 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
             </div>
@@ -179,24 +188,24 @@ export default function AdminTeamsPage() {
         </div>
 
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showFilters ? "max-h-96 opacity-100 mb-6" : "max-h-0 opacity-0 mb-0"}`}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
-            <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 border border-white/10 rounded-xl bg-white/[0.02]">
+            <select value={docFilter} onChange={(e) => { setDocFilter(e.target.value); setPage(1); }} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="all" className="bg-[#15161A]">Status Document: All</option>
               <option value="review" className="bg-[#15161A]">Need Review</option>
               <option value="revise" className="bg-[#15161A]">Revise</option>
               <option value="approved" className="bg-[#15161A]">Approved</option>
             </select>
-            <select value={payFilter} onChange={(e) => setPayFilter(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+            <select value={payFilter} onChange={(e) => { setPayFilter(e.target.value); setPage(1); }} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="all" className="bg-[#15161A]">Status Payment: All</option>
               <option value="review" className="bg-[#15161A]">Need Review</option>
               <option value="not_paid" className="bg-[#15161A]">Not Paid</option>
               <option value="paid" className="bg-[#15161A]">Paid</option>
             </select>
-            <select value={timeSort} onChange={(e) => setTimeSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+            <select value={timeSort} onChange={(e) => { setTimeSort(e.target.value); setPage(1); }} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="newest" className="bg-[#15161A]">Time Regist: Newest</option>
               <option value="oldest" className="bg-[#15161A]">Time Regist: Oldest</option>
             </select>
-            <select value={nameSort} onChange={(e) => setNameSort(e.target.value)} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
+            <select value={nameSort} onChange={(e) => { setNameSort(e.target.value); setPage(1); }} className="bg-transparent border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80">
               <option value="az" className="bg-[#15161A]">Team Name: A-Z</option>
               <option value="za" className="bg-[#15161A]">Team Name: Z-A</option>
             </select>
@@ -233,56 +242,78 @@ export default function AdminTeamsPage() {
                   : "Coba ubah kata kunci pencarian."}
             </p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-left text-white/70 border-b border-white/10">
-                  <th className="pb-3 font-semibold">Team</th>
-                  <th className="pb-3 font-semibold">Team Leader Name</th>
-                  <th className="pb-3 font-semibold">Time Registration</th>
-                  <th className="pb-3 font-semibold">Status Document</th>
-                  <th className="pb-3 font-semibold">Status Payment</th>
-                  <th className="pb-3 font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredTeams.map((t) => {
-                  const teamName = t.teamName;
-                  const leader = teamLeaderName(t);
-                  const registeredAt = formatRegistrationDate(t.createdAt);
-                  const doc = docStatusInfo(t);
-                  const pay = payStatusInfo(t);
-                  return (
-                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-5 pr-4">{teamName}</td>
-                      <td className="py-5 pr-4">{leader}</td>
-                      <td className="py-5 pr-4">{registeredAt}</td>
-                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span></td>
-                      <td className="py-5 pr-4"><span className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span></td>
-                      <td className="py-5">
-                        <Link href={`/admin/teams/${t.id}`} className="text-white/60 hover:text-white" title="Lihat detail tim">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </Link>
-                      </td>
+        ) : (() => {
+          const { pageItems } = paginateItems(filteredTeams, page, pageSize);
+          return (
+            <>
+              <div className="lg:overflow-x-auto">
+                <table className="block w-full text-left text-sm lg:table">
+                  <thead className="hidden lg:table-header-group">
+                    <tr className="text-left text-white/70 border-b border-white/10">
+                      <th className="pb-3 font-semibold whitespace-nowrap">Team</th>
+                      <th className="pb-3 font-semibold whitespace-nowrap">Team Leader Name</th>
+                      <th className="pb-3 font-semibold whitespace-nowrap">Time Registration</th>
+                      <th className="pb-3 font-semibold text-center whitespace-nowrap">Status Document</th>
+                      <th className="pb-3 font-semibold text-center whitespace-nowrap">Status Payment</th>
+                      <th className="pb-3 font-semibold text-center whitespace-nowrap">Action</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-5 text-xs text-white/50">
-          <span>Showing {filteredTeams.length} data out of {queueTeams.length} in antrean</span>
-          <div className="flex items-center gap-3">
-            <span>Show</span>
-            <select className="bg-transparent border border-white/20 rounded-lg px-2 py-1"><option>10</option></select>
-            <span>data per page</span>
-            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <button className="border border-white/20 rounded-lg p-1.5"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg></button>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="block space-y-3 lg:table-row-group lg:space-y-0 lg:divide-y lg:divide-white/5">
+                    {pageItems.map((t) => {
+                      const teamName = t.teamName;
+                      const leader = teamLeaderName(t);
+                      const registeredAt = formatRegistrationDate(t.createdAt);
+                      const doc = docStatusInfo(t);
+                      const pay = payStatusInfo(t);
+                      return (
+                        <tr
+                          key={t.id}
+                          className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5 lg:table-row lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:space-y-0 lg:hover:bg-white/[0.02] transition-colors"
+                        >
+                          <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap font-medium text-white">
+                            <span className="text-xs font-normal text-white/50 shrink-0 lg:hidden">Team</span>
+                            <span className="min-w-0 text-right lg:text-left break-words">{teamName}</span>
+                          </td>
+                          <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap text-white/80">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Leader</span>
+                            <span className="min-w-0 text-right lg:text-left break-words">{leader}</span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap text-white/70">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Registered</span>
+                            <span className="min-w-0 text-right lg:text-left">{registeredAt}</span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:text-center lg:whitespace-nowrap">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Document</span>
+                            <span className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap px-4 py-1.5 rounded-full border text-xs font-semibold ${doc.cls}`}>{doc.label}</span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:text-center lg:whitespace-nowrap">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Payment</span>
+                            <span className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap px-4 py-1.5 rounded-full border text-xs font-semibold ${pay.cls}`}>{pay.label}</span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 pt-2 border-t border-white/10 lg:border-t-0 lg:table-cell lg:py-5 lg:text-center lg:whitespace-nowrap">
+                            <span className="text-xs text-white/50 lg:hidden">Action</span>
+                            <Link href={`/admin/teams/${t.id}`} className="inline-flex items-center justify-center gap-1.5 text-white/60 hover:text-white" title="Lihat detail tim">
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              <span className="text-xs font-medium lg:hidden">Detail</span>
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <TablePagination
+                totalItems={filteredTeams.length}
+                currentPage={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                suffixLabel={queueTeams.length !== filteredTeams.length ? `(${queueTeams.length} in antrean)` : "in antrean"}
+              />
+            </>
+          );
+        })()}
       </div>
     </div>
   );

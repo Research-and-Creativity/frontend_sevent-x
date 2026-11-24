@@ -7,23 +7,23 @@ type StatusInfo = { label: string; cls: string };
 export function docStatusInfo(t: Team): StatusInfo {
   const s = (t.documentStatus || t.status || "").toUpperCase();
   if (s.includes("APPROV") || s.includes("VERIF")) {
-    return { label: "Approved", cls: "border-[#3CB578] text-[#63CFA0]" };
+    return { label: "Approved", cls: "border-white/10 bg-white/[0.03] text-emerald-400" };
   }
   if (s.includes("REJECT") || s.includes("REVISE")) {
-    return { label: "Revise", cls: "border-[#E5B33C] text-[#F0C969]" };
+    return { label: "Revise", cls: "border-white/10 bg-white/[0.03] text-rose-300" };
   }
-  return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
+  return { label: "Need Review", cls: "border-white/10 bg-white/[0.03] text-white/70" };
 }
 
 export function payStatusInfo(t: Team): StatusInfo {
   const s = (t.paymentProof?.status || "").toUpperCase();
   if (s.includes("APPROV") || s.includes("PAID") || s.includes("VERIF")) {
-    return { label: "Paid", cls: "border-[#3CB578] text-[#63CFA0]" };
+    return { label: "Paid", cls: "border-white/10 bg-white/[0.03] text-emerald-400" };
   }
   if (s.includes("REJECT") || s.includes("UNPAID") || s === "NOT PAID") {
-    return { label: "Not Paid", cls: "border-[#E55353] text-[#F08080]" };
+    return { label: "Not Paid", cls: "border-white/10 bg-white/[0.03] text-rose-300" };
   }
-  return { label: "Need Review", cls: "border-[#5B8DEF] text-[#7FA7F5]" };
+  return { label: "Need Review", cls: "border-white/10 bg-white/[0.03] text-white/70" };
 }
 
 /**

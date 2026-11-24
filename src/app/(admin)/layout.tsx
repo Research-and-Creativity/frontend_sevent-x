@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { useAdminReviewCounts } from "@/hooks/use-admin";
+import { useLogout } from "@/hooks/use-logout";
 import { toast } from "sonner";
 import {
   LayoutGrid,
@@ -19,6 +20,8 @@ import {
   X,
   ListChecks,
   Trophy,
+  SquarePen,
+  FileSpreadsheet,
 } from "lucide-react";
 
 const mainLinks = [
@@ -82,12 +85,28 @@ function SidebarContent({
       </p>
       <nav className="space-y-1">
         <Link
+          href="/admin/submissions"
+          onClick={onNavigate}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith("/admin/submissions") ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+        >
+          <SquarePen className="w-5 h-5" />
+          <span className="flex-1">Already Submitted</span>
+        </Link>
+        <Link
           href="/admin/results"
           onClick={onNavigate}
           className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith("/admin/results") ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
         >
           <Trophy className="w-5 h-5" />
-          <span className="flex-1">Hasil & Export</span>
+          <span className="flex-1">Results</span>
+        </Link>
+        <Link
+          href="/admin/export"
+          onClick={onNavigate}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${pathname?.startsWith("/admin/export") ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+        >
+          <FileSpreadsheet className="w-5 h-5" />
+          <span className="flex-1">Export Sertifikat</span>
         </Link>
       </nav>
 
@@ -122,6 +141,7 @@ function SidebarContent({
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const handleLogout = useLogout();
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -198,7 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <SidebarContent
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
-                onLogout={() => router.push("/login")}
+                onLogout={handleLogout}
                 reviewCounts={{ pendingReview }}
               />
             </div>
@@ -213,14 +233,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
           <SidebarContent
             pathname={pathname}
-            onLogout={() => router.push("/login")}
+            onLogout={handleLogout}
             reviewCounts={{ pendingReview }}
           />
         </div>
       </aside>
 
       {/* Content */}
-      <main className="flex-1 relative p-8 overflow-x-hidden">
+      <main className="flex-1 min-w-0 relative p-4 pt-16 sm:p-8 md:pt-8 overflow-x-clip">
         <Image src="/assets/image/pattern-landing2.svg" alt="" width={1440} height={1712} className="absolute inset-0 w-full h-full object-cover opacity-15 pointer-events-none" />
         <div className="relative z-10">{children}</div>
       </main>

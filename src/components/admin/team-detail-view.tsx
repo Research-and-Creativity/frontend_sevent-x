@@ -274,7 +274,7 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
                   </div>
 
                   <h3 className="font-display text-lg font-bold">Document</h3>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {REQUIRED_DOC_LABELS.map(({ type, label }) => {
                       const doc = member.user.documents.find((d) => d.type === type);
                       if (!doc) {
@@ -309,7 +309,7 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
                             </span>
                           </a>
                           {doc.status === "REJECT" && doc.rejectionReason && (
-                            <p className="mt-1 text-[10px] text-[#F0C969]">
+                            <p className="mt-1 text-[10px] text-rose-300">
                               Catatan: {doc.rejectionReason}
                             </p>
                           )}
@@ -375,8 +375,8 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
         {mode === "registered" && (
           <>
             {isSoftdevMemberUnderLimit && (
-              <div className="mt-5 p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+              <div className="mt-5 p-3.5 rounded-xl border border-white/10 bg-white/[0.025] text-white/75 text-xs flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-white/60" />
                 <span>
                   Tim Software Development saat ini hanya memiliki {team.members.length} anggota. Minimal 3 anggota diperlukan agar tim dapat lolos verifikasi.
                 </span>
@@ -386,7 +386,7 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
               <button
                 disabled={!team.paymentProof || payStatus === "APPROVE" || updatePay.isPending}
                 onClick={() => setRevisePay(true)}
-                className="cursor-pointer px-8 py-2.5 rounded-full border border-[#F0C969] text-[#F0C969] text-sm font-semibold hover:bg-[#F0C969]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="cursor-pointer px-8 py-2.5 rounded-full border border-white/20 bg-white/[0.03] text-white/80 text-sm font-semibold hover:bg-white/10 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Revise
               </button>
@@ -525,8 +525,8 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
 }
 
 function docStatusColor(status: string): string {
-  if (status === "APPROVE") return "text-[#63CFA0]";
-  if (status === "REJECT") return "text-[#F0C969]";
+  if (status === "APPROVE") return "text-emerald-400";
+  if (status === "REJECT") return "text-rose-300";
   return "text-white/40";
 }
 

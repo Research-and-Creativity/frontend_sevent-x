@@ -11,17 +11,20 @@ import {
 } from "@/hooks/use-admin";
 import { getErrorMessageWithDefault } from "@/lib/errors";
 import { NewsTag } from "@/types/api";
+import { TablePagination, paginateItems } from "@/components/shared/table-pagination";
 
 const TAG_STYLE: Record<NewsTag, string> = {
-  IMPORTANT: "border-[#E55353] text-[#F08080]",
-  INFO: "border-[#5B8DEF] text-[#7FA7F5]",
-  UPDATE: "border-[#3CB578] text-[#63CFA0]",
+  IMPORTANT: "border-white/10 bg-white/[0.03] text-rose-300",
+  INFO: "border-white/10 bg-white/[0.03] text-[#A9B7FF]",
+  UPDATE: "border-white/10 bg-white/[0.03] text-emerald-400",
 };
 
 const TAGS: NewsTag[] = ["IMPORTANT", "INFO", "UPDATE"];
 
 export default function AdminAnnouncementPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const { data: news = [], isLoading } = useAdminNews();
   const createMutation = useCreateNews();
   const updateMutation = useUpdateNews();
@@ -109,17 +112,20 @@ export default function AdminAnnouncementPage() {
       </div>
 
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="font-display text-2xl font-bold">Announcement List</h2>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
               <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-72 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full sm:w-72 bg-transparent border border-white/20 rounded-full pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50"
               />
             </div>
             <button
@@ -201,84 +207,108 @@ export default function AdminAnnouncementPage() {
           </form>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-white/70 border-b border-white/10">
-                <th className="pb-3 font-semibold">Title</th>
-                <th className="pb-3 font-semibold">Tag</th>
-                <th className="pb-3 font-semibold">Created</th>
-                <th className="pb-3 font-semibold text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
-                    <td className="py-4" colSpan={4}>
-                      <div className="h-6 rounded bg-white/5 animate-pulse" />
-                    </td>
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td className="py-10 text-center text-white/40" colSpan={4}>
-                    {news.length === 0
-                      ? "Belum ada pengumuman."
-                      : "Tidak ada pengumuman yang cocok."}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((post) => (
-                  <tr key={post.id} className="border-b border-white/5">
-                    <td className="py-4 max-w-md">
-                      <p className="truncate font-medium text-white">
-                        {post.title}
-                      </p>
-                      <p className="truncate text-xs text-white/40">
-                        {post.content}
-                      </p>
-                    </td>
-                    <td className="py-4">
-                      <span
-                        className={`inline-block px-4 py-1.5 rounded-full border text-xs font-semibold ${TAG_STYLE[post.tag]}`}
-                      >
-                        {post.tag}
-                      </span>
-                    </td>
-                    <td className="py-4 text-white/60">
-                      {new Date(post.createdAt).toLocaleString("id-ID", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(post.id)}
-                          className="text-white/60 hover:text-white cursor-pointer"
-                          aria-label="Edit"
+        {(() => {
+          const { pageItems } = paginateItems(filtered, page, pageSize);
+          return (
+            <>
+              <div className="lg:overflow-x-auto">
+                <table className="block w-full text-sm lg:table">
+                  <thead className="hidden lg:table-header-group">
+                    <tr className="text-left text-white/70 border-b border-white/10">
+                      <th className="pb-3 font-semibold">Title</th>
+                      <th className="pb-3 font-semibold">Tag</th>
+                      <th className="pb-3 font-semibold">Created</th>
+                      <th className="pb-3 font-semibold text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="block space-y-3 lg:table-row-group lg:space-y-0">
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <tr key={i} className="block lg:table-row border-b border-white/5">
+                          <td className="block py-4 lg:table-cell" colSpan={4}>
+                            <div className="h-6 rounded bg-white/5 animate-pulse" />
+                          </td>
+                        </tr>
+                      ))
+                    ) : pageItems.length === 0 ? (
+                      <tr className="block lg:table-row">
+                        <td className="block py-10 text-center text-white/40 lg:table-cell" colSpan={4}>
+                          {news.length === 0
+                            ? "Belum ada pengumuman."
+                            : "Tidak ada pengumuman yang cocok."}
+                        </td>
+                      </tr>
+                    ) : (
+                      pageItems.map((post) => (
+                        <tr
+                          key={post.id}
+                          className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5 lg:table-row lg:rounded-none lg:border-0 lg:border-b lg:border-white/5 lg:bg-transparent lg:p-0 lg:space-y-0"
                         >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(post.id, post.title)}
-                          className="text-white/60 hover:text-rose-400 cursor-pointer"
-                          aria-label="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          <td className="block lg:table-cell lg:py-4 lg:max-w-md">
+                            <p className="truncate font-medium text-white">
+                              {post.title}
+                            </p>
+                            <p className="truncate text-xs text-white/40">
+                              {post.content}
+                            </p>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-4">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Tag</span>
+                            <span
+                              className={`inline-block shrink-0 px-4 py-1.5 rounded-full border text-xs font-semibold ${TAG_STYLE[post.tag]}`}
+                            >
+                              {post.tag}
+                            </span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-4 text-white/60">
+                            <span className="text-xs text-white/50 shrink-0 lg:hidden">Created</span>
+                            <span>
+                              {new Date(post.createdAt).toLocaleString("id-ID", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </td>
+                          <td className="flex items-center justify-between gap-3 pt-2 border-t border-white/10 lg:border-t-0 lg:table-cell lg:py-4">
+                            <span className="text-xs text-white/50 lg:hidden">Action</span>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => openEdit(post.id)}
+                                className="text-white/60 hover:text-white cursor-pointer"
+                                aria-label="Edit"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onDelete(post.id, post.title)}
+                                className="text-white/60 hover:text-rose-400 cursor-pointer"
+                                aria-label="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {!isLoading && filtered.length > 0 && (
+                <TablePagination
+                  totalItems={filtered.length}
+                  currentPage={page}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                />
               )}
-            </tbody>
-           </table>
-        </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

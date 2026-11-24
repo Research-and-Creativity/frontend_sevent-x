@@ -195,7 +195,7 @@ export default function AdminJudgesPage() {
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-white/20 text-white/60">
+                        <span className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-3 py-0.5 text-xs font-medium text-white/75">
                           {u.role}
                         </span>
                         {u.institution && (
@@ -368,7 +368,7 @@ export default function AdminJudgesPage() {
                           <h4 className="font-bold text-white text-sm">
                             {judgeName}
                           </h4>
-                          <span className="text-[11px] font-semibold px-3 py-1 rounded-full border border-[#5B8DEF]/40 text-[#7FA7F5]">
+                          <span className="inline-flex items-center rounded-full border border-[#7D8CFF]/40 bg-[#7D8CFF]/10 px-3 py-0.5 text-xs font-medium text-[#A9B7FF]">
                             {j.competitionSlug}
                           </span>
                         </div>
@@ -399,7 +399,7 @@ export default function AdminJudgesPage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveJudge(j.id, judgeName)}
-                        className="flex items-center gap-1 text-xs h-8 px-4 rounded-full border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        className="flex items-center gap-1 text-xs h-8 px-4 rounded-full border border-white/10 bg-white/[0.03] text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/30 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Hapus</span>

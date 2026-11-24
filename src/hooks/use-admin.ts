@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { User, UserRole, NewsPost, NewsTag, GalleryItem, Team } from "@/types/api";
+import { User, UserRole, NewsPost, NewsTag, GalleryItem, Team, Submission } from "@/types/api";
 import { isVerifiedTeam } from "@/lib/admin-team-status";
 
 // Hook 1: Fetch Users list for Admin with search & role filter
@@ -491,5 +491,32 @@ export function useDeleteNews() {
   });
 }
 
+export type AdminSubmissionItem = Submission;
 
+export function useAdminSubmissions(competitionSlug?: string) {
+  return useQuery<Submission[]>({
+    queryKey: ["adminSubmissions", competitionSlug ?? "all"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/submissions", {
+        params: competitionSlug ? { competitionSlug } : undefined,
+      });
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
 
+export function useAdminSubmissionDetail(submissionId: string) {
+  return useQuery<Submission>({
+    queryKey: ["adminSubmissionDetail", submissionId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/api/submissions/${submissionId}`);
+      return res.data?.data || res.data;
+    },
+    enabled: Boolean(submissionId),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
