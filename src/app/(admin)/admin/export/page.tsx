@@ -10,12 +10,14 @@ import {
   Loader2,
   Info,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 import { getGreeting } from "@/lib/greeting";
 import { useCompetitions } from "@/hooks/use-peserta";
+import { TIMELINE_EVENTS } from "@/config/site";
 
 export default function AdminExportPage() {
   const storeUser = useAuthStore((state) => state.user);
@@ -32,6 +34,57 @@ export default function AdminExportPage() {
   const [winnerComp, setWinnerComp] = useState<string>("all");
 
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+
+  // Jadwal timeline & status lock
+  const now = new Date();
+
+  const getStageDate = (keyword: string, compSlug?: string): Date | null => {
+    // 1. Cek dari database kompetisi jika ada
+    const targetComp =
+      compSlug && compSlug !== "all"
+        ? competitions.find((c) => c.slug === compSlug)
+        : competitions[0];
+
+    const dbStage = targetComp?.timelines?.find((t) =>
+      (t.stageName || "").toLowerCase().includes(keyword.toLowerCase())
+    );
+    if (dbStage?.startDate) {
+      const d = new Date(dbStage.startDate);
+      if (!Number.isNaN(d.getTime())) return d;
+    }
+
+    // 2. Fallback dari TIMELINE_EVENTS di site.ts
+    const siteEvent = TIMELINE_EVENTS.find((e) =>
+      (e.title || "").toLowerCase().includes(keyword.toLowerCase())
+    );
+    if (siteEvent?.start) {
+      const d = new Date(siteEvent.start);
+      if (!Number.isNaN(d.getTime())) return d;
+    }
+
+    return null;
+  };
+
+  const finalistStageDate = getStageDate("finalis", finalistComp);
+  const isFinalistUnlocked = finalistStageDate ? now >= finalistStageDate : true;
+
+  const winnerStageDate =
+    getStageDate("awarding", winnerComp) || getStageDate("final lomba", winnerComp);
+  const isWinnerUnlocked = winnerStageDate ? now >= winnerStageDate : true;
+
+  const formatScheduleDate = (date: Date | null) => {
+    if (!date) return "-";
+    return (
+      new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Jakarta",
+      }).format(date) + " WIB"
+    );
+  };
 
   const handleDownload = async (
     category: "all" | "finalists" | "winners",
@@ -236,8 +289,16 @@ export default function AdminExportPage() {
         {/* Card 2: Finalists */}
         <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
-              <Award className="w-6 h-6 text-white/80" />
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
+                <Award className="w-6 h-6 text-white/80" />
+              </div>
+              {!isFinalistUnlocked && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/[0.05] text-[11px] font-medium text-amber-400">
+                  <Lock className="w-3 h-3" />
+                  Terkunci
+                </span>
+              )}
             </div>
 
             <div>
@@ -271,39 +332,53 @@ export default function AdminExportPage() {
               </select>
             </div>
 
-            <div className="pt-1 text-[11px] text-white/40">
-              {exportMode === "member"
-                ? "💡 5 tim finalis × 3 anggota = 15 baris penerima sertifikat per cabang."
-                : "💡 Menghasilkan tepat 5 baris (1 tim per baris) per cabang."}
-            </div>
+            {/* Status Timeline Notification */}
+            {!isFinalistUnlocked ? (
+              <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-xs space-y-0.5">
+                  <p className="font-semibold text-amber-300">Belum Masuk Jadwal</p>
+                  <p className="text-white/60 text-[11px] leading-relaxed">
+                    Export finalis baru dibuka saat jadwal pengumuman finalis tiba:{" "}
+                    <strong className="text-white/90">{formatScheduleDate(finalistStageDate)}</strong>.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-1 text-[11px] text-white/40">
+                {exportMode === "member"
+                  ? "💡 5 tim finalis × 3 anggota = 15 baris penerima sertifikat per cabang."
+                  : "💡 Menghasilkan tepat 5 baris (1 tim per baris) per cabang."}
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-2.5 pt-4 border-t border-white/5">
             <button
               onClick={() => handleDownload("finalists", finalistComp, "xlsx")}
-              disabled={Boolean(downloadingKey)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-50"
+              disabled={Boolean(downloadingKey) || !isFinalistUnlocked}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {downloadingKey === "finalists-xlsx" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileSpreadsheet className="w-4 h-4" />
               )}
-              <span>Download Excel (.xlsx)</span>
+              <span>{isFinalistUnlocked ? "Download Excel (.xlsx)" : "Terkunci (Belum Jadwal)"}</span>
             </button>
 
             <button
               onClick={() => handleDownload("finalists", finalistComp, "csv")}
-              disabled={Boolean(downloadingKey)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-50"
+              disabled={Boolean(downloadingKey) || !isFinalistUnlocked}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {downloadingKey === "finalists-csv" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileText className="w-4 h-4 text-white/70" />
               )}
-              <span>Download CSV (Canva / Figma)</span>
+              <span>{isFinalistUnlocked ? "Download CSV (Canva / Figma)" : "Terkunci (Belum Jadwal)"}</span>
             </button>
           </div>
         </div>
@@ -311,8 +386,16 @@ export default function AdminExportPage() {
         {/* Card 3: Winners */}
         <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
-            <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white/80" />
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-white/80" />
+              </div>
+              {!isWinnerUnlocked && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/[0.05] text-[11px] font-medium text-amber-400">
+                  <Lock className="w-3 h-3" />
+                  Terkunci
+                </span>
+              )}
             </div>
 
             <div>
@@ -346,39 +429,53 @@ export default function AdminExportPage() {
               </select>
             </div>
 
-            <div className="pt-1 text-[11px] text-white/40">
-              {exportMode === "member"
-                ? "💡 3 tim juara × 3 anggota = 9 baris penerima sertifikat per cabang."
-                : "💡 Menghasilkan tepat 3 baris (Juara 1, 2, 3) per cabang."}
-            </div>
+            {/* Status Timeline Notification */}
+            {!isWinnerUnlocked ? (
+              <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-xs space-y-0.5">
+                  <p className="font-semibold text-amber-300">Belum Masuk Jadwal</p>
+                  <p className="text-white/60 text-[11px] leading-relaxed">
+                    Export juara baru dibuka saat jadwal awarding lomba tiba:{" "}
+                    <strong className="text-white/90">{formatScheduleDate(winnerStageDate)}</strong>.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-1 text-[11px] text-white/40">
+                {exportMode === "member"
+                  ? "💡 3 tim juara × 3 anggota = 9 baris penerima sertifikat per cabang."
+                  : "💡 Menghasilkan tepat 3 baris (Juara 1, 2, 3) per cabang."}
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-2.5 pt-4 border-t border-white/5">
             <button
               onClick={() => handleDownload("winners", winnerComp, "xlsx")}
-              disabled={Boolean(downloadingKey)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-50"
+              disabled={Boolean(downloadingKey) || !isWinnerUnlocked}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {downloadingKey === "winners-xlsx" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileSpreadsheet className="w-4 h-4" />
               )}
-              <span>Download Excel (.xlsx)</span>
+              <span>{isWinnerUnlocked ? "Download Excel (.xlsx)" : "Terkunci (Belum Jadwal)"}</span>
             </button>
 
             <button
               onClick={() => handleDownload("winners", winnerComp, "csv")}
-              disabled={Boolean(downloadingKey)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-50"
+              disabled={Boolean(downloadingKey) || !isWinnerUnlocked}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {downloadingKey === "winners-csv" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileText className="w-4 h-4 text-white/70" />
               )}
-              <span>Download CSV (Canva / Figma)</span>
+              <span>{isWinnerUnlocked ? "Download CSV (Canva / Figma)" : "Terkunci (Belum Jadwal)"}</span>
             </button>
           </div>
         </div>
