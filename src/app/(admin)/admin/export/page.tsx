@@ -9,8 +9,6 @@ import {
   Trophy,
   Loader2,
   Info,
-  CheckCircle2,
-  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -23,10 +21,8 @@ export default function AdminExportPage() {
   const storeUser = useAuthStore((state) => state.user);
   const { data: competitions = [] } = useCompetitions();
 
-  // Mode: per individu (1 baris = 1 orang) atau per tim (1 baris = 1 tim)
   const [exportMode, setExportMode] = useState<"member" | "team">("member");
 
-  // Filter states per card
   const [allComp, setAllComp] = useState<string>("all");
   const [allVerifiedOnly, setAllVerifiedOnly] = useState<boolean>(true);
 
@@ -39,7 +35,6 @@ export default function AdminExportPage() {
   const now = new Date();
 
   const getStageDate = (keyword: string, compSlug?: string): Date | null => {
-    // 1. Cek dari database kompetisi jika ada
     const targetComp =
       compSlug && compSlug !== "all"
         ? competitions.find((c) => c.slug === compSlug)
@@ -53,7 +48,6 @@ export default function AdminExportPage() {
       if (!Number.isNaN(d.getTime())) return d;
     }
 
-    // 2. Fallback dari TIMELINE_EVENTS di site.ts
     const siteEvent = TIMELINE_EVENTS.find((e) =>
       (e.title || "").toLowerCase().includes(keyword.toLowerCase())
     );
@@ -139,66 +133,56 @@ export default function AdminExportPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Top Greeting */}
-      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 mb-6">
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
         <h1 className="font-display text-3xl font-bold">
           {getGreeting(storeUser?.fullName, "Admin")}
         </h1>
       </div>
 
       {/* Header Info & Mode Selector */}
-      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 space-y-5">
+      <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl font-bold text-white">
               Export Data Sertifikat
             </h2>
-            <p className="text-xs text-white/50 mt-1 max-w-3xl leading-relaxed">
-              Unduh data peserta untuk keperluan pencetakan sertifikat massal.
-              Gunakan <strong>Excel (.xlsx)</strong> untuk arsip rapi dengan formatting nomor HP teks, atau <strong>CSV (.csv)</strong> untuk langsung import ke <strong>Canva Bulk Create</strong> atau plugin Figma.
+            <p className="text-xs text-white/50 mt-1 max-w-2xl leading-relaxed">
+              Unduh data peserta untuk kebutuhan pencetakan sertifikat massal (Excel untuk arsip, CSV untuk Canva Bulk Create / Figma).
             </p>
           </div>
 
           {/* Mode Switcher */}
-          <div className="bg-white/[0.04] border border-white/10 p-1 rounded-xl flex items-center shrink-0 self-start md:self-auto">
-            <button
-              type="button"
-              onClick={() => setExportMode("member")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                exportMode === "member"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-white/60 hover:text-white"
-              }`}
-            >
-              Per Individu (Orang)
-            </button>
-            <button
-              type="button"
-              onClick={() => setExportMode("team")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                exportMode === "team"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-white/60 hover:text-white"
-              }`}
-            >
-              Per Tim (1 Baris/Tim)
-            </button>
+          <div className="flex flex-col items-start md:items-end gap-1.5 shrink-0">
+            <div className="bg-white/[0.04] border border-white/10 p-1 rounded-xl flex items-center">
+              <button
+                type="button"
+                onClick={() => setExportMode("member")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  exportMode === "member"
+                    ? "bg-white text-black shadow-sm"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                Per Individu
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportMode("team")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  exportMode === "team"
+                    ? "bg-white text-black shadow-sm"
+                    : "text-white/60 hover:text-white"
+                }`}
+              >
+                Per Tim
+              </button>
+            </div>
+            <span className="text-[11px] text-white/40">
+              {exportMode === "member"
+                ? "1 baris = 1 peserta (ketua & anggota)"
+                : "1 baris = 1 tim"}
+            </span>
           </div>
-        </div>
-
-        {/* Mode explanation banner */}
-        <div className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <p className="text-xs text-white/70">
-            {exportMode === "member" ? (
-              <>
-                <strong>Mode Aktif: Per Individu.</strong> Setiap ketua dan anggota tim menempati 1 baris mandiri (misal 5 tim beranggotakan 3 orang = 15 baris). Cocok untuk menerbitkan sertifikat nama masing-masing peserta.
-              </>
-            ) : (
-              <>
-                <strong>Mode Aktif: Per Tim.</strong> Setiap tim menempati tepat 1 baris (5 tim finalis = 5 baris, 3 juara = 3 baris). Nama anggota digabung dalam satu kolom. Cocok untuk sertifikat tim atau rekapitulasi data.
-              </>
-            )}
-          </p>
         </div>
       </div>
 
@@ -208,30 +192,30 @@ export default function AdminExportPage() {
         <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
-              <Users className="w-6 h-6 text-white/80" />
+              <Users className="w-5 h-5 text-white/70" />
             </div>
 
             <div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[11px] font-medium text-white/70 mb-2">
+              <span className="inline-block text-[11px] font-medium text-white/50 mb-1">
                 Kepesertaan
               </span>
-              <h3 className="font-display text-xl font-bold text-white">
+              <h3 className="font-display text-lg font-bold text-white">
                 Sertifikat Peserta
               </h3>
               <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                Mengekspor seluruh peserta kompetisi untuk keperluan sertifikat kepesertaan.
+                Data seluruh peserta kompetisi untuk sertifikat kepesertaan.
               </p>
             </div>
 
             {/* Filter Cabang */}
             <div className="space-y-1.5 pt-2">
-              <label className="block text-xs font-medium text-white/60">
+              <label className="block text-xs text-white/50 font-medium">
                 Cabang Lomba
               </label>
               <select
                 value={allComp}
                 onChange={(e) => setAllComp(e.target.value)}
-                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
+                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
               >
                 <option value="all">Semua Cabang Kompetisi</option>
                 {competitions.map((comp) => (
@@ -243,21 +227,21 @@ export default function AdminExportPage() {
             </div>
 
             {/* Checkbox Verified Only */}
-            <label className="flex items-center gap-2.5 cursor-pointer pt-1">
+            <label className="flex items-center gap-2 cursor-pointer pt-1">
               <input
                 type="checkbox"
                 checked={allVerifiedOnly}
                 onChange={(e) => setAllVerifiedOnly(e.target.checked)}
                 className="w-4 h-4 rounded border-white/20 bg-white/5 accent-white cursor-pointer"
               />
-              <span className="text-xs text-white/70">
+              <span className="text-xs text-white/60">
                 Hanya tim terverifikasi (Approved)
               </span>
             </label>
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-2.5 pt-4 border-t border-white/5">
+          <div className="space-y-2 pt-4 border-t border-white/5">
             <button
               onClick={() => handleDownload("all", allComp, "xlsx", allVerifiedOnly)}
               disabled={Boolean(downloadingKey)}
@@ -274,12 +258,12 @@ export default function AdminExportPage() {
             <button
               onClick={() => handleDownload("all", allComp, "csv", allVerifiedOnly)}
               disabled={Boolean(downloadingKey)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/15 bg-white/[0.02] text-white/80 font-medium text-xs hover:bg-white/[0.05] transition-colors disabled:opacity-50"
             >
               {downloadingKey === "all-csv" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <FileText className="w-4 h-4 text-white/70" />
+                <FileText className="w-4 h-4 text-white/60" />
               )}
               <span>Download CSV (Canva / Figma)</span>
             </button>
@@ -291,37 +275,36 @@ export default function AdminExportPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
-                <Award className="w-6 h-6 text-white/80" />
+                <Award className="w-5 h-5 text-white/70" />
               </div>
               {!isFinalistUnlocked && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/[0.05] text-[11px] font-medium text-amber-400">
-                  <Lock className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-white/40 px-2.5 py-1 rounded-lg border border-white/10 bg-white/[0.02]">
                   Terkunci
                 </span>
               )}
             </div>
 
             <div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[11px] font-medium text-white/70 mb-2">
+              <span className="inline-block text-[11px] font-medium text-white/50 mb-1">
                 Babak Final
               </span>
-              <h3 className="font-display text-xl font-bold text-white">
+              <h3 className="font-display text-lg font-bold text-white">
                 Sertifikat Finalis
               </h3>
               <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                Mengekspor tim yang lolos sebagai finalis (5 tim per cabang lomba yang telah diumumkan).
+                Data tim yang dinyatakan lolos ke babak final (5 tim per cabang).
               </p>
             </div>
 
             {/* Filter Cabang */}
             <div className="space-y-1.5 pt-2">
-              <label className="block text-xs font-medium text-white/60">
+              <label className="block text-xs text-white/50 font-medium">
                 Cabang Lomba
               </label>
               <select
                 value={finalistComp}
                 onChange={(e) => setFinalistComp(e.target.value)}
-                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
+                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
               >
                 <option value="all">Semua Cabang Kompetisi</option>
                 {competitions.map((comp) => (
@@ -332,53 +315,49 @@ export default function AdminExportPage() {
               </select>
             </div>
 
-            {/* Status Timeline Notification */}
+            {/* Schedule Status */}
             {!isFinalistUnlocked ? (
-              <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] flex items-start gap-2.5">
-                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-xs space-y-0.5">
-                  <p className="font-semibold text-amber-300">Belum Masuk Jadwal</p>
-                  <p className="text-white/60 text-[11px] leading-relaxed">
-                    Export finalis baru dibuka saat jadwal pengumuman finalis tiba:{" "}
-                    <strong className="text-white/90">{formatScheduleDate(finalistStageDate)}</strong>.
-                  </p>
-                </div>
+              <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                <p className="text-xs text-white/70 font-medium">Jadwal Pengumuman</p>
+                <p className="text-[11px] text-white/40 mt-0.5">
+                  Dibuka pada {formatScheduleDate(finalistStageDate)}
+                </p>
               </div>
             ) : (
-              <div className="pt-1 text-[11px] text-white/40">
+              <p className="text-[11px] text-white/40 pt-1">
                 {exportMode === "member"
-                  ? "💡 5 tim finalis × 3 anggota = 15 baris penerima sertifikat per cabang."
-                  : "💡 Menghasilkan tepat 5 baris (1 tim per baris) per cabang."}
-              </div>
+                  ? "5 tim × 3 anggota (15 baris per cabang)"
+                  : "5 baris per cabang"}
+              </p>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-2.5 pt-4 border-t border-white/5">
+          <div className="space-y-2 pt-4 border-t border-white/5">
             <button
               onClick={() => handleDownload("finalists", finalistComp, "xlsx")}
               disabled={Boolean(downloadingKey) || !isFinalistUnlocked}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {downloadingKey === "finalists-xlsx" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileSpreadsheet className="w-4 h-4" />
               )}
-              <span>{isFinalistUnlocked ? "Download Excel (.xlsx)" : "Terkunci (Belum Jadwal)"}</span>
+              <span>Download Excel (.xlsx)</span>
             </button>
 
             <button
               onClick={() => handleDownload("finalists", finalistComp, "csv")}
               disabled={Boolean(downloadingKey) || !isFinalistUnlocked}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/15 bg-white/[0.02] text-white/80 font-medium text-xs hover:bg-white/[0.05] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {downloadingKey === "finalists-csv" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <FileText className="w-4 h-4 text-white/70" />
+                <FileText className="w-4 h-4 text-white/60" />
               )}
-              <span>{isFinalistUnlocked ? "Download CSV (Canva / Figma)" : "Terkunci (Belum Jadwal)"}</span>
+              <span>Download CSV (Canva / Figma)</span>
             </button>
           </div>
         </div>
@@ -388,37 +367,36 @@ export default function AdminExportPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white/80" />
+                <Trophy className="w-5 h-5 text-white/70" />
               </div>
               {!isWinnerUnlocked && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/[0.05] text-[11px] font-medium text-amber-400">
-                  <Lock className="w-3 h-3" />
+                <span className="text-[11px] font-mono text-white/40 px-2.5 py-1 rounded-lg border border-white/10 bg-white/[0.02]">
                   Terkunci
                 </span>
               )}
             </div>
 
             <div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[11px] font-medium text-white/70 mb-2">
+              <span className="inline-block text-[11px] font-medium text-white/50 mb-1">
                 Podium &amp; Juara
               </span>
-              <h3 className="font-display text-xl font-bold text-white">
+              <h3 className="font-display text-lg font-bold text-white">
                 Sertifikat Juara
               </h3>
               <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                Mengekspor tim juara podium (Juara 1, 2, 3) lengkap dengan keterangan predikat juaranya.
+                Data tim pemenang podium (Juara 1, 2, 3) beserta predikat juaranya.
               </p>
             </div>
 
             {/* Filter Cabang */}
             <div className="space-y-1.5 pt-2">
-              <label className="block text-xs font-medium text-white/60">
+              <label className="block text-xs text-white/50 font-medium">
                 Cabang Lomba
               </label>
               <select
                 value={winnerComp}
                 onChange={(e) => setWinnerComp(e.target.value)}
-                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
+                className="w-full bg-[#15161A] border border-white/20 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/50 cursor-pointer"
               >
                 <option value="all">Semua Cabang Kompetisi</option>
                 {competitions.map((comp) => (
@@ -429,53 +407,49 @@ export default function AdminExportPage() {
               </select>
             </div>
 
-            {/* Status Timeline Notification */}
+            {/* Schedule Status */}
             {!isWinnerUnlocked ? (
-              <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.04] flex items-start gap-2.5">
-                <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-xs space-y-0.5">
-                  <p className="font-semibold text-amber-300">Belum Masuk Jadwal</p>
-                  <p className="text-white/60 text-[11px] leading-relaxed">
-                    Export juara baru dibuka saat jadwal awarding lomba tiba:{" "}
-                    <strong className="text-white/90">{formatScheduleDate(winnerStageDate)}</strong>.
-                  </p>
-                </div>
+              <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02]">
+                <p className="text-xs text-white/70 font-medium">Jadwal Pengumuman</p>
+                <p className="text-[11px] text-white/40 mt-0.5">
+                  Dibuka pada {formatScheduleDate(winnerStageDate)}
+                </p>
               </div>
             ) : (
-              <div className="pt-1 text-[11px] text-white/40">
+              <p className="text-[11px] text-white/40 pt-1">
                 {exportMode === "member"
-                  ? "💡 3 tim juara × 3 anggota = 9 baris penerima sertifikat per cabang."
-                  : "💡 Menghasilkan tepat 3 baris (Juara 1, 2, 3) per cabang."}
-              </div>
+                  ? "3 tim × 3 anggota (9 baris per cabang)"
+                  : "3 baris per cabang"}
+              </p>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-2.5 pt-4 border-t border-white/5">
+          <div className="space-y-2 pt-4 border-t border-white/5">
             <button
               onClick={() => handleDownload("winners", winnerComp, "xlsx")}
               disabled={Boolean(downloadingKey) || !isWinnerUnlocked}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-white/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {downloadingKey === "winners-xlsx" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <FileSpreadsheet className="w-4 h-4" />
               )}
-              <span>{isWinnerUnlocked ? "Download Excel (.xlsx)" : "Terkunci (Belum Jadwal)"}</span>
+              <span>Download Excel (.xlsx)</span>
             </button>
 
             <button
               onClick={() => handleDownload("winners", winnerComp, "csv")}
               disabled={Boolean(downloadingKey) || !isWinnerUnlocked}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/[0.03] text-white font-medium text-xs hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/15 bg-white/[0.02] text-white/80 font-medium text-xs hover:bg-white/[0.05] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {downloadingKey === "winners-csv" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <FileText className="w-4 h-4 text-white/70" />
+                <FileText className="w-4 h-4 text-white/60" />
               )}
-              <span>{isWinnerUnlocked ? "Download CSV (Canva / Figma)" : "Terkunci (Belum Jadwal)"}</span>
+              <span>Download CSV (Canva / Figma)</span>
             </button>
           </div>
         </div>
@@ -483,50 +457,17 @@ export default function AdminExportPage() {
 
       {/* Guide Card */}
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6">
-        <div className="flex items-start gap-3.5">
-          <Info className="w-5 h-5 text-white/40 shrink-0 mt-0.5" />
-          <div className="space-y-2 text-xs text-white/60 leading-relaxed">
-            <p className="font-semibold text-white text-sm">
-              Informasi Kolom Data ({exportMode === "member" ? "Mode Per Individu" : "Mode Per Tim"})
+        <div className="flex items-start gap-3">
+          <Info className="w-4 h-4 text-white/40 shrink-0 mt-0.5" />
+          <div className="space-y-2 text-xs text-white/50 leading-relaxed">
+            <p className="font-semibold text-white">
+              Struktur Kolom ({exportMode === "member" ? "Mode Per Individu" : "Mode Per Tim"})
             </p>
-            <p>
-              {exportMode === "member" ? (
-                <>Setiap baris data mewakili <strong>1 individu peserta</strong> (baik ketua maupun anggota). Kolom yang disertakan meliputi:</>
-              ) : (
-                <>Setiap baris data mewakili <strong>1 tim</strong>. Kolom yang disertakan meliputi:</>
-              )}
+            <p className="text-white/40">
+              {exportMode === "member"
+                ? "Setiap baris mencakup data satu peserta: No, Nama Lengkap, Email, No. WhatsApp, Asal Institusi, Nama Tim, Kode Tim, Cabang Kompetisi, Peran di Tim, Predikat Sertifikat, dan Judul Karya."
+                : "Setiap baris mencakup data satu tim: No, Nama Tim, Kode Tim, Cabang Kompetisi, Ketua Tim, Email Ketua, No. WhatsApp Ketua, Anggota Tim, Asal Institusi, Predikat Sertifikat, dan Judul Karya."}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-1 text-white/70 font-mono text-[11px]">
-              {exportMode === "member" ? (
-                <>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• No</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Nama Lengkap</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Email</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• No. WhatsApp / HP</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Asal Institusi</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Nama Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Kode Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Cabang Kompetisi</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Peran di Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Predikat Sertifikat</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Judul Karya</span>
-                </>
-              ) : (
-                <>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• No</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Nama Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Kode Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Cabang Kompetisi</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Ketua Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Email Ketua</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• No. WhatsApp Ketua</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Anggota Tim</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Asal Institusi</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Predikat Sertifikat</span>
-                  <span className="p-2 rounded bg-white/[0.02] border border-white/5">• Judul Karya</span>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </div>
