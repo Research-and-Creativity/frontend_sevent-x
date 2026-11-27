@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Plus, X, ExternalLink } from "lucide-react";
+import { ArrowRight, Plus, X, ExternalLink, Lock } from "lucide-react";
 import { RULEBOOK_LINKS } from "@/config/site";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,12 @@ export default function PesertaCompetitionPage() {
   const activeMemberLimits = getTeamMemberLimits(activeSlug);
 
   const openCreate = (slug: string) => {
+    const comp = competitions.find((c) => c.slug === slug);
+    const regTimeline = comp?.timelines?.find((t) => t.phase === "REGISTRATION");
+    if (regTimeline && Date.now() > new Date(regTimeline.endDate).getTime()) {
+      toast.error("Periode pendaftaran untuk kompetisi ini telah berakhir.");
+      return;
+    }
     setActiveSlug(slug);
     setTeamName("");
     setError(null);
@@ -100,6 +106,12 @@ export default function PesertaCompetitionPage() {
   };
 
   const openJoin = (slug: string) => {
+    const comp = competitions.find((c) => c.slug === slug);
+    const regTimeline = comp?.timelines?.find((t) => t.phase === "REGISTRATION");
+    if (regTimeline && Date.now() > new Date(regTimeline.endDate).getTime()) {
+      toast.error("Periode pendaftaran untuk kompetisi ini telah berakhir.");
+      return;
+    }
     setActiveSlug(slug);
     setTeamCode("");
     setError(null);
@@ -204,6 +216,54 @@ export default function PesertaCompetitionPage() {
         >
           Already in another competition
         </Button>
+      );
+    }
+
+    // Cek status periode pendaftaran kompetisi berdasarkan timeline REGISTRATION
+    const regTimeline = competition.timelines?.find((t) => t.phase === "REGISTRATION");
+    const now = Date.now();
+    const isRegistrationClosed = regTimeline
+      ? now > new Date(regTimeline.endDate).getTime()
+      : false;
+    const isRegistrationNotStarted = regTimeline
+      ? now < new Date(regTimeline.startDate).getTime()
+      : false;
+
+    if (regTimeline && isRegistrationClosed) {
+      return (
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-xs font-semibold text-red-400">
+            <Lock className="w-3.5 h-3.5" />
+            Pendaftaran Telah Ditutup
+          </span>
+          <span className="text-xs text-white/40">
+            Batas pendaftaran berakhir pada{" "}
+            {new Date(regTimeline.endDate).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
+      );
+    }
+
+    if (regTimeline && isRegistrationNotStarted) {
+      return (
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-400">
+            <Lock className="w-3.5 h-3.5" />
+            Pendaftaran Belum Dibuka
+          </span>
+          <span className="text-xs text-white/40">
+            Dibuka mulai{" "}
+            {new Date(regTimeline.startDate).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
       );
     }
 
