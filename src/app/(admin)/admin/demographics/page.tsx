@@ -26,6 +26,7 @@ export default function AdminDemographicsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("ALL");
   const [competitionFilter, setCompetitionFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [provinceFilter, setProvinceFilter] = useState<string>("ALL");
 
   // Pagination states per tab
@@ -76,6 +77,7 @@ export default function AdminDemographicsPage() {
       if (levelFilter !== "ALL" && t.detectedLevel !== levelFilter) return false;
       if (competitionFilter !== "ALL" && t.competitionSlug !== competitionFilter)
         return false;
+      if (statusFilter !== "ALL" && t.status !== statusFilter) return false;
       if (provinceFilter !== "ALL" && t.detectedProvince !== provinceFilter)
         return false;
       if (searchQuery.trim()) {
@@ -90,7 +92,7 @@ export default function AdminDemographicsPage() {
       }
       return true;
     });
-  }, [teams, levelFilter, competitionFilter, provinceFilter, searchQuery]);
+  }, [teams, levelFilter, competitionFilter, statusFilter, provinceFilter, searchQuery]);
 
   const { pageItems: paginatedProvinces } = paginateItems(
     filteredProvinces,
@@ -573,6 +575,23 @@ export default function AdminDemographicsPage() {
               </select>
             )}
 
+            {/* Status Filter (Khusus Tab Tim) */}
+            {activeTab === "tim" && (
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setTeamPage(1);
+                }}
+                className="bg-[#15161A] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 focus:outline-none focus:border-white/30"
+              >
+                <option value="ALL">Semua Status</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="REVIEW">Need Review</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            )}
+
             {/* Province Filter */}
             <select
               value={provinceFilter}
@@ -593,6 +612,7 @@ export default function AdminDemographicsPage() {
 
             {(levelFilter !== "ALL" ||
               competitionFilter !== "ALL" ||
+              statusFilter !== "ALL" ||
               provinceFilter !== "ALL" ||
               searchQuery) && (
               <button
@@ -600,6 +620,7 @@ export default function AdminDemographicsPage() {
                 onClick={() => {
                   setLevelFilter("ALL");
                   setCompetitionFilter("ALL");
+                  setStatusFilter("ALL");
                   setProvinceFilter("ALL");
                   setSearchQuery("");
                 }}
