@@ -106,11 +106,11 @@ function SidebarContent({
 
       <div className="mt-auto border-t border-white/10 pt-4 pb-1">
         <div className="px-3 py-1.5 mb-1">
-          <p className="text-sm font-semibold text-white truncate">{judgeName || "Dewan Juri"}</p>
+          <p className="text-sm font-semibold text-white truncate">{judgeName || "Juri"}</p>
           {competitionName ? (
             <p className="text-xs text-[#7D8CFF] font-medium truncate mt-0.5">{competitionName}</p>
           ) : (
-            <p className="text-xs text-white/40 font-medium truncate mt-0.5">Dewan Juri</p>
+            <p className="text-xs text-white/40 font-medium truncate mt-0.5">Juri</p>
           )}
         </div>
         <button
@@ -141,7 +141,7 @@ export default function JuriLayout({
   const competitionName =
     userMe?.judgeProfile?.competition?.name ||
     submissions?.[0]?.team?.competition?.name;
-  const judgeName = currentUser?.fullName || "Dewan Juri";
+  const judgeName = currentUser?.fullName || "Juri";
   const activeRound = submissions?.[0]?.team?.competition?.activeRound;
   const pendingCount =
     submissions?.filter((submission) => !submission.evaluationStatus?.isEvaluated)
