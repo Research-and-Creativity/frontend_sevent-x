@@ -37,7 +37,7 @@ export default function WinnerDetailPage() {
   const submissionId = params.submissionId;
 
   const { data, isLoading, isError, refetch } =
-    useJudgeSubmissionDetail(submissionId);
+    useJudgeSubmissionDetail(submissionId, "PENYISIHAN");
   const { data: rankingData } = useJudgeRankings();
 
   const [isPreliminaryOpen, setIsPreliminaryOpen] = useState(false);
@@ -98,15 +98,10 @@ export default function WinnerDetailPage() {
 
       {/* Header: Competition */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
-        <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white break-words">
-          Competition
-          <span className="mx-3 text-white/70">•</span>
-          {competitionName(submission)}
+        <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white break-words flex flex-wrap items-center gap-3">
+          <span>{competitionName(submission)}</span>
           {ranking && (
-            <>
-              <span className="mx-3 text-white/70">•</span>
-              {podiumLabel(ranking.rank)}
-            </>
+            <span className="text-[#7D8CFF] text-2xl lg:text-3xl font-semibold">({podiumLabel(ranking.rank)})</span>
           )}
         </h1>
       </div>
@@ -177,8 +172,8 @@ export default function WinnerDetailPage() {
             <JudgeBreakdownPanel
               finalScore={ranking.finalScore}
               isFullyScored={ranking.isFullyScored}
+              expectedJudgeCount={rankingData?.expectedJudgeCount}
               breakdown={ranking.judgeBreakdown}
-              recommendationTally={ranking.recommendationTally}
             />
           ) : (
             <p className="text-sm text-white/60">

@@ -49,12 +49,31 @@ export default function AdminSubmissionsPage() {
           institution.toLowerCase().includes(q) ||
           s.id.toLowerCase().includes(q);
 
-        const hasEvaluations =
-          (s.judgeEvaluations?.length ?? 0) > 0 || (s.scores?.length ?? 0) > 0;
-        const matchEval =
-          evaluationFilter === "all" ||
-          (evaluationFilter === "evaluated" && hasEvaluations) ||
-          (evaluationFilter === "pending" && !hasEvaluations);
+        const assignedJudges = s.team?.competition?.judges || [];
+        const evaluatedJudgeIds = new Set([
+          ...(s.scores?.map((sc) => sc.judgeId).filter(Boolean) || []),
+          ...(s.judgeEvaluations?.map((ev) => ev.judgeId).filter(Boolean) || []),
+        ]);
+        const scoredCount =
+          assignedJudges.length > 0
+            ? assignedJudges.filter((j) => evaluatedJudgeIds.has(j.id)).length
+            : evaluatedJudgeIds.size;
+        const totalJudges = assignedJudges.length;
+
+        const isComplete = totalJudges > 0 ? scoredCount === totalJudges : scoredCount > 0;
+        const isPartial = totalJudges > 0 ? scoredCount > 0 && scoredCount < totalJudges : false;
+        const isPending = scoredCount === 0;
+
+        let matchEval = true;
+        if (evaluationFilter === "completed") {
+          matchEval = isComplete;
+        } else if (evaluationFilter === "partial") {
+          matchEval = isPartial;
+        } else if (evaluationFilter === "pending") {
+          matchEval = isPending;
+        } else if (evaluationFilter === "evaluated") {
+          matchEval = scoredCount > 0;
+        }
 
         return matchSearch && matchEval;
       })
@@ -166,9 +185,10 @@ export default function AdminSubmissionsPage() {
                 }}
                 className="w-full bg-[#15161A] border border-white/20 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-white/50 cursor-pointer"
               >
-                <option value="all">Semua Status</option>
-                <option value="evaluated">Sudah Dinilai Juri</option>
-                <option value="pending">Belum Dinilai Juri</option>
+                <option value="all">Semua Status Penilaian</option>
+                <option value="completed">Lengkap (Semua Juri)</option>
+                <option value="partial">Sebagian (Perlu Diingatkan)</option>
+                <option value="pending">Belum Ada Nilai</option>
               </select>
             </div>
 
@@ -236,8 +256,22 @@ export default function AdminSubmissionsPage() {
               ) : (
                 paginatedRows.map((item) => {
                   const leader = item.team?.members?.find((m) => m.role === "LEADER")?.user;
-                  const hasScores = (item.scores?.length ?? 0) > 0;
-                  const hasEvals = (item.judgeEvaluations?.length ?? 0) > 0;
+                  const assignedJudges = item.team?.competition?.judges || [];
+                  const evaluatedJudgeIds = new Set([
+                    ...(item.scores?.map((sc) => sc.judgeId).filter(Boolean) || []),
+                    ...(item.judgeEvaluations?.map((ev) => ev.judgeId).filter(Boolean) || []),
+                  ]);
+                  const scoredCount =
+                    assignedJudges.length > 0
+                      ? assignedJudges.filter((j) => evaluatedJudgeIds.has(j.id)).length
+                      : evaluatedJudgeIds.size;
+                  const totalJudges = assignedJudges.length;
+                  const pendingJudges = assignedJudges
+                    .filter((j) => !evaluatedJudgeIds.has(j.id))
+                    .map((j) => j.user?.fullName)
+                    .filter(Boolean);
+                  const isComplete = totalJudges > 0 ? scoredCount === totalJudges : scoredCount > 0;
+                  const isPartial = totalJudges > 0 ? scoredCount > 0 && scoredCount < totalJudges : false;
 
                   return (
                     <tr
@@ -252,7 +286,7 @@ export default function AdminSubmissionsPage() {
                             {item.team?.teamName || "Tanpa Nama Tim"}
                           </p>
                           <p className="text-xs text-white/40 font-mono mt-0.5">
-                            {item.team?.teamCode} • {item.team?.competition?.name || "Kompetisi"}
+                            {item.team?.teamCode} - {item.team?.competition?.name || "Kompetisi"}
                           </p>
                         </div>
                       </td>
@@ -290,15 +324,31 @@ export default function AdminSubmissionsPage() {
                       {/* Status Penilaian Juri */}
                       <td className="flex items-center justify-between gap-3 py-2 border-b border-white/10 lg:border-b-0 lg:table-cell lg:px-6 lg:py-4 lg:text-center whitespace-nowrap">
                         <span className="text-xs text-white/50 shrink-0 lg:hidden font-medium">Penilaian</span>
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium ${
-                            hasScores || hasEvals
-                              ? "border-white/10 bg-white/[0.03] text-emerald-400"
-                              : "border-white/10 bg-white/[0.03] text-white/50"
-                          }`}
-                        >
-                          {hasScores || hasEvals ? "Sudah Dinilai" : "Belum Dinilai"}
-                        </span>
+                        <div className="flex flex-col items-end lg:items-center">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-medium ${
+                              isComplete
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : isPartial
+                                ? "border-white/10 bg-white/[0.04] text-white/80"
+                                : "border-white/10 bg-white/[0.02] text-white/40"
+                            }`}
+                          >
+                            {isComplete
+                              ? `Lengkap (${scoredCount}/${totalJudges})`
+                              : isPartial
+                              ? `${scoredCount}/${totalJudges} Juri`
+                              : `0/${totalJudges || 3} Dinilai`}
+                          </span>
+                          {pendingJudges.length > 0 && totalJudges > 0 && isPartial ? (
+                            <span
+                              className="text-[10px] text-white/40 mt-1 max-w-[170px] truncate"
+                              title={`Belum: ${pendingJudges.join(", ")}`}
+                            >
+                              Belum: {pendingJudges.join(", ")}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
 
                       {/* Aksi */}

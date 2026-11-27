@@ -284,28 +284,36 @@ export default function PesertaProfilePage() {
     setActiveDocType(null);
   };
 
+  const handleUploadSingle = async (type: string) => {
+    const file = pendingDocs[type];
+    if (!file) return;
+
+    const docLabel = VERIFICATION_DOCS.find((d) => d.type === type)?.label ?? type;
+    const payload = new FormData();
+    payload.append("type", type);
+    payload.append("file", file);
+
+    try {
+      await uploadDocumentMutation.mutateAsync(payload);
+      toast.success(`${docLabel} berhasil diunggah.`);
+      setPendingDocs((prev) => {
+        const next = { ...prev };
+        delete next[type];
+        return next;
+      });
+    } catch (err) {
+      toast.error(getErrorMessage(err, `Gagal mengunggah ${docLabel}.`));
+    }
+  };
+
   const handleSendAllDocuments = async () => {
     const pendingTypes = Object.keys(pendingDocs);
     if (pendingTypes.length === 0) {
-      toast.error("Pilih file dokumen terlebih dahulu.");
+      toast.error("Pilih setidaknya satu file dokumen terlebih dahulu.");
       return;
     }
 
-    // Validasi: semua dokumen wajib sudah ada (sudah terunggah atau baru dipilih).
-    const missing = VERIFICATION_DOCS.filter(
-      (doc) =>
-        !documentsByType.get(doc.type) && !pendingDocs[doc.type],
-    );
-    if (missing.length > 0) {
-      toast.error(
-        `Lengkapi semua dokumen terlebih dahulu: ${missing
-          .map((d) => d.label)
-          .join(", ")}.`,
-      );
-      return;
-    }
-
-    // Upload semua file yang pending secara berurutan.
+    // Upload semua file yang pending (bisa satu atau lebih)
     let successCount = 0;
     for (const type of pendingTypes) {
       const file = pendingDocs[type];
@@ -332,7 +340,11 @@ export default function PesertaProfilePage() {
     }
 
     if (successCount > 0) {
-      toast.success("Semua dokumen terkirim dan menunggu review.");
+      toast.success(
+        successCount === 1
+          ? "1 dokumen berhasil dikirim dan menunggu review."
+          : `${successCount} dokumen berhasil dikirim dan menunggu review.`
+      );
     }
   };
 
@@ -569,7 +581,7 @@ export default function PesertaProfilePage() {
             <input
               id="profile-password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               value={passwords.next}
               onChange={(e) =>
                 setPasswords((prev) => ({ ...prev, next: e.target.value }))
@@ -588,7 +600,7 @@ export default function PesertaProfilePage() {
             <input
               id="profile-current-password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               value={passwords.current}
               onChange={(e) =>
                 setPasswords((prev) => ({ ...prev, current: e.target.value }))
@@ -659,19 +671,33 @@ export default function PesertaProfilePage() {
                           ? DOCUMENT_STATUS_LABEL[status ?? ""] ?? status
                           : "Upload File"}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handlePickDocument(doc.type)}
-                    aria-label={`Upload ${doc.label}`}
-                    disabled={uploadDocumentMutation.isPending}
-                    className="cursor-pointer flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#7D8CFF] transition-colors hover:bg-white/80 disabled:opacity-60"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <UploadCloud className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5">
+                    {isPendingForThis && !isUploading && (
+                      <button
+                        type="button"
+                        onClick={() => handleUploadSingle(doc.type)}
+                        title={`Upload ${doc.label} sekarang`}
+                        disabled={uploadDocumentMutation.isPending}
+                        className="cursor-pointer px-3 h-8 rounded-full bg-[#7D8CFF] text-white text-xs font-semibold hover:bg-[#6c7cf5] transition-colors disabled:opacity-60"
+                      >
+                        Upload
+                      </button>
                     )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePickDocument(doc.type)}
+                      aria-label={isPendingForThis ? `Ganti file ${doc.label}` : `Upload ${doc.label}`}
+                      title={isPendingForThis ? "Ganti file" : "Pilih file"}
+                      disabled={uploadDocumentMutation.isPending}
+                      className="cursor-pointer flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#7D8CFF] transition-colors hover:bg-white/80 disabled:opacity-60"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <UploadCloud className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 {uploaded?.status === "REJECT" && uploaded.rejectionReason && (
                   <p className="text-xs text-rose-400">
@@ -705,7 +731,11 @@ export default function PesertaProfilePage() {
           >
             {uploadDocumentMutation.isPending
               ? "Mengirim..."
-              : "Kirim Semua Dokumen"}
+              : Object.keys(pendingDocs).length === 1
+                ? "Kirim Semua Dokumen (1)"
+                : Object.keys(pendingDocs).length > 1
+                  ? `Kirim Semua Dokumen (${Object.keys(pendingDocs).length})`
+                  : "Kirim Semua Dokumen"}
           </button>
           {Object.keys(pendingDocs).length > 0 && (
             <p className="text-xs text-text-secondary">
@@ -715,8 +745,7 @@ export default function PesertaProfilePage() {
         </div>
 
         <p className="relative mt-6 text-xs text-text-secondary">
-          Dokumen menunggu persetujuan admin. Kamu baru bisa mengirim karya
-          setelah keempat dokumen disetujui.
+          Anda dapat mengunggah dokumen satu per satu atau sekaligus. Dokumen menunggu persetujuan admin. Anda baru bisa mengirim karya setelah keempat dokumen disetujui.
         </p>
       </div>
     </div>

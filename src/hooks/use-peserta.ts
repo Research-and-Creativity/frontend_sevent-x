@@ -17,8 +17,9 @@ export interface TimelineStage {
 }
 
 export function useUserMe() {
+  const userId = useAuthStore((state) => state.user?.id ?? "anon");
   return useQuery<User | null>({
-    queryKey: ["userMe"],
+    queryKey: ["userMe", userId],
     queryFn: async () => {
       const res = await apiClient.get("/api/user/me");
       return res.data?.data ?? null;

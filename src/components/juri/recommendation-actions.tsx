@@ -57,7 +57,7 @@ export function RecommendationActions({
             Rekomendasi Anda saat ini:{" "}
             <span
               className={`font-semibold ${
-                recommendation === "FINALIST" ? "text-[#7D8CFF]" : "text-[#EAB308]"
+                recommendation === "FINALIST" ? "text-[#7D8CFF]" : "text-white/70"
               }`}
             >
               {recommendation === "FINALIST" ? "Go to Finalist" : "Hold Team"}

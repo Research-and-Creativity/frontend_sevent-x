@@ -72,6 +72,13 @@ function ScoringForm({
     for (const s of existingScores) seeded[s.criteriaId] = String(s.score);
     return seeded;
   });
+  const [criteriaNotes, setCriteriaNotes] = useState<Record<string, string>>(() => {
+    const seeded: Record<string, string> = {};
+    for (const s of existingScores) {
+      if (s.note) seeded[s.criteriaId] = s.note;
+    }
+    return seeded;
+  });
   const [notes, setNotes] = useState(() => feedback ?? "");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -133,6 +140,7 @@ function ScoringForm({
         scores: criteriaList.map((c) => ({
           criteriaId: c.id,
           score: Number(scores[c.id]),
+          note: criteriaNotes[c.id]?.trim() || undefined,
         })),
         feedback: notes.trim(),
         isDraft: false,
@@ -148,19 +156,18 @@ function ScoringForm({
   return (
     <>
       <div className={`${glass} p-6 lg:p-8`}>
-        <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-6">
-          Judgement Preliminary
-        </h2>
-
-        <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-6 flex items-center gap-3">
+        <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-2 flex items-center gap-3">
           Judgement {round === "FINAL" ? "Final" : "Preliminary"}
-          <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border border-white/20 text-white/70">
+          <span className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-3 py-0.5 text-xs font-medium text-white/75">
             {round}
           </span>
         </h2>
+        <p className="relative text-xs text-white/50 mb-6">
+          Kolom bertanda <span className="text-[#7D8CFF] font-bold">*</span> wajib diisi oleh juri sebelum mengirim penilaian.
+        </p>
 
         {!rubric.isValid && criteriaList.length > 0 && (
-          <div className="relative mb-5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-300">
+          <div className="relative mb-5 rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-sm text-rose-300">
             Rubrik penilaian belum sah (total bobot {rubric.totalWeight}%, wajib 100%).
             Hubungi panitia sebelum mengirim penilaian.
           </div>
@@ -179,43 +186,64 @@ function ScoringForm({
                     {group}
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
                   {items.map((c) => {
                     const invalid =
                       scores[c.id] !== undefined &&
                       scores[c.id] !== "" &&
                       (Number(scores[c.id]) < 0 || Number(scores[c.id]) > c.maxScore);
                     return (
-                      <div key={c.id} className="space-y-2">
-                        <label htmlFor={c.id} className="block text-sm text-white/60">
-                          <span className="text-white">{c.name}</span>{" "}
-                          <span className="text-white/40">
-                            (0-{c.maxScore}) · {c.weight}%
-                          </span>
-                          {c.description && (
-                            <span className="block text-xs text-white/40 mt-0.5 whitespace-pre-line">
-                              {c.description}
+                      <div
+                        key={c.id}
+                        className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] space-y-3.5 transition-colors hover:border-white/20"
+                      >
+                        <div>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <label htmlFor={c.id} className="text-white font-semibold text-sm sm:text-base">
+                              {c.name}{" "}
+                              <span className="text-[#7D8CFF] font-bold" title="Wajib diisi">*</span>
+                            </label>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono text-white/70 bg-white/[0.04] border border-white/10">
+                              0–{c.maxScore} (Bobot {c.weight}%)
                             </span>
+                          </div>
+                          {c.description && (
+                            <p className="text-xs text-white/50 leading-relaxed whitespace-pre-line mt-1.5">
+                              {c.description}
+                            </p>
                           )}
-                        </label>
-                        <Input
-                          id={c.id}
-                          type="number"
-                          min={0}
-                          max={c.maxScore}
-                          disabled={isLocked || submitScore.isPending}
-                          value={scores[c.id] ?? ""}
-                          onChange={(e) =>
-                            setScores((prev) => ({ ...prev, [c.id]: e.target.value }))
-                          }
-                          placeholder="0"
-                          className={`${glassInput} ${invalid ? "border-rose-400/70" : ""}`}
-                        />
-                        {invalid && (
-                          <p className="text-xs text-rose-400">
-                            Nilai maksimal {c.maxScore}
-                          </p>
-                        )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Input
+                            id={c.id}
+                            type="number"
+                            min={0}
+                            max={c.maxScore}
+                            disabled={isLocked || submitScore.isPending}
+                            value={scores[c.id] ?? ""}
+                            onChange={(e) =>
+                              setScores((prev) => ({ ...prev, [c.id]: e.target.value }))
+                            }
+                            placeholder="0"
+                            className={`${glassInput} ${invalid ? "border-rose-400/70" : ""}`}
+                          />
+                          <Textarea
+                            rows={2}
+                            disabled={isLocked || submitScore.isPending}
+                            value={criteriaNotes[c.id] ?? ""}
+                            onChange={(e) =>
+                              setCriteriaNotes((prev) => ({ ...prev, [c.id]: e.target.value }))
+                            }
+                            placeholder={`Catatan untuk kriteria "${c.name}" (opsional)`}
+                            className="w-full text-xs rounded-xl px-4 py-2.5 bg-white/[0.03] border border-white/20 text-white placeholder:text-white/40 focus-visible:border-[#7D8CFF]/70 focus-visible:ring-0 resize-none disabled:opacity-60 transition-colors min-h-[58px]"
+                          />
+                          {invalid && (
+                            <p className="text-xs text-rose-400">
+                              Nilai maksimal {c.maxScore}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -232,7 +260,7 @@ function ScoringForm({
 
         <div className="relative mt-5 space-y-2">
           <label htmlFor="notes" className="block text-sm text-white/60">
-            Notes for the Team
+            Notes for the Team <span className="text-xs text-white/40 font-normal">(Opsional)</span>
           </label>
           <Textarea
             id="notes"
@@ -246,14 +274,14 @@ function ScoringForm({
         </div>
 
         {isLocked ? (
-          <p className="relative mt-6 text-sm text-amber-400">
+          <p className="relative mt-6 text-sm text-white/60">
             Penilaian ini sudah dikunci dan tidak dapat diubah.
           </p>
         ) : (
           <>
             {missing.length > 0 && criteriaList.length > 0 && (
               <p className="relative mt-4 text-xs text-white/60">
-                Isi semua kriteria sebelum mengirim penilaian.
+                <span className="text-[#7D8CFF] font-bold">*</span> Harap isi semua nilai kriteria yang bertanda bintang ({missing.length} kriteria belum diisi) sebelum mengirim penilaian.
               </p>
             )}
             <div className="relative mt-6 flex justify-end">
@@ -346,8 +374,6 @@ export default function AlreadySubmittedDetailPage() {
 
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white break-words">
-          Competition
-          <span className="mx-3 text-white/70">•</span>
           {competitionName(submission)}
         </h1>
       </div>

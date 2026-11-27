@@ -26,10 +26,10 @@ export function formatSubmittedDate(iso: string): string {
   });
 }
 
-export function statusBadge(status: SubmissionStatus): string {
+export function statusBadge(status: SubmissionStatus | string): string {
   return status === "In Review"
-    ? "text-[#EAB308] border-[#EAB308]/60"
-    : "text-[#3B5BFF] border-[#3B5BFF]/60";
+    ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
+    : "border-white/15 bg-white/[0.05] text-[#A9B7FF]";
 }
 
 // Hanya tampilkan tautan yang benar-benar diisi peserta — kompetisi Software
@@ -70,10 +70,11 @@ export function competitionName(sub: JudgeSubmissionItem): string {
   return sub.team?.competition?.name || "Competition";
 }
 
-// Juara 1 dan 2 mendapat gelar, sisanya urutan biasa.
+// Juara 1, 2, dan 3 mendapat gelar podium, sisanya urutan biasa.
 export function podiumLabel(rank: number): string {
   if (rank === 1) return "Juara 1";
   if (rank === 2) return "Juara 2";
+  if (rank === 3) return "Juara 3";
   return `Peringkat ${rank}`;
 }
 
@@ -83,15 +84,19 @@ export function formatScore(score: number): string {
     : String(score.toFixed(2));
 }
 
-// Urutkan dari skor tertinggi untuk "Top 3 Highest Score".
+// Urutkan dari skor tertinggi (dan waktu submit tercepat sebagai tie-breaker) untuk "Top 3 Highest Score".
 export function byTotalScoreDesc(
   list: JudgeSubmissionItem[]
 ): JudgeSubmissionItem[] {
-  return [...list].sort(
-    (a, b) =>
+  return [...list].sort((a, b) => {
+    const scoreDiff =
       (b.evaluationStatus?.totalScore ?? 0) -
-      (a.evaluationStatus?.totalScore ?? 0)
-  );
+      (a.evaluationStatus?.totalScore ?? 0);
+    if (scoreDiff !== 0) return scoreDiff;
+    const timeA = a.submittedAt ? new Date(a.submittedAt).getTime() : Infinity;
+    const timeB = b.submittedAt ? new Date(b.submittedAt).getTime() : Infinity;
+    return timeA - timeB;
+  });
 }
 
 export function formatCountdown(target: Date, currentNow = 0): string {

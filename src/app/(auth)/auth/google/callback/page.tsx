@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -19,6 +20,7 @@ const glass =
 
 function GoogleCallbackContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -48,6 +50,7 @@ function GoogleCallbackContent() {
         if (!accessToken || !user)
           throw new Error("Respon tidak valid dari server.");
 
+        queryClient.clear();
         setAuth(user, accessToken);
         setResult({ status: "success", message: "" });
         toast.success(`Login berhasil! Selamat datang, ${user.fullName}.`);
@@ -68,7 +71,7 @@ function GoogleCallbackContent() {
       }
     };
     processGoogleLogin();
-  }, [code, router, setAuth]);
+  }, [code, router, setAuth, queryClient]);
 
   return (
     <div className={`${glass} mx-auto w-full max-w-md p-8 text-center`}>

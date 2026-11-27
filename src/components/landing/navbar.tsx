@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
@@ -24,6 +24,16 @@ const scrolledClasses = [
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useGSAP(
     () => {
@@ -113,16 +123,29 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Backdrop redup di belakang menu mobile agar konten hero di bawahnya tidak mengganggu */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 top-0 bg-black/75 backdrop-blur-sm -z-10 md:hidden"
+          aria-hidden="true"
+        />
+      )}
+
       <div
-        className={`md:hidden absolute top-full left-0 right-0 bg-black/90 backdrop-blur-xl border-b border-white/10 overflow-hidden transition-all duration-300 ${mobileMenuOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}`}
+        className={`md:hidden absolute top-full left-0 right-0 bg-[#07090E]/95 backdrop-blur-2xl border-b border-white/10 shadow-[0_25px_50px_rgba(0,0,0,0.85)] overflow-y-auto transition-all duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? "max-h-[calc(100vh-4.5rem)] opacity-100 pointer-events-auto"
+            : "max-h-0 opacity-0 pointer-events-none"
+        }`}
       >
-        <div className="p-6 flex flex-col gap-4">
+        <div className="p-6 pb-8 flex flex-col gap-3">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-medium text-white/70 hover:text-white py-2 border-b border-white/5"
+              className="text-base font-medium text-white/75 hover:text-white py-2.5 border-b border-white/5 transition-colors"
             >
               {link.label}
             </Link>
@@ -130,9 +153,9 @@ export function Navbar() {
           <Link
             href="/login"
             onClick={() => setMobileMenuOpen(false)}
-            className="mt-2"
+            className="pt-2"
           >
-            <button className="w-full bg-white text-black font-bold py-2 rounded-full">
+            <button className="cursor-pointer w-full bg-white text-black font-bold py-2.5 rounded-full hover:bg-white/90 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]">
               Login
             </button>
           </Link>

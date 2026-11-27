@@ -102,7 +102,7 @@ export default function RootLayout({
           <SessionProvider>
             <LenisProvider>
               {children}
-              <Toaster position="top-right" richColors />
+              <Toaster position="top-right" richColors theme="dark" />
             </LenisProvider>
           </SessionProvider>
         </QueryProvider>

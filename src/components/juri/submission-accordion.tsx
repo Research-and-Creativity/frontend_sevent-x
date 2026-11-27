@@ -67,7 +67,7 @@ export function SubmissionAccordion({
       {isOpen && (
         <>
           {/* Baris 1: Team Information + Product Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Team Information */}
             <div className={`${glass} p-6 lg:p-8`}>
               <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-6">
@@ -109,7 +109,7 @@ export function SubmissionAccordion({
           </div>
 
           {/* Baris 2: External Links + Proposal */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
             {/* External Links */}
             <div className={`${glass} p-6 lg:p-8`}>
               <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-1">

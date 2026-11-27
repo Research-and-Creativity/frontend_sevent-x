@@ -73,38 +73,77 @@ export default function AdminSubmissionDetailPage() {
     submission?.originalityFileSize,
   ]);
 
-  // Group scores by judge
-  const judgeScoresGrouped = useMemo(() => {
-    if (!submission?.scores || submission.scores.length === 0) return [];
-    const map = new Map<
+  // Pemetaan penilaian untuk seluruh juri yang ditugaskan di kompetisi ini
+  const judgesStatusList = useMemo(() => {
+    const assignedJudges = submission?.team?.competition?.judges || [];
+    const scores = submission?.scores || [];
+    const evals = submission?.judgeEvaluations || [];
+
+    // Kelompokkan skor berdasarkan judgeId
+    const scoreMap = new Map<
       string,
       {
         judgeName: string;
-        scores: NonNullable<typeof submission.scores>;
+        scores: typeof scores;
         totalScore: number;
         feedback?: string | null;
       }
     >();
 
-    for (const scoreItem of submission.scores) {
-      const jId = scoreItem.judgeId || scoreItem.id;
-      const jName = scoreItem.judge?.user?.fullName || "Dewan Juri";
-      if (!map.has(jId)) {
-        const evalItem = submission.judgeEvaluations?.find((e) => e.judgeId === jId);
-        map.set(jId, {
+    for (const sc of scores) {
+      const jId = sc.judgeId || "";
+      const jName = sc.judge?.user?.fullName || "Dewan Juri";
+      if (!scoreMap.has(jId)) {
+        const evalItem = evals.find((e) => e.judgeId === jId);
+        scoreMap.set(jId, {
           judgeName: jName,
           scores: [],
           totalScore: 0,
           feedback: evalItem?.feedback,
         });
       }
-      const entry = map.get(jId)!;
-      entry.scores.push(scoreItem);
-      entry.totalScore += Number(scoreItem.score) || 0;
+      const entry = scoreMap.get(jId)!;
+      entry.scores.push(sc);
+      const maxScore = sc.criteria?.maxScore || 1;
+      const weight = sc.criteria?.weight ?? 0;
+      entry.totalScore += (Number(sc.score) / maxScore) * weight;
     }
 
-    return Array.from(map.values());
-  }, [submission?.scores, submission?.judgeEvaluations]);
+    // Bangun daftar status lengkap mencakup semua juri yang ditugaskan
+    const list = assignedJudges.map((j) => {
+      const scoredData = scoreMap.get(j.id);
+      const isEvaluated = (scoredData?.scores?.length ?? 0) > 0;
+      return {
+        judgeId: j.id,
+        judgeName: j.user?.fullName || "Dewan Juri",
+        judgeEmail: j.user?.email,
+        isEvaluated,
+        totalScore: scoredData ? parseFloat(scoredData.totalScore.toFixed(2)) : null,
+        scores: scoredData?.scores || [],
+        feedback: scoredData?.feedback || null,
+      };
+    });
+
+    // Antisipasi jika ada juri yang pernah menilai tapi tidak terdaftar di assignedJudges
+    for (const [jId, sData] of scoreMap.entries()) {
+      if (!list.some((item) => item.judgeId === jId)) {
+        list.push({
+          judgeId: jId,
+          judgeName: sData.judgeName,
+          judgeEmail: undefined,
+          isEvaluated: true,
+          totalScore: parseFloat(sData.totalScore.toFixed(2)),
+          scores: sData.scores,
+          feedback: sData.feedback || null,
+        });
+      }
+    }
+
+    return list;
+  }, [submission?.team?.competition?.judges, submission?.scores, submission?.judgeEvaluations]);
+
+  const evaluatedCount = judgesStatusList.filter((j) => j.isEvaluated).length;
+  const totalAssignedJudges = judgesStatusList.length;
 
   if (isLoading) {
     return (
@@ -212,60 +251,94 @@ export default function AdminSubmissionDetailPage() {
 
       {/* Rincian Penilaian Juri */}
       <div className="bg-[#15161A] border border-white/10 rounded-2xl p-6 space-y-6">
-        <div>
-          <h2 className="font-display text-xl font-bold text-white">
-            Penilaian Dewan Juri
-          </h2>
-          <p className="text-xs text-white/40 mt-1">
-            Rekap skor dan catatan evaluasi yang telah diberikan juri
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-xl font-bold text-white">
+              Penilaian Dewan Juri
+            </h2>
+            <p className="text-xs text-white/40 mt-1">
+              Rekap skor dan evaluasi dari dewan juri
+            </p>
+          </div>
+
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
+              evaluatedCount === totalAssignedJudges && totalAssignedJudges > 0
+                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                : evaluatedCount > 0
+                ? "border-white/10 bg-white/[0.03] text-white/80"
+                : "border-white/10 bg-white/[0.03] text-white/40"
+            }`}
+          >
+            {evaluatedCount}/{totalAssignedJudges || 3} Juri Menilai
+          </span>
         </div>
 
-        {judgeScoresGrouped.length === 0 ? (
+        {judgesStatusList.length === 0 ? (
           <div className="text-center py-8 border border-white/5 rounded-xl bg-white/[0.01]">
             <p className="text-sm text-white/50">
-              Belum ada nilai atau evaluasi yang dimasukkan oleh dewan juri untuk karya ini.
+              Belum ada data juri yang ditugaskan untuk cabang lomba ini.
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {judgeScoresGrouped.map((item, idx) => (
+          <div className="space-y-3">
+            {judgesStatusList.map((item, idx) => (
               <div
-                key={idx}
+                key={item.judgeId || idx}
                 className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-white text-sm">
-                    {item.judgeName}
-                  </span>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-white/10 text-white">
-                    Total: {item.totalScore.toFixed(2)}
-                  </span>
-                </div>
-
-                {/* Score breakdown per criteria */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {item.scores.map((sc) => (
-                    <div
-                      key={sc.id}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5"
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-semibold text-white text-sm">
+                      {item.judgeName}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${
+                        item.isEvaluated
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-white/[0.03] text-white/40 border-white/10"
+                      }`}
                     >
-                      <span className="text-white/70 truncate pr-2">
-                        {sc.criteria?.name || "Kriteria"}
-                      </span>
-                      <span className="font-mono font-medium text-white shrink-0">
-                        {sc.score} / {sc.criteria?.maxScore ?? 100}
-                      </span>
-                    </div>
-                  ))}
+                      {item.isEvaluated ? "Sudah Menilai" : "Belum Menilai"}
+                    </span>
+                  </div>
+
+                  {item.isEvaluated && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-white/10 text-white">
+                      Total: {item.totalScore?.toFixed(2) ?? "-"}
+                    </span>
+                  )}
                 </div>
 
-                {/* Feedback */}
-                {item.feedback && (
-                  <div className="text-xs text-white/70 p-3 rounded-lg bg-white/[0.02] border border-white/5 mt-2">
-                    <span className="block font-medium text-white/50 mb-1">Catatan Evaluasi:</span>
-                    <p className="whitespace-pre-wrap">{item.feedback}</p>
-                  </div>
+                {item.isEvaluated && (
+                  <>
+                    {/* Score breakdown per criteria */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                      {item.scores.map((sc) => (
+                        <div
+                          key={sc.id}
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-white/5"
+                        >
+                          <span className="text-white/70 truncate pr-2">
+                            {sc.criteria?.name || "Kriteria"}
+                          </span>
+                          <span className="font-mono font-medium text-white shrink-0">
+                            {sc.score} / {sc.criteria?.maxScore ?? 100}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Feedback */}
+                    {item.feedback && (
+                      <div className="text-xs text-white/70 p-3 rounded-lg bg-white/[0.02] border border-white/5 mt-1">
+                        <span className="block font-medium text-white/50 mb-1">
+                          Catatan Evaluasi:
+                        </span>
+                        <p className="whitespace-pre-wrap">{item.feedback}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}

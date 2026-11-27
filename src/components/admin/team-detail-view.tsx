@@ -189,7 +189,7 @@ export function TeamDetailView({ mode }: TeamDetailViewProps) {
       <div className={card}>
         <h1 className="font-display text-3xl font-bold">{team.teamName}</h1>
         <p className="text-xs text-white/60 mt-1">
-          {team.competition?.name} • Team Code • {team.teamCode}
+          {team.competition?.name} - Team Code: {team.teamCode}
         </p>
       </div>
 

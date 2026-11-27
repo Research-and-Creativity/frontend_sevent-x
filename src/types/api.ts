@@ -10,6 +10,14 @@ export interface User {
   domicile?: string | null;
   phone?: string | null;
   discordId?: string | null;
+  judgeProfile?: {
+    id: string;
+    competition?: {
+      id: string;
+      name: string;
+      slug: string;
+    } | null;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -110,6 +118,14 @@ export interface Submission {
       name: string;
       slug: string;
       activeRound?: "PENYISIHAN" | "FINAL";
+      judges?: Array<{
+        id: string;
+        user: {
+          id: string;
+          fullName: string;
+          email?: string;
+        };
+      }>;
     };
     members?: Array<{
       id?: string;
@@ -156,7 +172,7 @@ export interface Submission {
       round?: "PENYISIHAN" | "FINAL";
       group?: string | null;
     };
-    judge: { id?: string; user: { fullName: string } };
+    judge?: { id?: string; user?: { fullName?: string } };
   }>;
   judgeEvaluations?: Array<{
     id: string;
@@ -164,7 +180,7 @@ export interface Submission {
     round?: "PENYISIHAN" | "FINAL";
     recommendation?: string | null;
     feedback?: string | null;
-    judge: { id?: string; user: { fullName: string } };
+    judge?: { id?: string; user?: { fullName?: string } };
   }>;
   createdAt?: string;
   updatedAt?: string;

@@ -10,8 +10,11 @@ import {
   JudgeBreakdownPanel,
   ScoreSummary,
 } from "@/components/juri/judgement-panels";
-import { RecommendationActions } from "@/components/juri/recommendation-actions";
-import { useJudgeRankings, useJudgeSubmissionDetail } from "@/hooks/use-juri";
+import {
+  useJudgeRankings,
+  useJudgeSubmissionDetail,
+  useJudgeSubmissions,
+} from "@/hooks/use-juri";
 import {
   competitionName,
   externalLinks,
@@ -37,8 +40,9 @@ export default function FinalistDetailPage() {
   const submissionId = params.submissionId;
 
   const { data, isLoading, isError, refetch } =
-    useJudgeSubmissionDetail(submissionId);
+    useJudgeSubmissionDetail(submissionId, "PENYISIHAN");
   const { data: rankingData } = useJudgeRankings();
+  const { data: submissions = [] } = useJudgeSubmissions();
 
   const [isPreliminaryOpen, setIsPreliminaryOpen] = useState(false);
 
@@ -97,8 +101,6 @@ export default function FinalistDetailPage() {
       {/* Header: Competition */}
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <h1 className="relative font-display text-3xl lg:text-4xl font-bold tracking-tight text-white break-words">
-          Competition
-          <span className="mx-3 text-white/70">•</span>
           {competitionName(submission)}
         </h1>
       </div>
@@ -148,30 +150,42 @@ export default function FinalistDetailPage() {
 
       {/* Judgement Final (skor akhir hasil hitungan panitia, read-only) */}
       <div className={`${glass} p-6 lg:p-8`}>
-        <h2 className="relative font-display text-2xl font-bold tracking-tight text-white mb-6">
-          Judgement Final
-        </h2>
+        <div className="relative flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-white">
+            Judgement Final
+          </h2>
+          {(rankingData?.competition?.activeRound === "FINAL" ||
+            submission.team?.competition?.activeRound === "FINAL" ||
+            submissions[0]?.team?.competition?.activeRound === "FINAL") && (() => {
+            const myFinalSub = submissions.find((s) => s.id === submissionId);
+            const isEvaluatedByMe = myFinalSub?.evaluationStatus?.isEvaluated ?? false;
+            return (
+              <Link
+                href={
+                  isEvaluatedByMe
+                    ? `/juri/judged/${submissionId}`
+                    : `/juri/already-submitted/${submissionId}`
+                }
+                className="inline-flex items-center justify-center rounded-full border border-[#7D8CFF]/50 bg-[#7D8CFF]/15 px-4 py-1.5 text-xs font-semibold text-[#A9B7FF] hover:bg-[#7D8CFF]/25 transition-colors"
+              >
+                {isEvaluatedByMe ? "Lihat Nilai Final" : "Isi Nilai Final"}
+              </Link>
+            );
+          })()}
+        </div>
 
         {ranking ? (
           <JudgeBreakdownPanel
             finalScore={ranking.finalScore}
             isFullyScored={ranking.isFullyScored}
+            expectedJudgeCount={rankingData?.expectedJudgeCount}
             breakdown={ranking.judgeBreakdown}
-            recommendationTally={ranking.recommendationTally}
           />
         ) : (
           <p className="text-sm text-white/60">
             Skor akhir untuk karya ini belum tersedia.
           </p>
         )}
-
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <RecommendationActions
-            submissionId={submissionId}
-            teamName={teamName}
-            recommendation={data?.evaluation?.recommendation ?? null}
-          />
-        </div>
       </div>
     </div>
   );

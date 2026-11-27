@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserDocuments, useUserMe, useUserTeam } from "@/hooks/use-peserta";
+import { useLogout } from "@/hooks/use-logout";
 import { toast } from "sonner";
 import { LayoutGrid, LogOut, Medal, User, Menu, X } from "lucide-react";
 import { useAnnouncementNotifications } from "@/hooks/use-peserta";
@@ -96,6 +97,7 @@ export default function PesertaLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const handleLogout = useLogout();
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const { unreadCount: unreadAnnouncements } = useAnnouncementNotifications();
@@ -226,7 +228,7 @@ export default function PesertaLayout({
               <SidebarContent
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
-                onLogout={() => router.push("/login")}
+                onLogout={handleLogout}
                 unreadAnnouncements={unreadAnnouncements}
                 paymentRejected={paymentRejected}
                 userTeamSlug={userTeam?.competition?.slug}
@@ -249,7 +251,7 @@ export default function PesertaLayout({
         <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
           <SidebarContent
             pathname={pathname}
-            onLogout={() => router.push("/login")}
+            onLogout={handleLogout}
             unreadAnnouncements={unreadAnnouncements}
             paymentRejected={paymentRejected}
             userTeamSlug={userTeam?.competition?.slug}
@@ -258,7 +260,7 @@ export default function PesertaLayout({
       </aside>
 
       {/* Content */}
-      <main className="flex-1 relative p-8 overflow-x-hidden">
+      <main className="flex-1 min-w-0 relative p-4 pt-16 sm:p-8 md:pt-8 overflow-x-clip">
         <Image
           src="/assets/image/pattern-landing2.svg"
           alt=""

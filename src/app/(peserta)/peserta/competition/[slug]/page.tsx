@@ -8,7 +8,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/confirm-modal";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import type { Submission } from "@/types/api";
+import type {
+  EvaluationCriteriaScore,
+  EvaluationJudgeBreakdown,
+  Submission,
+  TeamAnnouncementEvaluation,
+} from "@/types/api";
+import { AnnouncementScoringTable } from "@/components/peserta/announcement-scoring-table";
 import { getTeamMemberLimits } from "@/lib/team-member-limits";
 import {
   useCompetition,
@@ -56,6 +62,108 @@ const PROPOSAL_TEMPLATE_URLS: Record<string, string> = {
   "software-development": "https://drive.google.com/drive/folders/1o53aIbEjoNmFIEcPOp-G_ncghdqOWBpq",
   "ui-ux": "https://drive.google.com/drive/folders/1LyZZxsMfYACsdgcFIXzQvcOfwCuhmLWq",
 };
+
+function buildSubmissionEvaluation(
+  submission: Submission | null | undefined
+): TeamAnnouncementEvaluation | null {
+  const rawScores = submission?.scores;
+  if (!rawScores || rawScores.length === 0) return null;
+
+  const hasFinalScores = rawScores.some((s) => s.criteria.round === "FINAL");
+  const activeRound = hasFinalScores ? "FINAL" : "PENYISIHAN";
+  const roundScores = rawScores.filter(
+    (s) => !s.criteria.round || s.criteria.round === activeRound
+  );
+  const scores = roundScores.length > 0 ? roundScores : rawScores;
+
+  const feedbackByJudgeId = new Map<string, string | null>();
+  const feedbackByJudgeName = new Map<string, string | null>();
+  for (const ev of submission?.judgeEvaluations ?? []) {
+    if (ev.round && ev.round !== activeRound) continue;
+    const jId = ev.judge?.id ?? ev.judgeId;
+    if (jId) feedbackByJudgeId.set(jId, ev.feedback ?? null);
+    if (ev.judge?.user?.fullName) {
+      feedbackByJudgeName.set(ev.judge.user.fullName, ev.feedback ?? null);
+    }
+  }
+
+  const byJudge = new Map<
+    string,
+    { judgeName: string; items: typeof scores }
+  >();
+  for (const item of scores) {
+    const jId =
+      item.judge?.id ||
+      item.judgeId ||
+      item.judge?.user?.fullName ||
+      item.id;
+    if (!byJudge.has(jId)) {
+      byJudge.set(jId, {
+        judgeName: item.judge?.user?.fullName || "Juri",
+        items: [],
+      });
+    }
+    byJudge.get(jId)!.items.push(item);
+  }
+
+  const judgeBreakdown: EvaluationJudgeBreakdown[] = [];
+  let sumJudgeAvg = 0;
+
+  for (const [jId, group] of byJudge.entries()) {
+    const sorted = group.items
+      .slice()
+      .sort((a, b) => (a.criteria.order ?? 0) - (b.criteria.order ?? 0));
+    const hasWeights = sorted.some((s) => (s.criteria.weight ?? 0) > 0);
+    const totalWeight = sorted.reduce(
+      (acc, s) => acc + (s.criteria.weight ?? 0),
+      0
+    );
+
+    const rawWeighted = hasWeights
+      ? sorted.reduce((acc, s) => {
+          const maxScore = s.criteria.maxScore > 0 ? s.criteria.maxScore : 1;
+          const weight = s.criteria.weight ?? 0;
+          return acc + (s.score / maxScore) * weight;
+        }, 0)
+      : sorted.reduce((acc, s) => acc + s.score, 0) / sorted.length;
+
+    const normalized =
+      hasWeights && totalWeight > 0 && totalWeight !== 100
+        ? (rawWeighted / totalWeight) * 100
+        : rawWeighted;
+    const roundedAvg = parseFloat(normalized.toFixed(2));
+    sumJudgeAvg += roundedAvg;
+
+    const criteriaScores: EvaluationCriteriaScore[] = sorted.map((s) => ({
+      criteriaId: s.criteria.id,
+      criteriaName: s.criteria.name,
+      score: s.score,
+      maxScore: s.criteria.maxScore,
+      weight: s.criteria.weight ?? 0,
+      note: s.note ?? null,
+    }));
+
+    judgeBreakdown.push({
+      judgeId: jId,
+      judgeName: group.judgeName,
+      criteriaCount: criteriaScores.length,
+      averageScore: roundedAvg,
+      feedback:
+        feedbackByJudgeId.get(jId) ??
+        feedbackByJudgeName.get(group.judgeName) ??
+        null,
+      criteriaScores,
+    });
+  }
+
+  if (judgeBreakdown.length === 0) return null;
+
+  return {
+    finalScore: parseFloat((sumJudgeAvg / judgeBreakdown.length).toFixed(2)),
+    isFullyScored: scores.every((s) => s.isLocked),
+    judgeBreakdown,
+  };
+}
 
 function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
@@ -490,9 +598,7 @@ export default function CompetitionRegistrationPage() {
       <div className={`${glass} px-6 py-5 lg:px-8 lg:py-6`}>
         <div>
           <h1 className="relative font-display text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
-            Competition
-            <span className="mx-3 text-white/60">•</span>
-            {competition?.name ?? "..."}
+            {competition?.name ?? "Kompetisi"}
           </h1>
           {rulebook && (
             <a
@@ -517,7 +623,7 @@ export default function CompetitionRegistrationPage() {
             </h2>
             <div className="mt-1 flex items-center gap-2">
               <p className="text-sm font-semibold text-white/90">
-                Team Name • <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
+                Team Name: <span className="font-bold text-[#7D8CFF] text-base">{team?.teamName ?? "..."}</span>
               </p>
               {isLeader && (
                 <button
@@ -579,7 +685,7 @@ export default function CompetitionRegistrationPage() {
               >
                 <span className="text-sm text-white">{member.name}</span>
                 {isMemberLeader ? (
-                  <span className="rounded-full border border-white/15 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-text-secondary">
+                  <span className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] px-3 py-0.5 text-xs font-medium text-white/75">
                     Leader
                   </span>
                 ) : (
@@ -805,9 +911,9 @@ export default function CompetitionRegistrationPage() {
           </div>
 
           {/* Proposal Submit + Action Button | External Links */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
             {/* Left column */}
-            <div className="space-y-6">
+            <div className="space-y-6 lg:col-span-7">
               {/* Proposal Karya */}
               <div className={`${glass} p-6 lg:p-8`}>
                 <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
@@ -1005,127 +1111,75 @@ export default function CompetitionRegistrationPage() {
                 cancelText={isEligible ? "Batal" : undefined}
                 onConfirm={isEligible ? handleSubmitAll : () => setShowSubmitConfirm(false)}
               />
-
-              {/* Hasil penilaian (muncul setelah juri menilai) */}
-              {existingSubmission?.scores && existingSubmission.scores.length > 0 && (
-                <div className={`${glass} p-6 lg:p-8`}>
-                  <h2 className="relative font-display text-lg font-bold tracking-tight text-white">
-                    Hasil Penilaian Juri
-                  </h2>
-                  <div className="relative mt-4 space-y-2">
-                    {(() => {
-                      const byCriteria = new Map<string, { name: string; max: number; scores: number[] }>();
-                      for (const s of existingSubmission.scores) {
-                        if (!byCriteria.has(s.criteria.id)) {
-                          byCriteria.set(s.criteria.id, { name: s.criteria.name, max: s.criteria.maxScore, scores: [] });
-                        }
-                        byCriteria.get(s.criteria.id)!.scores.push(s.score);
-                      }
-                      const rows = Array.from(byCriteria.values()).map((c) => ({
-                        name: c.name,
-                        max: c.max,
-                        avg: c.scores.length ? c.scores.reduce((a, b) => a + b, 0) / c.scores.length : 0,
-                      }));
-                      const overall = rows.length ? rows.reduce((a, b) => a + b.avg, 0) / rows.length : 0;
-                      return (
-                        <>
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="text-text-secondary">
-                                <th className="text-left py-1">Komponen</th>
-                                <th className="text-right py-1">Rata-rata</th>
-                                <th className="text-right py-1">Maks</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {rows.map((r) => (
-                                <tr key={r.name} className="border-t border-white/5">
-                                  <td className="py-1 text-white">{r.name}</td>
-                                  <td className="py-1 text-right text-white">{r.avg.toFixed(2)}</td>
-                                  <td className="py-1 text-right text-text-secondary">{r.max}</td>
-                                </tr>
-                              ))}
-                              <tr className="border-t border-white/10 font-semibold">
-                                <td className="py-1 text-white">Rata-rata keseluruhan</td>
-                                <td className="py-1 text-right text-white">{overall.toFixed(2)}</td>
-                                <td className="py-1 text-right text-text-secondary"></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          {existingSubmission.judgeEvaluations && existingSubmission.judgeEvaluations.length > 0 && (
-                            <div className="mt-4 space-y-3">
-                              <p className="text-sm font-semibold text-white">Catatan Juri</p>
-                              {existingSubmission.judgeEvaluations.map((ev, i) => (
-                                <div key={ev.id ?? i} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                                  <p className="text-xs font-semibold text-[#7D8CFF]">
-                                    {ev.judge?.user?.fullName ?? "Juri"}
-                                  </p>
-                                  {ev.feedback && (
-                                    <p className="mt-1 text-xs text-text-secondary whitespace-pre-wrap">
-                                      {ev.feedback}
-                                    </p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* External Links */}
-            <div className={`${glass} p-6 lg:p-8`}>
-              <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
-                External Links
-              </h2>
-              <p className="relative mt-2 text-sm text-text-secondary">
-                Please make sure this link is open public so we can access it.
-                Required fields are marked with{" "}
-                <span className="text-[#7D8CFF]">*</span>.
-              </p>
+            {/* External Links (sticky mengikuti kolom upload hingga Action Button) */}
+            <div className="lg:col-span-5 lg:sticky lg:top-6">
+              <div className={`${glass} p-6 lg:p-8`}>
+                <h2 className="relative font-display text-xl font-bold tracking-tight text-white">
+                  External Links
+                </h2>
+                <p className="relative mt-2 text-sm text-text-secondary">
+                  Please make sure this link is open public so we can access it.
+                  Required fields are marked with{" "}
+                  <span className="text-[#7D8CFF]">*</span>.
+                </p>
 
-              <div className="relative mt-6 space-y-5">
-                {linkFields.map((field) => {
-                  const required = field.required;
-                  return (
-                    <div key={field.name} className="space-y-1.5">
-                      <label
-                        htmlFor={`external-${field.name}`}
-                        className="block text-sm text-text-secondary"
-                      >
-                        {field.label}
-                        {required ? (
-                          <span className="ml-1 text-[#7D8CFF]">*</span>
-                        ) : (
-                          <span className="ml-1 text-xs font-normal text-text-secondary/70">
-                            (optional)
-                          </span>
-                        )}
-                      </label>
-                      <input
-                        id={`external-${field.name}`}
-                        type="url"
-                        placeholder="https://"
-                        disabled={isLocked}
-                        value={form[field.name]}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            [field.name]: e.target.value,
-                          }))
-                        }
-                        className={glassInput}
-                      />
-                    </div>
-                  );
-                })}
+                <div className="relative mt-6 space-y-5">
+                  {linkFields.map((field) => {
+                    const required = field.required;
+                    return (
+                      <div key={field.name} className="space-y-1.5">
+                        <label
+                          htmlFor={`external-${field.name}`}
+                          className="block text-sm text-text-secondary"
+                        >
+                          {field.label}
+                          {required ? (
+                            <span className="ml-1 text-[#7D8CFF]">*</span>
+                          ) : (
+                            <span className="ml-1 text-xs font-normal text-text-secondary/70">
+                              (optional)
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          id={`external-${field.name}`}
+                          type="url"
+                          placeholder="https://"
+                          disabled={isLocked}
+                          value={form[field.name]}
+                          onChange={(e) =>
+                            setForm((prev) => ({
+                              ...prev,
+                              [field.name]: e.target.value,
+                            }))
+                          }
+                          className={glassInput}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Hasil penilaian (w-full di bawah Action Button & External Links) */}
+          {(() => {
+            const submissionEvaluation = buildSubmissionEvaluation(existingSubmission);
+            if (!submissionEvaluation) return null;
+            return (
+              <div className={`${glass} w-full p-6 lg:p-8`}>
+                <h2 className="relative font-display text-lg font-bold tracking-tight text-white">
+                  Hasil Penilaian Juri
+                </h2>
+                <div className="relative">
+                  <AnnouncementScoringTable evaluation={submissionEvaluation} />
+                </div>
+              </div>
+            );
+          })()}
         </>
       ) : paymentStatus === "REVIEW" ? (
         /* Payment Information — sudah dikirim, menunggu review admin */
@@ -1136,7 +1190,7 @@ export default function CompetitionRegistrationPage() {
           <p className="relative mt-2 text-sm text-text-secondary">
             Bukti pembayaran sudah dikirim dan sedang ditinjau oleh admin.
           </p>
-          <span className="mt-5 inline-flex items-center rounded-full border border-amber-500/60 px-4 py-1.5 text-xs font-semibold text-amber-500">
+          <span className="mt-5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs font-medium text-white/70">
             Menunggu Review
           </span>
         </div>
@@ -1172,7 +1226,7 @@ export default function CompetitionRegistrationPage() {
                 Scan QRIS resmi dari panitia melalui Guidebook, lalu unggah bukti pembayaran di
                 samping.
               </p>
-              <span className="mt-5 inline-flex items-center rounded-full border border-rose-500/60 px-4 py-1.5 text-xs font-semibold text-rose-500">
+              <span className="mt-5 inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 text-xs font-medium text-rose-300">
                 {team?.paymentProof?.status ?? "Not Submitted"}
               </span>
             </div>

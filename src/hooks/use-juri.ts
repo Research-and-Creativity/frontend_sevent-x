@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useAuthStore } from "@/store/auth-store";
 import type { TeamAnnouncementItem } from "@/types/api";
 
 export interface JudgeSubmissionScore {
@@ -44,6 +45,7 @@ export interface JudgeSubmissionItem {
       id: string;
       name: string;
       slug: string;
+      activeRound?: "PENYISIHAN" | "FINAL";
     };
     members: Array<{
       role: string;
@@ -133,16 +135,23 @@ export interface JudgeRankingItem {
 }
 
 export interface JudgeRankingsResponse {
-  competition: { id: string; name: string; slug: string };
+  competition: {
+    id: string;
+    name: string;
+    slug: string;
+    activeRound?: "PENYISIHAN" | "FINAL";
+  };
   round: string | null;
   isCalculated: boolean;
+  expectedJudgeCount?: number;
   rankings: JudgeRankingItem[];
 }
 
 // Hook 1: Fetch all submissions assigned to this Judge (GET /api/judge/submissions)
 export function useJudgeSubmissions() {
+  const userId = useAuthStore((state) => state.user?.id ?? "anon");
   return useQuery<JudgeSubmissionItem[]>({
-    queryKey: ["judgeSubmissions"],
+    queryKey: ["judgeSubmissions", userId],
     queryFn: async () => {
       const res = await apiClient.get("/api/judge/submissions");
       const list = res.data?.data || res.data;
@@ -154,11 +163,17 @@ export function useJudgeSubmissions() {
 }
 
 // Hook 2: Fetch single submission detail for scoring (GET /api/judge/submissions/:id)
-export function useJudgeSubmissionDetail(submissionId: string) {
+export function useJudgeSubmissionDetail(
+  submissionId: string,
+  round?: "PENYISIHAN" | "FINAL"
+) {
+  const userId = useAuthStore((state) => state.user?.id ?? "anon");
   return useQuery<JudgeSubmissionDetailResponse>({
-    queryKey: ["judgeSubmissionDetail", submissionId],
+    queryKey: ["judgeSubmissionDetail", userId, submissionId, round ?? "active"],
     queryFn: async () => {
-      const res = await apiClient.get(`/api/judge/submissions/${submissionId}`);
+      const res = await apiClient.get(`/api/judge/submissions/${submissionId}`, {
+        params: round ? { round } : undefined,
+      });
       return res.data?.data || res.data;
     },
     enabled: Boolean(submissionId),
@@ -180,8 +195,9 @@ export function useSubmitJudgeScore(submissionId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["judgeSubmissions"] });
+      queryClient.invalidateQueries({ queryKey: ["judgeRankings"] });
       queryClient.invalidateQueries({
-        queryKey: ["judgeSubmissionDetail", submissionId],
+        queryKey: ["judgeSubmissionDetail"],
       });
     },
   });
@@ -202,7 +218,7 @@ export function useSubmitJudgeRecommendation(submissionId: string) {
       queryClient.invalidateQueries({ queryKey: ["judgeSubmissions"] });
       queryClient.invalidateQueries({ queryKey: ["judgeRankings"] });
       queryClient.invalidateQueries({
-        queryKey: ["judgeSubmissionDetail", submissionId],
+        queryKey: ["judgeSubmissionDetail"],
       });
     },
   });
@@ -227,8 +243,9 @@ export function useJudgeAnnouncements(competitionSlug?: string) {
 
 // Hook 5: Ranking karya pada kompetisi yang dinilai juri ini (GET /api/judge/rankings)
 export function useJudgeRankings() {
+  const userId = useAuthStore((state) => state.user?.id ?? "anon");
   return useQuery<JudgeRankingsResponse>({
-    queryKey: ["judgeRankings"],
+    queryKey: ["judgeRankings", userId],
     queryFn: async () => {
       const res = await apiClient.get("/api/judge/rankings");
       return res.data?.data || res.data;

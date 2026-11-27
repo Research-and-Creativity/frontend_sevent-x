@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -35,6 +36,7 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -58,6 +60,7 @@ export default function LoginPage() {
         throw new Error("Invalid login response from server.");
       }
 
+      queryClient.clear();
       setAuth(user, accessToken);
       toast.success(`Welcome back, ${user.fullName}!`);
 

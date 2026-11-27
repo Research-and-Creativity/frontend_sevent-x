@@ -6,14 +6,9 @@ import {
   Users,
   RotateCcw,
   Clock,
-  Trophy,
-  Award,
-  Sparkles,
   Megaphone,
-  Calendar,
   ChevronLeft,
   ChevronRight,
-  User,
   CheckCircle2,
   Circle,
   AlertCircle,
@@ -38,6 +33,7 @@ import {
 } from "@/hooks/use-peserta";
 import { useAnnouncementStore } from "@/store/announcement-store";
 import { getTeamMemberLimits } from "@/lib/team-member-limits";
+import { AnnouncementScoringTable } from "@/components/peserta/announcement-scoring-table";
 
 // Style glass yang sama dengan halaman peserta lainnya
 const glass =
@@ -74,6 +70,73 @@ function formatCountdown(target: Date, currentNow = 0) {
 
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`;
+}
+
+function formatSubmitWib(iso: string | null | undefined) {
+  if (!iso) return "-";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const datePart = date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  });
+  const timePart = date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Jakarta",
+  });
+  return `${datePart}, ${timePart} WIB`;
+}
+
+type AnnouncementBadgeTone = "winner" | "finalist" | "eliminated" | "neutral";
+
+const ANNOUNCEMENT_BADGE_TONES: Record<AnnouncementBadgeTone, string> = {
+  winner: "border-white/15 bg-white/[0.04] text-[#A9B7FF]",
+  finalist: "border-white/10 bg-white/[0.03] text-emerald-400",
+  eliminated: "border-white/10 bg-white/[0.03] text-rose-300",
+  neutral: "border-white/10 bg-white/[0.03] text-white/70",
+};
+
+function resolveAnnouncementBadge(options: {
+  isWinner: boolean;
+  winnerRank?: number | null;
+  isFinalist: boolean;
+  round?: string;
+  finalistLabel: string;
+  fallbackNeutralLabel?: string;
+}): { tone: AnnouncementBadgeTone; label: string } | null {
+  if (options.isWinner) {
+    return { tone: "winner", label: options.winnerRank ? `Juara ${options.winnerRank}` : "Pemenang" };
+  }
+  if (options.isFinalist) {
+    return { tone: "finalist", label: options.finalistLabel };
+  }
+  if (options.round === "PENYISIHAN") {
+    return { tone: "eliminated", label: "Tidak Lolos" };
+  }
+  if (options.fallbackNeutralLabel) {
+    return { tone: "neutral", label: options.fallbackNeutralLabel };
+  }
+  return null;
+}
+
+function AnnouncementStatusBadge({
+  tone,
+  label,
+}: {
+  tone: AnnouncementBadgeTone;
+  label: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-medium whitespace-nowrap ${ANNOUNCEMENT_BADGE_TONES[tone]}`}
+    >
+      {label}
+    </span>
+  );
 }
 
 export default function PesertaDashboardPage() {
@@ -146,9 +209,9 @@ export default function PesertaDashboardPage() {
   // pernah ditampilkan di mana pun, padahal peserta baru tahu mereka harus
   // unggah Twibbon/KTM/dsb setelah membaca halaman kompetisi.
   const { data: eligibility } = useSubmissionEligibility();
-  const teamMembers = eligibility?.requirements.members ?? [];
+  const teamMembers = eligibility?.requirements?.members ?? [];
   const docsAllApproved =
-    eligibility?.requirements.allMembersDocumentsApproved ?? false;
+    eligibility?.requirements?.allMembersDocumentsApproved ?? false;
 
   const memberCount = team?.members?.length ?? 0;
   const memberLimits = getTeamMemberLimits(team?.competition?.slug);
@@ -312,14 +375,14 @@ export default function PesertaDashboardPage() {
 
       {/* Sofdev Member Warning if < 3 */}
       {hasJoined && team?.competition?.slug === "software-development" && memberCount < 3 && (
-        <div className={`${glass} border-amber-500/40 bg-amber-500/[0.06] p-6 lg:p-7 flex items-start gap-4`}>
-          <AlertCircle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+        <div className={`${glass} border-white/10 bg-white/[0.025] p-6 lg:p-7 flex items-start gap-4`}>
+          <AlertCircle className="h-5 w-5 text-white/60 shrink-0 mt-0.5" />
           <div className="text-sm">
             <h3 className="font-display text-base font-bold text-white">
               Pemberitahuan: Anggota Tim Software Development Minimal 3 Orang
             </h3>
             <p className="text-white/80 mt-1 leading-relaxed">
-              Tim Anda saat ini beranggotakan <span className="font-bold text-amber-300">{memberCount} orang</span>. Sesuai ketentuan, tim Software Development wajib memiliki minimal 3 anggota (termasuk ketua) sebelum dapat mengumpulkan karya.
+              Tim Anda saat ini beranggotakan <span className="font-semibold text-white">{memberCount} orang</span>. Sesuai ketentuan, tim Software Development wajib memiliki minimal 3 anggota (termasuk ketua) sebelum dapat mengumpulkan karya.
             </p>
             {team?.teamCode && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -347,14 +410,31 @@ export default function PesertaDashboardPage() {
       {hasJoined && (
         <div className={`${glass} px-6 py-5 lg:px-8`}>
           <div>
-            <h2 className="relative font-display text-xl sm:text-2xl font-bold tracking-tight text-white flex flex-wrap items-center gap-3">
-              <span>Competition</span>
+            <h2 className="relative font-display text-xl sm:text-2xl font-bold tracking-tight text-white flex flex-wrap items-center gap-2">
+              <span>Competition:</span>
               {team?.competition?.name && (
-                <>
-                  <span className="text-white/40">•</span>
-                  <span>{team.competition.name}</span>
-                </>
+                <span>{team.competition.name}</span>
               )}
+              {!isAnnouncementsLoading &&
+                publishedTeamAnnouncements.length > 0 &&
+                (() => {
+                  const latestAnnouncement =
+                    publishedTeamAnnouncements.find((a) => a.round === "FINAL") ??
+                    publishedTeamAnnouncements[0];
+                  const isFinalist = Boolean(latestAnnouncement.isFinalist);
+                  const winnerRank = latestAnnouncement.rank;
+                  const isWinner =
+                    winnerRank === 1 || winnerRank === 2 || winnerRank === 3;
+
+                  const badge = resolveAnnouncementBadge({
+                    isWinner,
+                    winnerRank,
+                    isFinalist,
+                    round: latestAnnouncement.round,
+                    finalistLabel: "Lolos Finalis",
+                  });
+                  return badge ? <AnnouncementStatusBadge {...badge} /> : null;
+                })()}
             </h2>
             {team?.competition?.slug && RULEBOOK_LINKS[team.competition.slug] && (
               <a
@@ -432,10 +512,10 @@ export default function PesertaDashboardPage() {
             <div
               className={`font-display text-xl sm:text-2xl font-bold ${
                 hasJoined && !(eligibility?.requirements.paymentApproved)
-                  ? "text-amber-400"
+                  ? "text-white/70"
                   : submission
                   ? "text-emerald-400"
-                  : "text-rose-500"
+                  : "text-rose-400"
               }`}
             >
               {hasJoined && !(eligibility?.requirements.paymentApproved)
@@ -521,7 +601,7 @@ export default function PesertaDashboardPage() {
                   className={
                     member.allDocumentsApproved
                       ? "text-xs font-medium text-emerald-400"
-                      : "text-xs font-medium text-amber-300"
+                      : "text-xs font-medium text-white/50"
                   }
                 >
                   {member.allDocumentsApproved
@@ -546,13 +626,16 @@ export default function PesertaDashboardPage() {
           {publishedTeamAnnouncements.map((announcement) => {
             const isFinalist = Boolean(announcement.isFinalist);
             const winnerRank = announcement.rank;
-            const isWinner = winnerRank === 1 || winnerRank === 2;
+            const isWinner =
+              winnerRank === 1 || winnerRank === 2 || winnerRank === 3;
             const competitionName =
               announcement.competition?.name ||
               teamInfo?.competition?.name ||
               "Kompetisi";
             const teamName = teamInfo?.teamName || "Tim Anda";
-            const roundName = announcement.round || "Babak Penyisihan";
+            const roundName = announcement.round || "PENYISIHAN";
+            const roundLabel =
+              announcement.round === "FINAL" ? "Babak Final" : "Babak Penyisihan";
 
             const publishedDate = announcement.publishedAt
               ? new Date(announcement.publishedAt).toLocaleDateString("id-ID", {
@@ -565,82 +648,138 @@ export default function PesertaDashboardPage() {
             return (
               <div
                 key={announcement.id}
-                className={`relative overflow-hidden rounded-xl border-2 p-5 transition-colors ${
+                className={`relative overflow-hidden rounded-xl border p-5 transition-colors ${
                   isFinalist || isWinner
-                    ? "border-amber-400/70 bg-amber-500/[0.12] shadow-[0_0_24px_rgba(245,158,11,0.15)]"
+                    ? "border-white/15 bg-white/[0.025]"
                     : "border-white/10 bg-white/[0.02]"
                 }`}
               >
-                {/* Kilau amber tipis, hanya untuk tim yang lolos */}
-                {isFinalist && (
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-amber-500/15 blur-3xl" />
-                )}
-
                 <div className="relative z-10 space-y-3">
                   {/* Top Badge & Published Date */}
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      {isWinner ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
-                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                          <span>JUARA {winnerRank}</span>
-                        </span>
-                      ) : isFinalist ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-amber-300">
-                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                          <span>LOLOS SEBAGAI FINALIS</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-text-secondary">
-                          <Award className="w-3.5 h-3.5 text-text-secondary" />
-                          <span>PENGUMUMAN HASIL SELEKSI</span>
-                        </span>
-                      )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(() => {
+                        const badge = resolveAnnouncementBadge({
+                          isWinner,
+                          winnerRank,
+                          isFinalist,
+                          round: announcement.round,
+                          finalistLabel: "Lolos Finalis",
+                          fallbackNeutralLabel: "Finalis Kompetisi",
+                        });
+                        return badge ? <AnnouncementStatusBadge {...badge} /> : null;
+                      })()}
 
-                      <span className="rounded-md bg-white/[0.06] px-2.5 py-0.5 font-mono text-xs text-text-secondary">
+                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-0.5 text-xs font-medium text-white/70">
                         {roundName}
                       </span>
                     </div>
 
                     {publishedDate && (
-                      <div className="flex items-center gap-1.5 text-xs font-mono text-text-secondary">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>Diumumkan: {publishedDate}</span>
-                      </div>
+                      <span className="text-xs text-text-secondary">
+                        Diumumkan: {publishedDate}
+                      </span>
                     )}
                   </div>
 
                   {/* Main Announcement Message */}
                   <div className="space-y-2">
-                    <h2 className={`flex items-center gap-2.5 font-display tracking-tight text-white ${isFinalist || isWinner ? "text-xl font-extrabold" : "text-lg font-bold"}`}>
-                      {isWinner ? (
-                        <>
-                          <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
-                          <span>
-                            Selamat! Tim {teamName} Meraih Juara {winnerRank}
-                          </span>
-                        </>
-                      ) : isFinalist ? (
-                        <>
-                          <Sparkles className="w-6 h-6 text-amber-400 shrink-0" />
-                          <span>
-                            Selamat! Tim {teamName} Lolos ke {roundName}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Pengumuman Hasil Seleksi {roundName}</span>
-                        </>
-                      )}
+                    <h2 className="font-display text-lg sm:text-xl font-bold tracking-tight text-white">
+                      {isWinner
+                        ? `Selamat! Tim ${teamName} Meraih Juara ${winnerRank}`
+                        : isFinalist
+                        ? `Selamat! Tim ${teamName} Lolos ke Babak Final`
+                        : announcement.round === "FINAL"
+                        ? "Pengumuman Hasil Babak Final"
+                        : `Tim ${teamName} Belum Lolos ke Babak Final`}
                     </h2>
 
                     <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-2xl">
                       {isWinner
-                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih Juara ${winnerRank} pada babak ${roundName}. Terima kasih atas dedikasi dan kerja keras seluruh anggota tim.`
+                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih Juara ${winnerRank} pada ${roundLabel.toLowerCase()}. Terima kasih atas dedikasi dan kerja keras seluruh anggota tim.`
                         : isFinalist
-                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil meraih nilai unggul dan dinyatakan lolos untuk melaju ke tahap ${roundName}. Persiapkan diri Anda untuk tahapan berikutnya sesuai jadwal yang ditentukan oleh panitia.`
-                        : `Terima kasih atas partisipasi dan dedikasi tim ${teamName} (${competitionName}) pada babak ${roundName}. Tim Anda belum berhasil melaju ke babak selanjutnya pada kesempatan ini. Tetap semangat dan terus berkarya!`}
+                        ? `Selamat kepada tim ${teamName} (${competitionName})! Karya dan performa tim Anda berhasil masuk 5 besar pada ${roundLabel.toLowerCase()} dan dinyatakan lolos ke Babak Final. Persiapkan diri Anda untuk tahapan berikutnya sesuai jadwal yang ditentukan oleh panitia.`
+                        : announcement.round === "FINAL"
+                        ? `Terima kasih atas partisipasi dan dedikasi tim ${teamName} (${competitionName}) sebagai finalis pada ${roundLabel.toLowerCase()}. Tetap semangat dan terus berkarya!`
+                        : `Terima kasih atas kerja keras dan karya yang telah tim ${teamName} (${competitionName}) kontribusikan pada ${roundLabel.toLowerCase()}. Meski kali ini belum berkesempatan melaju ke Babak Final, setiap proses dan masukan yang didapat tetap menjadi bekal berharga untuk karya berikutnya. Tetap semangat, terus berkarya, dan kami nantikan kembali keikutsertaan tim Anda di SEVENT X tahun depan. Anda tetap dapat meninjau rincian penilaian dan catatan juri di bawah ini.`}
                     </p>
+
+                    {announcement.evaluation?.tieBreaker && (() => {
+                      const tie = announcement.evaluation.tieBreaker;
+                      const myTime = formatSubmitWib(tie.submittedAt);
+                      const compTime = formatSubmitWib(tie.comparedSubmittedAt);
+                      const targetLabel =
+                        announcement.round === "FINAL"
+                          ? `Juara ${tie.comparedRank}`
+                          : `batas lolos peringkat #${tie.comparedRank}`;
+
+                      return (
+                        <p className="mt-3 max-w-2xl rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-xs sm:text-sm leading-relaxed text-text-secondary">
+                          <span
+                            className={`font-semibold ${
+                              tie.status === "WON" ? "text-[#A9B7FF]" : "text-white"
+                            }`}
+                          >
+                            Keterangan Nilai Seri (Peringkat #{tie.rank}):
+                          </span>{" "}
+                          {tie.status === "WON" ? (
+                            tie.rule === "CRITERIA_SCORE" && tie.criteriaName ? (
+                              <>
+                                Skor akhir tim Anda ({tie.score.toFixed(2)}) sama dengan tim pada{" "}
+                                {targetLabel}. Tim Anda unggul berdasarkan nilai kriteria utama{" "}
+                                <strong className="text-white">&quot;{tie.criteriaName}&quot;</strong> (
+                                <span className="text-white font-medium">
+                                  {typeof tie.criteriaScore === "number" ? tie.criteriaScore.toFixed(2) : "-"}
+                                </span>{" "}
+                                dibanding{" "}
+                                <span className="text-white font-medium">
+                                  {typeof tie.comparedCriteriaScore === "number" ? tie.comparedCriteriaScore.toFixed(2) : "-"}
+                                </span>
+                                ).
+                              </>
+                            ) : (
+                              <>
+                                Skor akhir tim Anda ({tie.score.toFixed(2)}) sama dengan tim pada
+                                peringkat #{tie.comparedRank}. Tim Anda unggul berdasarkan waktu
+                                submit karya lebih cepat (
+                                <span className="text-white font-medium">{myTime}</span>{" "}
+                                dibanding{" "}
+                                <span className="text-white font-medium">{compTime}</span>).
+                              </>
+                            )
+                          ) : (
+                            tie.rule === "CRITERIA_SCORE" && tie.criteriaName ? (
+                              <>
+                                Skor akhir tim Anda ({tie.score.toFixed(2)}) sama dengan tim pada{" "}
+                                {targetLabel}. Penentuan peringkat memprioritaskan nilai kriteria utama{" "}
+                                <strong className="text-white">&quot;{tie.criteriaName}&quot;</strong> — tim Anda memperoleh nilai{" "}
+                                <span className="text-white font-medium">
+                                  {typeof tie.criteriaScore === "number" ? tie.criteriaScore.toFixed(2) : "-"}
+                                </span>
+                                , sedangkan {targetLabel} memperoleh nilai{" "}
+                                <span className="text-white font-medium">
+                                  {typeof tie.comparedCriteriaScore === "number" ? tie.comparedCriteriaScore.toFixed(2) : "-"}
+                                </span>
+                                .
+                              </>
+                            ) : (
+                              <>
+                                Skor akhir tim Anda ({tie.score.toFixed(2)}) sama dengan tim pada{" "}
+                                {targetLabel}. Penentuan peringkat memprioritaskan waktu submit
+                                karya lebih cepat — tim Anda mengirim{" "}
+                                <span className="text-white font-medium">{myTime}</span>, sedangkan{" "}
+                                {targetLabel} mengirim{" "}
+                                <span className="text-white font-medium">{compTime}</span>.
+                              </>
+                            )
+                          )}
+                        </p>
+                      );
+                    })()}
+
+                    {announcement.evaluation && (
+                      <AnnouncementScoringTable evaluation={announcement.evaluation} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -671,7 +810,7 @@ export default function PesertaDashboardPage() {
                   onClick={() => handleFilterChange(filter)}
                   variant={isActive ? "default" : "outline"}
                   size="sm"
-                  className={`h-8 cursor-pointer rounded-full border px-4 font-mono text-xs font-semibold transition-all ${
+                  className={`h-8 cursor-pointer rounded-full border px-4 text-xs font-semibold transition-all ${
                     isActive
                       ? "border-white bg-white text-[#1B235E] shadow-sm hover:bg-white/90"
                       : "border-white/25 bg-white/[0.03] text-text-secondary hover:text-white"
@@ -743,20 +882,19 @@ export default function PesertaDashboardPage() {
                   {/* Top Row: Category Badge (Left) & Date (Right) */}
                   <div className="flex items-center justify-between gap-4">
                     <span
-                      className={`rounded-md border px-2.5 py-0.5 font-mono text-[10px] font-bold ${
+                      className={`inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-0.5 text-xs font-medium ${
                         isImportant
-                          ? "border-red-500/40 bg-red-500/10 text-red-300"
+                          ? "text-rose-300"
                           : isInfo
-                          ? "border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-[#7D8CFF]"
-                          : "border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
+                          ? "text-[#A9B7FF]"
+                          : "text-emerald-400"
                       }`}
                     >
                       {tag}
                     </span>
 
-                    <span className="text-xs font-mono text-text-secondary flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{formattedDate}</span>
+                    <span className="text-xs text-text-secondary">
+                      {formattedDate}
                     </span>
                   </div>
 
@@ -771,16 +909,11 @@ export default function PesertaDashboardPage() {
                   </p>
 
                   {/* Footer: Posted By */}
-                  <div className="flex items-center justify-between border-t border-white/10 pt-2 text-xs font-mono text-text-secondary">
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-text-secondary" />
-                      <span>
-                        Diposting oleh:{" "}
-                        <strong className="text-white font-medium">
-                          {authorName}
-                        </strong>
-                      </span>
-                    </div>
+                  <div className="border-t border-white/10 pt-2.5 text-xs text-text-secondary">
+                    Diposting oleh{" "}
+                    <strong className="text-white font-medium">
+                      {authorName}
+                    </strong>
                   </div>
                 </div>
               );
@@ -788,7 +921,7 @@ export default function PesertaDashboardPage() {
 
             {/* Pagination Controls */}
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-white/10 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
                 <span className="text-xs font-mono text-text-secondary">
                   Halaman {pagination.page} dari {pagination.totalPages} ({pagination.total} Pengumuman)
                 </span>

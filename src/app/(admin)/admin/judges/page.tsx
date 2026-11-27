@@ -259,7 +259,7 @@ export default function AdminJudgesPage() {
                 <div className="flex items-center gap-2 text-white/40">
                   <UserIcon className="w-3.5 h-3.5 text-[#7FA7F5]" />
                   <span className="uppercase text-[11px]">
-                    Current Role: {selectedUser.role} • ID: #{selectedUser.id}
+                    Current Role: {selectedUser.role} - ID: #{selectedUser.id}
                   </span>
                 </div>
               </div>
@@ -374,13 +374,13 @@ export default function AdminJudgesPage() {
                         </div>
                         <p className="text-xs text-white/40 flex flex-wrap items-center gap-2">
                           <span>{judgeEmail}</span>
-                          <span>•</span>
+                          <span className="text-white/20">|</span>
                           <span className="text-white/70">
                             {compTitle}
                           </span>
                           {j.user?.institution && (
                             <>
-                              <span>•</span>
+                              <span className="text-white/20">|</span>
                               <span className="text-white/40">
                                 {j.user.institution}
                               </span>

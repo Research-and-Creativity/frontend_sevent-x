@@ -133,7 +133,7 @@ export function TimelineSection() {
                         {e.date}
                       </p>
                       <p className="text-sm text-white/70 mt-1">{e.title}</p>
-                      <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                      <span className="mt-2 inline-block text-xs font-medium text-white/70 px-3 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
                         Online
                       </span>
                     </div>
@@ -149,7 +149,7 @@ export function TimelineSection() {
                           {e.date}
                         </p>
                         <p className="text-sm text-white/70 mt-1">{e.title}</p>
-                        <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                        <span className="mt-2 inline-block text-xs font-medium text-white/70 px-3 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
                           Online
                         </span>
                       </div>
@@ -159,7 +159,7 @@ export function TimelineSection() {
                         {e.date}
                       </p>
                       <p className="text-sm text-white/70 mt-1">{e.title}</p>
-                      <span className="mt-2 inline-block text-[10px] uppercase tracking-wider font-medium text-white/60 px-2 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
+                      <span className="mt-2 inline-block text-xs font-medium text-white/70 px-3 py-0.5 rounded-full border border-white/15 bg-white/[0.04]">
                         Online
                       </span>
                     </div>

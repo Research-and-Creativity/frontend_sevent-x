@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { useJudgeSubmissions } from "@/hooks/use-juri";
+import { useLogout } from "@/hooks/use-logout";
 import { toast } from "sonner";
 import { LayoutGrid, LogOut, Medal, SquarePen, Menu, X } from "lucide-react";
 
@@ -31,11 +32,17 @@ function SidebarContent({
   onNavigate,
   onLogout,
   pendingCount,
+  activeRound,
+  judgeName,
+  competitionName,
 }: {
   pathname?: string;
   onNavigate?: () => void;
   onLogout: () => void;
   pendingCount?: number;
+  activeRound?: "PENYISIHAN" | "FINAL";
+  judgeName?: string;
+  competitionName?: string;
 }) {
   return (
     <>
@@ -59,7 +66,7 @@ function SidebarContent({
       </nav>
 
       <p className="mt-8 mb-2 text-[10px] tracking-widest text-white/40">
-        PRELIMINARY ROUND
+        {activeRound === "FINAL" ? "FINAL JUDGEMENT" : "PRELIMINARY ROUND"}
       </p>
       <nav className="space-y-1">
         {preliminaryRoundLinks.map((l) => (
@@ -81,7 +88,7 @@ function SidebarContent({
       </nav>
 
       <p className="mt-8 mb-2 text-[10px] tracking-widest text-white/40">
-        FINAL ROUND
+        {activeRound === "FINAL" ? "FINAL RESULTS" : "FINAL ROUND"}
       </p>
       <nav className="space-y-1">
         {finalRoundLinks.map((l) => (
@@ -97,13 +104,23 @@ function SidebarContent({
         ))}
       </nav>
 
-      <button
-        onClick={onLogout}
-        className="mt-auto flex items-center gap-3 px-4 py-3 text-sm text-white/60 hover:text-white transition-colors"
-      >
-        <LogOut className="w-5 h-5" />
-        Log out
-      </button>
+      <div className="mt-auto border-t border-white/10 pt-4 pb-1">
+        <div className="px-3 py-1.5 mb-1">
+          <p className="text-sm font-semibold text-white truncate">{judgeName || "Dewan Juri"}</p>
+          {competitionName ? (
+            <p className="text-xs text-[#7D8CFF] font-medium truncate mt-0.5">{competitionName}</p>
+          ) : (
+            <p className="text-xs text-white/40 font-medium truncate mt-0.5">Dewan Juri</p>
+          )}
+        </div>
+        <button
+          onClick={onLogout}
+          className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Log out
+        </button>
+      </div>
     </>
   );
 }
@@ -115,11 +132,17 @@ export default function JuriLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const handleLogout = useLogout();
   const storeUser = useAuthStore((state) => state.user);
   const { data: userMe, isLoading: isUserLoading } = useUserMe();
   const { data: submissions } = useJudgeSubmissions();
   const [isNavOpen, setIsNavOpen] = useState(false);
   const currentUser = userMe || storeUser;
+  const competitionName =
+    userMe?.judgeProfile?.competition?.name ||
+    submissions?.[0]?.team?.competition?.name;
+  const judgeName = currentUser?.fullName || "Dewan Juri";
+  const activeRound = submissions?.[0]?.team?.competition?.activeRound;
   const pendingCount =
     submissions?.filter((submission) => !submission.evaluationStatus?.isEvaluated)
       .length ?? 0;
@@ -175,8 +198,11 @@ export default function JuriLayout({
               <SidebarContent
                 pathname={pathname}
                 onNavigate={() => setIsNavOpen(false)}
-                onLogout={() => router.push("/login")}
+                onLogout={handleLogout}
                 pendingCount={pendingCount}
+                activeRound={activeRound}
+                judgeName={judgeName}
+                competitionName={competitionName}
               />
             </div>
           </div>
@@ -196,14 +222,17 @@ export default function JuriLayout({
         <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
           <SidebarContent
             pathname={pathname}
-            onLogout={() => router.push("/login")}
+            onLogout={handleLogout}
             pendingCount={pendingCount}
+            activeRound={activeRound}
+            judgeName={judgeName}
+            competitionName={competitionName}
           />
         </div>
       </aside>
 
       {/* Content */}
-      <main className="flex-1 relative p-8 overflow-x-hidden">
+      <main className="flex-1 min-w-0 relative p-4 pt-16 sm:p-8 md:pt-8 overflow-x-clip">
         <Image
           src="/assets/image/pattern-landing2.svg"
           alt=""

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Clock, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Clock, Eye } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useUserMe } from "@/hooks/use-peserta";
 import { getGreeting } from "@/lib/greeting";
@@ -28,12 +28,6 @@ const glass =
   "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl " +
   "before:bg-gradient-to-br before:from-white/[0.04] before:to-transparent";
 
-const glassSelect =
-  "bg-white/[0.03] border border-white/15 rounded-lg px-2 py-1 backdrop-blur-md";
-
-const glassButton =
-  "bg-white/[0.03] border border-white/15 rounded-lg p-1.5 backdrop-blur-md hover:bg-white/10 transition-colors";
-
 export default function JuriDashboardPage() {
   const [now, setNow] = useState(0);
   useEffect(() => {
@@ -49,6 +43,9 @@ export default function JuriDashboardPage() {
 
   const currentUser = userMe || storeUser;
   const name = currentUser?.fullName || "Juri";
+  const competitionName =
+    userMe?.judgeProfile?.competition?.name ||
+    submissions[0]?.team?.competition?.name;
 
   const judgedCount = submissions.filter(
     (s) => s.evaluationStatus?.isEvaluated
@@ -97,9 +94,16 @@ export default function JuriDashboardPage() {
       <div className="space-y-6">
         <div className={`${glass} p-6`}>
           <div className="relative flex flex-wrap items-center justify-between gap-3">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold">
-              {getGreeting(name, "Juri")}
-            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold">
+                {getGreeting(name, "Juri")}
+              </h1>
+              {competitionName && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border border-[#7D8CFF]/30 bg-[#7D8CFF]/10 text-[#7D8CFF]">
+                  {competitionName}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -184,21 +188,21 @@ export default function JuriDashboardPage() {
           <h2 className="relative font-display text-2xl font-bold mb-6">
             Top 3 Highest Score
           </h2>
-          <div className="overflow-x-auto">
-            <table className="relative w-full text-left text-sm">
-              <thead>
+          <div className="lg:overflow-x-auto">
+            <table className="relative block w-full text-left text-sm lg:table">
+              <thead className="hidden lg:table-header-group">
                 <tr className="text-left text-white/70 border-b border-white/10">
-                  <th className="pb-3 font-semibold">Team</th>
-                  <th className="pb-3 font-semibold">Product Name</th>
-                  <th className="pb-3 font-semibold">Team Leader Name</th>
-                  <th className="pb-3 font-semibold">Submitted Date</th>
-                  <th className="pb-3 font-semibold">Action</th>
+                  <th className="pb-3 font-semibold whitespace-nowrap">Team</th>
+                  <th className="pb-3 font-semibold min-w-[200px]">Product Name</th>
+                  <th className="pb-3 font-semibold whitespace-nowrap">Team Leader Name</th>
+                  <th className="pb-3 font-semibold whitespace-nowrap">Submitted Date</th>
+                  <th className="pb-3 font-semibold text-center whitespace-nowrap">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="block space-y-3 lg:table-row-group lg:space-y-0 lg:divide-y lg:divide-white/5">
                 {topScores.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-10 text-center text-sm text-white/60">
+                  <tr className="block lg:table-row">
+                    <td colSpan={5} className="block py-10 text-center text-sm text-white/60 lg:table-cell">
                       Belum ada karya yang dinilai.
                     </td>
                   </tr>
@@ -206,21 +210,33 @@ export default function JuriDashboardPage() {
                   topScores.map((t) => (
                     <tr
                       key={t.id}
-                      className="hover:bg-white/[0.03] transition-colors"
+                      className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5 lg:table-row lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:space-y-0 lg:hover:bg-white/[0.03] transition-colors"
                     >
-                      <td className="py-5 pr-4">{t.team?.teamName ?? "-"}</td>
-                      <td className="py-5 pr-4">{t.projectTitle ?? "-"}</td>
-                      <td className="py-5 pr-4">{leaderName(t)}</td>
-                      <td className="py-5 pr-4">
-                        {formatSubmittedDate(t.submittedAt)}
+                      <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap font-medium text-white">
+                        <span className="text-xs font-normal text-white/50 shrink-0 lg:hidden">Team</span>
+                        <span className="min-w-0 text-right lg:text-left break-words">{t.team?.teamName ?? "-"}</span>
                       </td>
-                      <td className="py-5">
+                      <td className="block py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:min-w-[200px] lg:max-w-[360px] text-white/90">
+                        <span className="text-xs text-white/50 block mb-0.5 lg:hidden">Product</span>
+                        <span className="break-words">{t.projectTitle ?? "-"}</span>
+                      </td>
+                      <td className="flex items-start justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap text-white/80">
+                        <span className="text-xs text-white/50 shrink-0 lg:hidden">Leader</span>
+                        <span className="min-w-0 text-right lg:text-left break-words">{leaderName(t)}</span>
+                      </td>
+                      <td className="flex items-center justify-between gap-3 py-0.5 lg:table-cell lg:py-5 lg:pr-4 lg:whitespace-nowrap text-white/70">
+                        <span className="text-xs text-white/50 shrink-0 lg:hidden">Submitted</span>
+                        <span>{formatSubmittedDate(t.submittedAt)}</span>
+                      </td>
+                      <td className="flex items-center justify-between gap-3 pt-2 border-t border-white/10 lg:border-t-0 lg:table-cell lg:py-5 lg:text-center lg:whitespace-nowrap">
+                        <span className="text-xs text-white/50 lg:hidden">Action</span>
                         <Link
                           href={`/juri/judged/${t.id}`}
-                          className="text-white/60 hover:text-white"
+                          className="inline-flex items-center justify-center gap-1.5 text-text-secondary hover:text-white hover:bg-white/10 rounded-md p-2 transition-colors"
                           title="View Details"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="w-4 h-4" />
+                          <span className="text-xs font-medium lg:hidden">Detail</span>
                         </Link>
                       </td>
                     </tr>
@@ -230,23 +246,16 @@ export default function JuriDashboardPage() {
             </table>
           </div>
 
-          <div className="relative flex items-center justify-between pt-5 text-xs text-white/50">
+          <div className="relative flex flex-wrap items-center justify-between gap-3 pt-5 text-xs text-white/50">
             <span>
-              Showing {topScores.length} data out of {judgedCount}
+              Menampilkan {topScores.length} peringkat teratas dari {judgedCount} karya dinilai
             </span>
-            <div className="flex items-center gap-3">
-              <span>Show</span>
-              <select className={glassSelect}>
-                <option className="bg-[#15161A]">10</option>
-              </select>
-              <span>data per page</span>
-              <button className={glassButton}>
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button className={glassButton}>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            <Link
+              href="/juri/judged"
+              className="font-medium text-[#A9B7FF] hover:text-white transition-colors"
+            >
+              Lihat semua karya dinilai →
+            </Link>
           </div>
         </div>
       </div>
