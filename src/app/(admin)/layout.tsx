@@ -22,12 +22,14 @@ import {
   Trophy,
   SquarePen,
   FileSpreadsheet,
+  BarChart3,
 } from "lucide-react";
 
 const mainLinks = [
   { href: "/admin/dashboard", label: "Overview", icon: LayoutGrid },
   { href: "/admin/teams", label: "Registered Team", icon: FileText },
   { href: "/admin/documents", label: "Verified Team", icon: CheckCircle2 },
+  { href: "/admin/demographics", label: "Demografi Peserta", icon: BarChart3 },
 ];
 
 const webLinks = [

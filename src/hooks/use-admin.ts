@@ -520,3 +520,103 @@ export function useAdminSubmissionDetail(submissionId: string) {
     refetchOnWindowFocus: true,
   });
 }
+
+export interface AdminDemographicsSummary {
+  totalTeams: number;
+  totalParticipants: number;
+  totalInstitutions: number;
+  totalProvinces: number;
+  byLevel: {
+    smaSmk: {
+      teamsCount: number;
+      participantsCount: number;
+      percentage: number;
+      smkCount: number;
+      smaCount: number;
+      maCount: number;
+    };
+    kuliah: {
+      teamsCount: number;
+      participantsCount: number;
+      percentage: number;
+      univCount: number;
+      polytechnicCount: number;
+      instituteCount: number;
+    };
+    unclassified: {
+      teamsCount: number;
+      participantsCount: number;
+      percentage: number;
+    };
+  };
+  byCompetition: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    totalTeams: number;
+    totalParticipants: number;
+    smaSmkTeams: number;
+    kuliahTeams: number;
+    unclassifiedTeams: number;
+  }>;
+}
+
+export interface AdminProvinceStat {
+  province: string;
+  teamsCount: number;
+  participantsCount: number;
+  percentage: number;
+  topInstitutions: string[];
+}
+
+export interface AdminInstitutionStat {
+  name: string;
+  level: "SMA/SMK" | "KULIAH" | "LAINNYA";
+  province: string;
+  teamsCount: number;
+  participantsCount: number;
+}
+
+export interface AdminTeamDemographicDetail {
+  id: string;
+  teamName: string;
+  teamCode: string;
+  competitionName: string;
+  competitionSlug: string;
+  status: string;
+  memberCount: number;
+  leaderName: string;
+  leaderEmail: string;
+  leaderPhone: string | null;
+  leaderInstitution: string;
+  leaderDomicile: string;
+  detectedLevel: "SMA/SMK" | "KULIAH" | "LAINNYA";
+  detectedSubcategory: string;
+  detectedProvince: string;
+  members: Array<{
+    fullName: string;
+    email: string;
+    institution: string;
+    domicile: string;
+    role: string;
+  }>;
+}
+
+export interface AdminDemographicsData {
+  summary: AdminDemographicsSummary;
+  provinces: AdminProvinceStat[];
+  institutions: AdminInstitutionStat[];
+  teams: AdminTeamDemographicDetail[];
+}
+
+export function useAdminDemographics() {
+  return useQuery<AdminDemographicsData>({
+    queryKey: ["adminDemographics"],
+    queryFn: async () => {
+      const res = await apiClient.get("/api/admin/demographics");
+      return res.data?.data || res.data;
+    },
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+  });
+}
