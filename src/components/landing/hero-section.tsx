@@ -149,7 +149,7 @@ export function HeroSection() {
         <div className="hero-anim mt-10 w-full max-w-md sm:max-w-xl">
           <div className="border border-white/20 rounded-xl px-6 py-5 bg-white/[0.03] shadow-[0_0_35px_rgba(120,150,255,0.18)]">
             <p className="text-xs tracking-[0.2em] text-white/80 mb-8 font-semibold">
-              {isClosed ? "PENDAFTARAN TELAH DITUTUP" : "LAST REGISTRATION"}
+              {isClosed ? "REGISTRATION CLOSED" : "LAST REGISTRATION"}
             </p>
             <div className="flex items-start justify-center gap-2 sm:gap-3 md:gap-5">
               {blocks.map((b, i) => (
@@ -174,7 +174,7 @@ export function HeroSection() {
 
           <Link href={isClosed ? "/login" : "/register"} className="block mt-5 w-full">
             <button className="cursor-pointer w-full bg-white text-black font-semibold text-sm px-10 py-3.5 rounded-full hover:bg-white/90 transition-all shadow-[0_0_35px_rgba(255,255,255,0.5)]">
-              {isClosed ? "Login ke Dashboard" : "Register Now!"}
+              {isClosed ? "Login to Dashboard" : "Register Now!"}
             </button>
           </Link>
         </div>

@@ -230,38 +230,46 @@ export default function PesertaCompetitionPage() {
       : false;
 
     if (regTimeline && isRegistrationClosed) {
+      const closedDate = new Date(regTimeline.endDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
       return (
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-xs font-semibold text-red-400">
-            <Lock className="w-3.5 h-3.5" />
-            Pendaftaran Telah Ditutup
-          </span>
-          <span className="text-xs text-white/40">
-            Batas pendaftaran berakhir pada{" "}
-            {new Date(regTimeline.endDate).toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <Button
+            type="button"
+            disabled
+            className={`${pillButton} cursor-not-allowed border border-white/10 bg-white/[0.04] text-white/40 flex items-center gap-2`}
+          >
+            <Lock className="h-3.5 w-3.5 text-white/30" />
+            Registration Closed
+          </Button>
+          <span className="text-xs text-text-secondary">
+            Registration ended on {closedDate}
           </span>
         </div>
       );
     }
 
     if (regTimeline && isRegistrationNotStarted) {
+      const startDate = new Date(regTimeline.startDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
       return (
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-400">
-            <Lock className="w-3.5 h-3.5" />
-            Pendaftaran Belum Dibuka
-          </span>
-          <span className="text-xs text-white/40">
-            Dibuka mulai{" "}
-            {new Date(regTimeline.startDate).toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <Button
+            type="button"
+            disabled
+            className={`${pillButton} cursor-not-allowed border border-white/10 bg-white/[0.04] text-white/40 flex items-center gap-2`}
+          >
+            <Lock className="h-3.5 w-3.5 text-white/30" />
+            Registration Upcoming
+          </Button>
+          <span className="text-xs text-text-secondary">
+            Opens on {startDate}
           </span>
         </div>
       );
