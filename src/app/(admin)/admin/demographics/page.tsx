@@ -552,7 +552,6 @@ export default function AdminDemographicsPage() {
               <option value="ALL">Semua Jenjang</option>
               <option value="SMA/SMK">SMA / SMK / Sederajat</option>
               <option value="KULIAH">Kuliah (Perguruan Tinggi)</option>
-              <option value="LAINNYA">Lainnya / Belum Diketahui</option>
             </select>
 
             {/* Competition Filter (Khusus Tab Tim) */}
