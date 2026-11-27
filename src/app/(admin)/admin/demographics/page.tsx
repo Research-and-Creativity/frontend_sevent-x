@@ -77,7 +77,18 @@ export default function AdminDemographicsPage() {
       if (levelFilter !== "ALL" && t.detectedLevel !== levelFilter) return false;
       if (competitionFilter !== "ALL" && t.competitionSlug !== competitionFilter)
         return false;
-      if (statusFilter !== "ALL" && t.status !== statusFilter) return false;
+      if (statusFilter !== "ALL") {
+        const s = (t.status || "").toUpperCase();
+        if (statusFilter === "APPROVE") {
+          if (!s.includes("APPROV") && !s.includes("VERIF")) return false;
+        } else if (statusFilter === "REVIEW") {
+          if (!s.includes("REVIEW")) return false;
+        } else if (statusFilter === "REJECT") {
+          if (!s.includes("REJECT")) return false;
+        } else if (s !== statusFilter) {
+          return false;
+        }
+      }
       if (provinceFilter !== "ALL" && t.detectedProvince !== provinceFilter)
         return false;
       if (searchQuery.trim()) {
@@ -586,9 +597,9 @@ export default function AdminDemographicsPage() {
                 className="bg-[#15161A] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 focus:outline-none focus:border-white/30"
               >
                 <option value="ALL">Semua Status</option>
-                <option value="VERIFIED">Verified</option>
+                <option value="APPROVE">Approved</option>
                 <option value="REVIEW">Need Review</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="REJECT">Rejected</option>
               </select>
             )}
 
@@ -856,14 +867,20 @@ export default function AdminDemographicsPage() {
                         <td className="py-3.5 px-4">
                           <span
                             className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                              t.status === "VERIFIED"
+                              t.status?.toUpperCase().includes("APPROV") || t.status?.toUpperCase().includes("VERIF")
                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                : t.status === "REVIEW"
+                                : t.status?.toUpperCase().includes("REVIEW")
                                 ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                                : "bg-white/5 text-white/50"
+                                : "bg-rose-500/10 text-rose-300 border border-rose-500/20"
                             }`}
                           >
-                            {t.status}
+                            {t.status === "APPROVE"
+                              ? "Approved"
+                              : t.status === "REVIEW"
+                              ? "Need Review"
+                              : t.status === "REJECT"
+                              ? "Rejected"
+                              : t.status}
                           </span>
                         </td>
                       </tr>
