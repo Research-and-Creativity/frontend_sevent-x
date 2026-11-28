@@ -12,7 +12,10 @@ import {
   RefreshCw,
   Building2,
   FileSpreadsheet,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { apiClient } from "@/lib/api-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TablePagination, paginateItems } from "@/components/shared/table-pagination";
 import { useAdminDemographics } from "@/hooks/use-admin";
@@ -128,6 +131,45 @@ export default function AdminDemographicsPage() {
     return Array.from(new Set(provinces.map((p) => p.province))).sort();
   }, [provinces]);
 
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+  // Ekspor Excel (.xlsx) Lengkap 4-Sheet Rapi dari Backend
+  const handleExportExcel = async () => {
+    if (!teams || teams.length === 0) return;
+    setIsExportingExcel(true);
+    try {
+      const res = await apiClient.get("/api/admin/demographics/export", {
+        responseType: "blob",
+      });
+
+      const disposition = res.headers["content-disposition"] || "";
+      let filename = `demografi-peserta-seventx-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match?.[1]) {
+        filename = match[1];
+      }
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("File Excel demografi berhasil diunduh");
+    } catch (err) {
+      console.error("Gagal mengunduh file Excel demografi:", err);
+      toast.error("Gagal mengunduh file Excel demografi");
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
   // Ekspor CSV Data Demografi Lengkap (UTF-8 with BOM untuk kompatibilitas Excel)
   const handleExportCSV = () => {
     if (!teams || teams.length === 0) return;
@@ -195,12 +237,12 @@ export default function AdminDemographicsPage() {
               Statistik sebaran jenjang pendidikan (SMA/SMK vs Kuliah), institusi, dan asal wilayah peserta SEVENT X
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => refetch()}
               disabled={isRefetching}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/20 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors disabled:opacity-50"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isRefetching ? "animate-spin" : ""}`}
@@ -209,9 +251,22 @@ export default function AdminDemographicsPage() {
             </button>
             <button
               type="button"
+              onClick={handleExportExcel}
+              disabled={isLoading || isExportingExcel || !teams.length}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+            >
+              {isExportingExcel ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+              )}
+              <span>Export Excel (.xlsx)</span>
+            </button>
+            <button
+              type="button"
               onClick={handleExportCSV}
               disabled={isLoading || !teams.length}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 text-xs font-semibold transition-colors disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
